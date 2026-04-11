@@ -1,0 +1,34 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario{
+  id      Int       @id @default(autoincrement())
+  nome    String    @db.VarChar(40)
+  email   String    @db.Varchar(40) @unique
+  hash    String    
+}
+
+model Leitor{
+  id   Int   @id @default(autoincrement())
+  id_usuario  Int
+  usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete:Cascade)
+  cpf  BigInt   @unique 
+  telefone  String    @db.VarChar(11)
+}
+
+model Bibliotecario{
+  id   Int   @id @default(autoincrement())
+  id_usuario  Int
+  usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete:Cascade)
+}
