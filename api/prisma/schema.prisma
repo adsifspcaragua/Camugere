@@ -9,14 +9,17 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 model Usuario{
   id      Int       @id @default(autoincrement())
   nome    String    @db.VarChar(40)
-  email   String    @db.Varchar(40) @unique
-  hash    String    
+  email   String    @unique @db.VarChar(40) 
+  hash    String
+
+  leitores Leitor[]
+  bibliotecarios Bibliotecario[]
 }
 
 model Leitor{
