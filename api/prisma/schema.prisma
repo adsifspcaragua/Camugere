@@ -14,7 +14,7 @@ datasource db {
 
 model Usuario{
   id      Int       @id @default(autoincrement())
-  nome    String    @db.VarChar(40)
+  nome    String    @db.VarChar(20)
   email   String    @unique @db.VarChar(40) 
   hash    String
 

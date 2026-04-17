@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors"
+import UsuarioRouter from "./Router/UsuarioRouter.js"
 
 const app = express()
 
@@ -16,3 +17,5 @@ app.get('/', (req, res) => {
 app.listen(3000, () => {
     console.log('Servirdor Rodando no http://localhost:3000')
 })
+
+app.use("/usuario", UsuarioRouter)
