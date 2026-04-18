@@ -1,23 +1,25 @@
 import { usuarioValidator } from "../../Model/UsuarioModel.js"
-import { createUsuario } from "../../Model/UsuarioModel.js"
+import { updateUsuario } from "../../Model/UsuarioModel.js"
 
-export default async function createUsuarioController(req, res) {
+export default async function updateUsuarioController(req, res) {
     try {
+        const {id} = req.params
         const usuario = req.body
+
         const { success, data, error } = usuarioValidator(usuario)
 
         if(!success){
             throw new Error(`Não foi possível validar usuário, ${error}`)
         }
 
-        const result = createUsuario(usuario)
+        const result = await updateUsuario(usuario, +id)
 
         if(!result){
-            throw new Error("Não foi possível criar Usuário!")
+            throw new Error("Não foi possível atualizar Usuário!")
         }
 
         return res.status(200).json({
-            message: "Usuário criado com sucesso!",
+            message: "Usuário atualizado com sucesso",
             data: result
         })
 
@@ -27,5 +29,4 @@ export default async function createUsuarioController(req, res) {
             error: e.message 
         })
     }
-    
 }

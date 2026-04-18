@@ -1,5 +1,6 @@
-import { PrismaClient } from "@prisma/client";
-import z from "zod";
+import { PrismaClient } from "@prisma/client"
+import bcrypt from "bcrypt" 
+import z, { hash } from "zod";
 
 const prisma = new PrismaClient()
 
@@ -27,8 +28,14 @@ export const usuarioValidator = (usuario, partial = null) => {
 }
 
 export async function createUsuario(usuario) {
+    const data = {
+        nome: usuario.nome,
+        email: usuario.email,
+        hash: await bcrypt.hash(usuario.hash, 10)
+    }
+    
     const result = await prisma.Usuario.create({
-        data: usuario,
+        data: data,
         select: {
             id: true,
             nome: true,
