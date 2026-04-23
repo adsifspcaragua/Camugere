@@ -93,10 +93,15 @@ export async function deleteUsuario(id) {
 }
 
 export async function updateUsuario(usuario, id) {
+    const data = {
+        id: id,
+        nome: usuario.nome,
+        email: usuario.email,
+        hash: await bcrypt.hash(usuario.hash, 10)
+    }
+    
     const result = await prisma.Usuario.update({
-        data:{
-            usuario
-        },
+        data: data,
         where: {
             id: id
         },
@@ -107,5 +112,7 @@ export async function updateUsuario(usuario, id) {
             hash: false
         }
     })
+
+    return result
     
 }
