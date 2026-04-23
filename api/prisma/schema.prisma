@@ -25,9 +25,9 @@ model Usuario{
 
 model Leitor{
   id   Int   @id @default(autoincrement())
-  id_usuario  Int
-  usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete:Cascade)
-  cpf  BigInt   @unique 
+  id_usuario  Int   @unique
+  usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  cpf  String   @db.VarChar(14)   @unique   
   telefone  String    @db.VarChar(11)
 }
 
