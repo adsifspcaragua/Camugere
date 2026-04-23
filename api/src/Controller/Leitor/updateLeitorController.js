@@ -1,21 +1,17 @@
-import { createLeitor } from "../../Model/LeitorModel.js";
+import { updateLeitor } from "../../Model/LeitorModel.js";
 import { leitorValidator } from "../../Model/LeitorModel.js";
 import { validarCPF } from "../../Model/LeitorModel.js";
 import { getUsuarioById } from "../../Model/UsuarioModel.js";
 
-export default async function createLeitorController(req, res) {
+export default async function updateLeitorController(req, res) {
     try {
+        const { id } = req.params
         const leitor = req.body
+
         const { success, data, error } = await leitorValidator(leitor)
 
         if (!success) {
             throw new Error(`Não foi possível validar leitor, ${error}`)
-        }
-
-        const usuario = await getUsuarioById(leitor.id_usuario)
-
-        if(!usuario){
-            throw new Error(`Este usuário não existe!`)
         }
 
         const cpfValidetor = validarCPF(leitor.cpf)
@@ -24,22 +20,21 @@ export default async function createLeitorController(req, res) {
             throw new Error(`Não foi possível validar CPF`)
         }
 
-        const result = await createLeitor(leitor)
+        const result = await updateLeitor(+id, leitor)
 
         if(!result){
-            throw new Error("Não foi possível criar Leitor!")
+            throw new Error("Não foi possível atualizar Leitor!")
         }
 
         return res.status(200).json({
-            message: "Leitor criado com sucesso!",
-            leitor: result,
-            usuario: usuario
+            message: "Leitor atualizado com sucesso!",
+            data: result
         })
 
-    } catch (e) {
+    } catch (error) {
         return res.status(500).json({
-            message: "Não foi possível criar o leitor!",
-            error: e.message
+            message: "Não foi possível atualizar o leitor!",
+            error: error.message
         })
     }
 }

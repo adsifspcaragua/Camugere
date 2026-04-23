@@ -23,7 +23,7 @@ export const leitorValidator = (leitor, partial = null) => {
         return leitorSchema.partial(partial).safeParse(leitor)
     }
 
-    return leitorSchema.safeParse(usuario)
+    return leitorSchema.safeParse(leitor)
 }
 
 export function validarCPF(cpf) {
