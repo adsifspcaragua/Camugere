@@ -28,11 +28,35 @@ model Leitor{
   id_usuario  Int   @unique
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   cpf  String   @db.VarChar(14)   @unique   
-  telefone  String    @db.VarChar(11)
+  telefone  String?    @db.VarChar(11)
 }
 
 model Bibliotecario{
   id   Int   @id @default(autoincrement())
   id_usuario  Int
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete:Cascade)
+}
+
+LeitorClube{
+  id_leitor   Int   
+  leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete:Cascade)
+  id_clube    Int
+  clube   Clube   @relation(fields: [id_clube], references: [id], onDelete:Cascade)
+
+  @@id([id_leitor], [id_clube])
+}
+
+model Clube{
+  id    Int   @id @default(autoincrement())
+  nome    String    @db.VarChar(40)
+  descricao   String?
+  dataCriacao   DateTime
+  status    String
+}
+
+model Obra{
+  id    Int   @id @default(autoincrement())
+  titulo    String    @db.VarChar(200)
+  autor     String    @db.VarChar(200)
+  cdd       String    
 }
