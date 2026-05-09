@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors"
 import UsuarioRouter from "./Router/UsuarioRouter.js"
 import LeitorRouter from "./Router/LeitorRouter.js"
+import BibliotecarioRouter from "./Router/BibliotecarioRouter.js"
 
 const app = express()
 
@@ -21,3 +22,4 @@ app.listen(3000, () => {
 
 app.use("/usuario", UsuarioRouter)
 app.use("/leitor", LeitorRouter)
+app.use("/bibliotecario", BibliotecarioRouter)
