@@ -25,25 +25,34 @@ model Usuario{
 
 model Leitor{
   id   Int   @id @default(autoincrement())
-  id_usuario  Int   @unique
+  id_usuario  Int
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   cpf  String   @db.VarChar(14)   @unique   
   telefone  String?    @db.VarChar(11)
+
+  leitorClubes LeitorClube[]
+  emprestimos Emprestimo[]
+  comentarios Comentario[]
+  reservas Reserva[]
 }
 
 model Bibliotecario{
   id   Int   @id @default(autoincrement())
   id_usuario  Int
-  usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete:Cascade)
+  usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
 }
 
-LeitorClube{
-  id_leitor   Int   
-  leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete:Cascade)
-  id_clube    Int
-  clube   Clube   @relation(fields: [id_clube], references: [id], onDelete:Cascade)
+model Obra{
+  id    Int   @id @default(autoincrement())
+  titulo    String    @db.VarChar(200)
+  autor     String    @db.VarChar(200)
+  cdd       String    @db.VarChar(200)
+  ativa     Boolean   @default(true)
+  notaMedia   Float
 
-  @@id([id_leitor], [id_clube])
+  exemplares Exemplar[]
+  reservas Reserva[]
+  comentarios Comentario[]
 }
 
 model Clube{
@@ -52,26 +61,27 @@ model Clube{
   descricao   String?
   dataCriacao   DateTime
   status    String
+
+  leitorClubes LeitorClube[]
 }
 
-model Obra{
-  id    Int   @id @default(autoincrement())
-  titulo    String    @db.VarChar(200)
-  autor     String    @db.VarChar(200)
-  cdd       String    @db.Varchar(200)
-  ativa     Boolean   @default(true)
-  notaMedia   Float
+model LeitorClube{
+  id_leitor   Int   
+  leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
+  id_clube    Int
+  clube   Clube   @relation(fields: [id_clube], references: [id], onDelete: Cascade)
 
-  @@check([notaMedia <= 5], name: "nota-maxima")     
-  @@check([notaMedia >= 0], name: "nota-minima")     
+  @@id([id_leitor, id_clube])
 }
 
 model Exemplar{
   id    Int   @id @default(autoincrement())
   id_obra   Int
-  obra    Obra    @relation(fields: [id_obra], references: [id], OnDelete:Cascade)
-  numeroInventario     String     @db.Varchar(6)
+  obra    Obra    @relation(fields: [id_obra], references: [id], onDelete: Cascade)
+  numeroInventario     String     @db.VarChar(6)
   disponivel      Boolean     @default(true)
+
+  emprestimos Emprestimo[]
 }
 
 model Emprestimo{
@@ -79,33 +89,31 @@ model Emprestimo{
   dataInicio    DateTime
   diasLocacao   Int 
   id_leitor     Int
-  leitor    Leitor    @realtion(fields: [id_obra], references: [id], OnDelete:Cascade)
+  leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
   id_exemplar   Int
-  exemplar    Emprestimo    @relation(fields: [id_exemplar], references: [id], OnDelete:Cascade)
+  exemplar    Exemplar    @relation(fields: [id_exemplar], references: [id], onDelete: Cascade)
 
-  @@check([diasLocacao <= 15], name: "dias-maximo")     
-  @@check([diasLocacao >= 0], name: "dias-minimo")
 }
 
 model Reserva{
   id    Int   @id @default(autoincrement())
   dataReserva     DateTime
   id_obra    Int
-  obra    Obra @relation(fields: [id_obra], references: [id], OnDelete:Cascade)
+  obra    Obra @relation(fields: [id_obra], references: [id], onDelete: Cascade)
   id_leitor     Int
-  leitor    Leitor    @relation(fields: [id_leitor], references: [id], OnDelete:Cascade)
+  leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
 }
 
 model Comentario{
   id    Int   @id @default(autoincrement())
-  texto   String?    @db.VarChar(1000)   @null
   dataPublicacao    DateTime
-  nota    Int?    @null
+  texto   String?    @db.VarChar(1000)
+  nota    Int?
   curtidas    Int     @default(0)
   moderado    Boolean     @default(false)
 
   id_obra     Int
-  obra    Obra    @relation(fields: [id_obra], references: [id], OnDelete:Cascade)
-  id_leitor   Int
-  leitor    Leitor    @relation(fields: [id_leitor], references[id], OnDelete:Cascade)    
+  obra    Obra    @relation(fields: [id_obra], references: [id], onDelete: Cascade)
+  id_leitor     Int
+  leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
 }
