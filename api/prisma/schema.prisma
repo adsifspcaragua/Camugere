@@ -58,5 +58,54 @@ model Obra{
   id    Int   @id @default(autoincrement())
   titulo    String    @db.VarChar(200)
   autor     String    @db.VarChar(200)
-  cdd       String    
+  cdd       String    @db.Varchar(200)
+  ativa     Boolean   @default(true)
+  notaMedia   Float
+
+  @@check([notaMedia <= 5], name: "nota-maxima")     
+  @@check([notaMedia >= 0], name: "nota-minima")     
+}
+
+model Exemplar{
+  id    Int   @id @default(autoincrement())
+  id_obra   Int
+  obra    Obra    @relation(fields: [id_obra], references: [id], OnDelete:Cascade)
+  numeroInventario     String     @db.Varchar(6)
+  disponivel      Boolean     @default(true)
+}
+
+model Emprestimo{
+  id    Int     @id @default(autoincrement())
+  dataInicio    DateTime
+  diasLocacao   Int 
+  id_leitor     Int
+  leitor    Leitor    @realtion(fields: [id_obra], references: [id], OnDelete:Cascade)
+  id_exemplar   Int
+  exemplar    Emprestimo    @relation(fields: [id_exemplar], references: [id], OnDelete:Cascade)
+
+  @@check([diasLocacao <= 15], name: "dias-maximo")     
+  @@check([diasLocacao >= 0], name: "dias-minimo")
+}
+
+model Reserva{
+  id    Int   @id @default(autoincrement())
+  dataReserva     DateTime
+  id_obra    Int
+  obra    Obra @relation(fields: [id_obra], references: [id], OnDelete:Cascade)
+  id_leitor     Int
+  leitor    Leitor    @relation(fields: [id_leitor], references: [id], OnDelete:Cascade)
+}
+
+model Comentario{
+  id    Int   @id @default(autoincrement())
+  texto   String?    @db.VarChar(1000)   @null
+  dataPublicacao    DateTime
+  nota    Int?    @null
+  curtidas    Int     @default(0)
+  moderado    Boolean     @default(false)
+
+  id_obra     Int
+  obra    Obra    @relation(fields: [id_obra], references: [id], OnDelete:Cascade)
+  id_leitor   Int
+  leitor    Leitor    @relation(fields: [id_leitor], references[id], OnDelete:Cascade)    
 }
