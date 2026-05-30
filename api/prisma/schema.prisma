@@ -44,15 +44,23 @@ model Bibliotecario{
 
 model Obra{
   id    Int   @id @default(autoincrement())
+  id_cdd    Int     @relation(fields: [id_cdd], references: [id], onDelete: Cascade)
+  cdd   Cdd
   titulo    String    @db.VarChar(200)
   autor     String    @db.VarChar(200)
-  cdd       String    @db.VarChar(200)
   ativa     Boolean   @default(true)
-  notaMedia   Float
+  notaMedia   Float?
 
   exemplares Exemplar[]
   reservas Reserva[]
   comentarios Comentario[]
+}
+
+model Cdd{
+  id    Int   @id
+  descricao   String  @db.VarChar
+
+  cdd´s Cdd[]
 }
 
 model Clube{
