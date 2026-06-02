@@ -1,7 +1,7 @@
-import e from "cors";
-import createBibliotecarioController from "../Controller/Biblliotecario/createBibliotecarioController";
+import express from "express";
+import createBibliotecarioController from "../Controller/Biblliotecario/createBibliotecarioController.js";
 
-const router = e.Router()
+const router = express.Router()
 
 router.post("create", createBibliotecarioController)
 

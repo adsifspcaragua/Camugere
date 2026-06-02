@@ -46,19 +46,20 @@ model Obra{
   id    Int   @id @default(autoincrement())
   titulo    String    @db.VarChar(200)
   subtitulo    String?    @db.VarChar(200)
-  autor     String   @db.VarChar(200)
-  cdd       String    @db.VarChar(200)
   editora   String?    @db.VarChar(100)
   edicao    String?    @db.VarChar(20)
   numeroPaginas   Int
   capa      String    @db.VarChar(200)
+  autor     String    @db.VarChar(200)
   ativa     Boolean   @default(true)
-  notaMedia   Float
+  notaMedia   Float?
+
+  id_cdd    Int     
+  cdd   Cdd   @relation(fields: [id_cdd], references: [id], onDelete: Cascade)
 
   exemplares Exemplar[]
   reservas Reserva[]
   comentarios Comentario[]
-
   autores ObraAutor[]
 }
 
@@ -76,6 +77,13 @@ model Autor{
   nome    String    @db.VarChar(40)
 
   obras ObraAutor[]
+}
+
+model Cdd{
+  id    Int   @id
+  descricao   String  @db.VarChar(100)
+
+  obras Obra[]
 }
 
 model Clube{
