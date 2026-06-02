@@ -54,7 +54,7 @@ model Obra{
   ativa     Boolean   @default(true)
   notaMedia   Float?
 
-  id_cdd    Int     
+  id_cdd    String    @db.VarChar(6)     
   cdd   Cdd   @relation(fields: [id_cdd], references: [id], onDelete: Cascade)
 
   exemplares Exemplar[]
@@ -80,7 +80,7 @@ model Autor{
 }
 
 model Cdd{
-  id    Int   @id
+  id    String    @db.VarChar(6)   @id
   descricao   String  @db.VarChar(100)
 
   obras Obra[]
