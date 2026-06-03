@@ -4,6 +4,7 @@ import UsuarioRouter from "./Router/UsuarioRouter.js"
 import LeitorRouter from "./Router/LeitorRouter.js"
 import BibliotecarioRouter from "./Router/BibliotecarioRouter.js"
 import CddRouter from "./Router/CddRouter.js"
+import ObraRouter from "./Router/ObraRouter.js"
 
 const app = express()
 
@@ -25,3 +26,4 @@ app.use("/usuario", UsuarioRouter)
 app.use("/leitor", LeitorRouter)
 app.use("/bibliotecario", BibliotecarioRouter)
 app.use("/cdd", CddRouter)
+app.use("/obra", ObraRouter)

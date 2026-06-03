@@ -49,8 +49,7 @@ model Obra{
   editora   String?    @db.VarChar(100)
   edicao    String?    @db.VarChar(20)
   numeroPaginas   Int
-  capa      String    @db.VarChar(200)
-  autor     String    @db.VarChar(200)
+  capa      String?
   ativa     Boolean   @default(true)
   notaMedia   Float?
 

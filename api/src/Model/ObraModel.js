@@ -9,9 +9,17 @@ const obraSchema = new z.object({
         required_error: "O titulo deve ser obrigatorio"
     }),
 
-    autor: z.string({
-        invalid_type_error: "O autor deve ser um valor tipo texto",
-        required_error: "O autor deve ser obrigatorio"
+    subtitulo: new z.string({
+        invalid_type_error: "O subtitulo deve ser um valor tipo texto"
+    }).optional(),
+
+    editora: new z.string({
+        invalid_type_error: "A editora deve ser um valor tipo texto"
+    }).optional(),
+
+    numeroPaginas: new z.number({
+        invalid_type_error: "O número de páginas deve ser um valor numérico",
+        required_error: "O número de páginas deve ser obrigatorio"
     }),
 
     ativo: z.boolean().default(true)
@@ -32,7 +40,10 @@ export async function createObra(obra) {
             id: true,
             id_cdd: true,
             titulo: true,
-            autor: true,
+            subtitulo: true,
+            editora: true,
+            numeroPaginas: true,
+            capa: true,
             ativo: true,
             notaMedia: true
         }
@@ -47,7 +58,10 @@ export async function listObra() {
             id: true,
             id_cdd: true,
             titulo: true,
-            autor: true,
+            subtitulo: true,
+            editora: true,
+            numeroPaginas: true,
+            capa: true,
             ativo: true,
             notaMedia: true
         }
@@ -65,7 +79,10 @@ export async function getObraById(id) {
             id: true,
             id_cdd: true,
             titulo: true,
-            autor: true,
+            subtitulo: true,
+            editora: true,
+            numeroPaginas: true,
+            capa: true,
             ativo: true,
             notaMedia: true
         }
@@ -84,7 +101,10 @@ export async function deleteObra(id) {
             id: true,
             id_cdd: true,
             titulo: true,
-            autor: true,
+            subtitulo: true,
+            editora: true,
+            numeroPaginas: true,
+            capa: true,
             ativo: true,
             notaMedia: true
         }
@@ -103,7 +123,10 @@ export async function updateObra(id, obra) {
             id: true,
             id_cdd: true,
             titulo: true,
-            autor: true,
+            subtitulo: true,
+            editora: true,
+            numeroPaginas: true,
+            capa: true,
             ativo: true,
             notaMedia: true
         }
