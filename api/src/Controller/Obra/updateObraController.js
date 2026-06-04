@@ -6,13 +6,13 @@ export default async function updateObraController(req, res) {
         const { id } = req.params
         const obra = req.body
 
-        const { success, data, error } = await updateObraService(id, obra)
+        const { success, data, error } = await obraValidator(obra)
 
         if(!success){
             throw new Error(`Não foi possível validar a obra, ${error}`)
         }
 
-        const result = await updateObra(id, data)
+        const result = await updateObra(+id, data)
 
         if(!result){
             throw new Error("Não foi possível atualizar a Obra!")

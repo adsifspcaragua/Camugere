@@ -11,13 +11,13 @@ export default async function createObraController(req, res) {
             throw new Error("Não foi possível validar os dados da obra!")
         }
 
-        const result = await createObra(data)
+        const result = await createObra(obra)
 
         if(!result) {
             throw new Error("Não foi possível criar a obra!")
         }
 
-        return res.status(201).json({
+        return res.status(200).json({
             message: "Obra criada com sucesso!",
             data: result
         })

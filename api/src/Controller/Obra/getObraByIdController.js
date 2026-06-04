@@ -4,7 +4,7 @@ export default async function getObraByIdController(req, res) {
     try {
         const { id } = req.params
 
-        const result = await getObraById(id)
+        const result = await getObraById(+id)
 
         if(!result) {
             throw new Error("Não foi possível encontrar a obra!")

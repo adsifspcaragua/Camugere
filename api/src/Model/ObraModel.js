@@ -22,7 +22,7 @@ const obraSchema = new z.object({
         required_error: "O número de páginas deve ser obrigatorio"
     }),
 
-    ativo: z.boolean().default(true)
+    ativa: z.boolean().default(true)
 })
 
 export const obraValidator = (obra, partial = null) => {
@@ -44,7 +44,7 @@ export async function createObra(obra) {
             editora: true,
             numeroPaginas: true,
             capa: true,
-            ativo: true,
+            ativa: true,
             notaMedia: true
         }
     })
@@ -62,7 +62,7 @@ export async function listObra() {
             editora: true,
             numeroPaginas: true,
             capa: true,
-            ativo: true,
+            ativa: true,
             notaMedia: true
         }
     })
@@ -83,7 +83,7 @@ export async function getObraById(id) {
             editora: true,
             numeroPaginas: true,
             capa: true,
-            ativo: true,
+            ativa: true,
             notaMedia: true
         }
     })
@@ -105,7 +105,7 @@ export async function deleteObra(id) {
             editora: true,
             numeroPaginas: true,
             capa: true,
-            ativo: true,
+            ativa: true,
             notaMedia: true
         }
     })
@@ -127,7 +127,7 @@ export async function updateObra(id, obra) {
             editora: true,
             numeroPaginas: true,
             capa: true,
-            ativo: true,
+            ativa: true,
             notaMedia: true
         }
     })
