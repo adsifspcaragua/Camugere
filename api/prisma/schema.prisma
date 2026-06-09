@@ -116,10 +116,12 @@ model Exemplar{
 
 model Emprestimo{
   id    Int     @id @default(autoincrement())
-  dataInicio    DateTime
-  diasLocacao   Int 
+  dataInicio    DateTime    @default(now())
+  diasLocacao   Int
+  
   id_leitor     Int
   leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
+
   id_exemplar   Int
   exemplar    Exemplar    @relation(fields: [id_exemplar], references: [id], onDelete: Cascade)
 
