@@ -8,7 +8,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "server": "node --watch src/server.js"
+    "server": "node --watch src/server.js",
+    "seed": "node src/seed.js"
   },
   "dependencies": {
     "@prisma/client": "6.5",
