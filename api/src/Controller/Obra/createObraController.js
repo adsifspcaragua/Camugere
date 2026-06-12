@@ -8,7 +8,7 @@ export default async function createObraController(req, res) {
         const { success, data, error } = await obraValidator(obra)
 
         if (!success) {
-            throw new Error("Não foi possível validar os dados da obra!")
+            throw new Error(`Não foi possível validar os dados da obra! Erro: ${error}`)
         }
 
         const result = await createObra(obra)

@@ -1,7 +1,7 @@
 import { createCdd } from "../../Model/CddModel.js";
 import { cddValidator } from "../../Model/CddModel.js";
 
-export default async function listCddController(req, res) {
+export default async function createCddController(req, res) {
     try {
         const cdd = req.body
 
@@ -24,7 +24,7 @@ export default async function listCddController(req, res) {
     } catch (error) {
         return res.status(500).json({
             message: "Não foi possível criar o cdd!",
-            error: e.message
+            error: error.message
         })
     }
 }
