@@ -116,3 +116,31 @@ export async function updateUsuario(usuario, id) {
     return result
     
 }
+
+export async function getUsuarioByEmail(email){
+    const result = prisma.Usuario.findUnique({
+        where: {
+            email: email
+        }, select: {
+            id: true,
+            nome: true,
+            email: true,
+            hash: true
+        }
+    })
+
+    return result
+}
+
+export async function getBibliotecarioByUsuarioId(id_usuario){
+    const result = prisma.bibliotecario.findMany({
+        where: {
+            id_usuario: id_usuario
+        }, select: {
+            id: true,
+            id_usuario: true
+        }
+    })
+    
+    return result
+}

@@ -4,7 +4,7 @@ import { createUsuario } from "../../Model/UsuarioModel.js"
 export default async function createUsuarioController(req, res) {
     try {
         const usuario = req.body
-        const { success, data, error } = usuarioValidator(usuario)
+        const { success, data, error } = await usuarioValidator(usuario)
 
         if(!success){
             throw new Error(`Não foi possível validar usuário, ${error}`)
