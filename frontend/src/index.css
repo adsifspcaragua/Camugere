@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-50: #f4f6ef;
+  --color-brand-100: #e6ecd9;
+  --color-brand-200: #cedab5;
+  --color-brand-300: #afc18a;
+  --color-brand-400: #93a866;
+  --color-brand-500: #748c48;
+  --color-brand-600: #5a6e36;
+  --color-brand-700: #45552c;
+  --color-brand-800: #3a4528;
+  --color-brand-900: #323b24;
+  --color-brand-950: #192010;
+
+  --color-surface-50: #faf8f5;
+  --color-surface-100: #f2efe8;
+  --color-surface-200: #e4dfd4;
+  --color-surface-300: #d1c9b9;
+  --color-surface-400: #b9ad99;
+  --color-surface-500: #a59882;
+  --color-surface-600: #93846d;
+  --color-surface-700: #7b6d5b;
+  --color-surface-800: #665b4d;
+  --color-surface-900: #554c41;
+  --color-surface-950: #2d2822;
+
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+
+  body {
+    @apply bg-surface-50 text-surface-900 antialiased transition-colors duration-300;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  .dark body,
+  body.dark {
+    @apply bg-surface-950 text-surface-100;
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: theme(--color-surface-300) transparent;
+  }
+  .dark .scrollbar-thin {
+    scrollbar-color: theme(--color-surface-600) transparent;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
