@@ -1,0 +1,412 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/data/mockData.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/data</a> mockData.js</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>0/109</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>0/109</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >export const mockObras = [<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 1, titulo: 'O escravo', autor: 'Carolina Maria de Jesus', cdd: '869e', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 2, titulo: 'Becos da memória', autor: 'Conceição Evaristo', cdd: '869b', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 3, titulo: 'Nada Digo De Ti, Que Em Ti Não Veja', autor: 'Eliana Alves Cruz', cdd: '869n', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 4, titulo: 'O Crime Do Cais Do Valongo', autor: 'Eliana Alves Cruz', cdd: '869c', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 5, titulo: 'Eu sou macuxi e outras histórias', autor: 'Julie Dorrico', cdd: '704e', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 6, titulo: 'Irmã Outsider', autor: 'Audre Lorde', cdd: '305.42i', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 7, titulo: 'O céu entre mundos', autor: 'Sandra Menezes', cdd: '869c', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 8, titulo: 'Várias faces da mesma solidão', autor: 'Bruna Motta', cdd: '869v', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 9, titulo: 'Perfomances do tempo espiralar', autor: 'Leda Maria Martins', cdd: '896p', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 10, titulo: 'O Ódio Que Você Semeia', autor: 'Angie Thomas', cdd: '808.068o', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 11, titulo: 'Torto Arado', autor: 'Itamar Vieira Junior', cdd: '869t', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 12, titulo: 'FOME', autor: 'Roxane Gay', cdd: '920f', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 13, titulo: 'Guardei no armário', autor: 'Samuel de Paula Gomes', cdd: '920g', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 14, titulo: 'Por Um Feminismo Afro-latino-americano', autor: 'Lélia Gonzalez', cdd: '305.42p', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 15, titulo: 'Vozes negras', autor: 'Claudia Tate', cdd: '896v', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 16, titulo: 'O sol das independências', autor: 'Ahmadou Kourouma', cdd: '896s', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 17, titulo: 'Tornar-se negro', autor: 'Neusa Santos Souza', cdd: '320.56t', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 18, titulo: 'Ensinando a transgredir', autor: 'Bell Hooks', cdd: '305.42e', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 19, titulo: 'Rastros de resistência', autor: 'Ale Santos', cdd: '326r', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 20, titulo: 'Cumbe', autor: 'Marcelo D\'salete', cdd: '326c', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 21, titulo: 'Dororidade', autor: 'Vilma Piedade', cdd: '320.56d', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 22, titulo: 'O olho mais azul', autor: 'Toni Morrison', cdd: '810o', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 23, titulo: 'Água Funda', autor: 'Ruth Guimaraes', cdd: '869a', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 24, titulo: 'Casa de alvenaria', autor: 'Carolina Maria de Jesus', cdd: '869c', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 25, titulo: 'Ponciá Vicêncio', autor: 'Conceição Evaristo', cdd: '869p', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 26, titulo: 'O Avesso Da Pele', autor: 'Jeferson Tenorio', cdd: '869a', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 27, titulo: 'Tráfico de mulheres e meninas', autor: 'Vera Vieira', cdd: '320.56t', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 28, titulo: 'Racismo estrutural', autor: 'Dennis de Oliveira', cdd: '320.56r', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 29, titulo: 'MULHERES, RAÇA E CLASSE', autor: 'ANGELA DAVIS', cdd: '320.56m', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 30, titulo: 'O caminho de casa', autor: 'Yaa Gyasi', cdd: '896c', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 31, titulo: 'Luiz Gama - antologia', autor: 'Enid Yatsuda Frederico', cdd: '869l', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 32, titulo: 'Solano Trindade', autor: 'Claudia de A. Campos', cdd: '869s', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 33, titulo: 'Deus Ajude Essa Criança', autor: 'Toni Morrison', cdd: '810d', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 34, titulo: 'A fenomenologia do espírito', autor: 'Hegel', cdd: '100f', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 35, titulo: 'Como ser um educador antirracista', autor: 'Bárbara Carine', cdd: '326c', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 36, titulo: 'O genocídio do negro brasileiro', autor: 'Abdias do Nascimento', cdd: '320.56g', capa: '📙' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 37, titulo: 'Cadernos negros', autor: 'Vários autores', cdd: '896c', capa: '📕' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 38, titulo: 'Olhos d\'água', autor: 'Conceição Evaristo', cdd: '869o', capa: '📗' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 39, titulo: 'Tocaia grande', autor: 'Jorge Amado', cdd: '869t', capa: '📘' },</span>
+<span class="cstat-no" title="statement not covered" >  { idObra: 40, titulo: 'Eu, onça', autor: 'Vários autores', cdd: '808.81e', capa: '📙' }</span>
+<span class="cstat-no" title="statement not covered" >];</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >export const mockExemplares = [</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 101, idObra: 1, numeroInventario: 'INV-0001', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 102, idObra: 1, numeroInventario: 'INV-0002', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 103, idObra: 2, numeroInventario: 'INV-0003', disponivel: false },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 104, idObra: 2, numeroInventario: 'INV-0004', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 105, idObra: 3, numeroInventario: 'INV-0005', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 106, idObra: 4, numeroInventario: 'INV-0006', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 107, idObra: 4, numeroInventario: 'INV-0007', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 108, idObra: 4, numeroInventario: 'INV-0008', disponivel: false },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 109, idObra: 5, numeroInventario: 'INV-0009', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 110, idObra: 5, numeroInventario: 'INV-0010', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 111, idObra: 6, numeroInventario: 'INV-0011', disponivel: false },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 112, idObra: 7, numeroInventario: 'INV-0012', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 113, idObra: 8, numeroInventario: 'INV-0013', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 114, idObra: 8, numeroInventario: 'INV-0014', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 115, idObra: 8, numeroInventario: 'INV-0015', disponivel: false },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 116, idObra: 9, numeroInventario: 'INV-0016', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 117, idObra: 10, numeroInventario: 'INV-0017', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 118, idObra: 11, numeroInventario: 'INV-0018', disponivel: false },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 119, idObra: 11, numeroInventario: 'INV-0019', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 120, idObra: 11, numeroInventario: 'INV-0020', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 121, idObra: 12, numeroInventario: 'INV-0021', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 122, idObra: 13, numeroInventario: 'INV-0022', disponivel: false },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 123, idObra: 14, numeroInventario: 'INV-0023', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 124, idObra: 22, numeroInventario: 'INV-0024', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 125, idObra: 22, numeroInventario: 'INV-0025', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 126, idObra: 27, numeroInventario: 'INV-0026', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 127, idObra: 27, numeroInventario: 'INV-0027', disponivel: false },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 128, idObra: 29, numeroInventario: 'INV-0028', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 129, idObra: 38, numeroInventario: 'INV-0029', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 130, idObra: 40, numeroInventario: 'INV-0030', disponivel: true },</span>
+<span class="cstat-no" title="statement not covered" >  { idExemplar: 131, idObra: 40, numeroInventario: 'INV-0031', disponivel: true }</span>
+<span class="cstat-no" title="statement not covered" >];</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >export const mockLeitores = [</span>
+<span class="cstat-no" title="statement not covered" >  { idLeitor: 1, nome: 'Lucas Perrotta', contato: 'lucas@email.com' },</span>
+<span class="cstat-no" title="statement not covered" >  { idLeitor: 2, nome: 'Matheus Manfredini', contato: 'matheus@email.com' },</span>
+<span class="cstat-no" title="statement not covered" >  { idLeitor: 3, nome: 'Rafael Tomaz', contato: 'rafael@email.com' },</span>
+<span class="cstat-no" title="statement not covered" >  { idLeitor: 4, nome: 'Tiago Vieira', contato: 'tiago@email.com' },</span>
+<span class="cstat-no" title="statement not covered" >  { idLeitor: 5, nome: 'Vitor de Oliveira', contato: 'vitor@email.com' }</span>
+<span class="cstat-no" title="statement not covered" >];</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >export const mockEmprestimos = [</span>
+<span class="cstat-no" title="statement not covered" >  { idEmprestimo: 1, idExemplar: 103, idLeitor: 1, dataInicio: '2026-05-01', dataDevolucaoPrevista: '2026-05-15' },</span>
+<span class="cstat-no" title="statement not covered" >  { idEmprestimo: 2, idExemplar: 108, idLeitor: 2, dataInicio: '2026-05-05', dataDevolucaoPrevista: '2026-05-19' },</span>
+<span class="cstat-no" title="statement not covered" >  { idEmprestimo: 3, idExemplar: 111, idLeitor: 3, dataInicio: '2026-05-08', dataDevolucaoPrevista: '2026-05-22' },</span>
+<span class="cstat-no" title="statement not covered" >  { idEmprestimo: 4, idExemplar: 115, idLeitor: 4, dataInicio: '2026-05-09', dataDevolucaoPrevista: '2026-05-23' },</span>
+<span class="cstat-no" title="statement not covered" >  { idEmprestimo: 5, idExemplar: 118, idLeitor: 5, dataInicio: '2026-05-10', dataDevolucaoPrevista: '2026-05-24' },</span>
+<span class="cstat-no" title="statement not covered" >  { idEmprestimo: 6, idExemplar: 122, idLeitor: 1, dataInicio: '2026-04-28', dataDevolucaoPrevista: '2026-05-12' },</span>
+<span class="cstat-no" title="statement not covered" >  { idEmprestimo: 7, idExemplar: 127, idLeitor: 3, dataInicio: '2026-04-30', dataDevolucaoPrevista: '2026-05-14' }</span>
+<span class="cstat-no" title="statement not covered" >];</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >// Helper: get obra by id</span>
+<span class="cstat-no" title="statement not covered" >export function getObraById(idObra) {</span>
+<span class="cstat-no" title="statement not covered" >  return mockObras.find((o) =&gt; o.idObra === idObra);</span>
+<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >// Helper: get exemplares for an obra</span>
+<span class="cstat-no" title="statement not covered" >export function getExemplaresByObra(idObra, exemplares) {</span>
+<span class="cstat-no" title="statement not covered" >  return exemplares.filter((e) =&gt; e.idObra === idObra);</span>
+<span class="cstat-no" title="statement not covered" >}</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >// Helper: get leitor by id</span>
+<span class="cstat-no" title="statement not covered" >export function getLeitorById(idLeitor) {</span>
+<span class="cstat-no" title="statement not covered" >  return mockLeitores.find((l) =&gt; l.idLeitor === idLeitor);</span>
+<span class="cstat-no" title="statement not covered" >}</span>
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-06-25T18:45:41.132Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    
