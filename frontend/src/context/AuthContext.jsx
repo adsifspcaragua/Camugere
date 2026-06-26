@@ -26,6 +26,7 @@ export function AuthProvider({ children }) {
     if (!response.ok) {
       const errorJson = await response.json().catch(() => null);
       const message = errorJson?.message || "Falha ao autenticar";
+      console.log(message)
       throw new Error(message);
     }
 

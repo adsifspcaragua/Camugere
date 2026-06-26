@@ -38,6 +38,7 @@ function AppContent() {
 
   const loadData = async () => {
     setIsLoadingData(true)
+    console.log(token)
 
     try{
       const responseObras = await apiFetch("/obra/list", {}, token)
@@ -55,12 +56,14 @@ function AppContent() {
     }
   }
 
+  docu
+
   useEffect(() => {
 
     if(isAuthenticated){
       loadData()
     }
-  }, [])
+  }, [isAuthenticated, activePage])
 
   // === DRAWER STATE ===
   const [loanDrawerOpen, setLoanDrawerOpen] = useState(false);
