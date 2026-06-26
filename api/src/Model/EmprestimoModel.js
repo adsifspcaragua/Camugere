@@ -8,14 +8,14 @@ const emprestimoSchema = z.object({
     dataInicio: z.date({
         invalid_type_error: "A data de início do empréstimo deve ser uma data válida!"
     })
-    .default(() => new Date())
-    .optional(),
+        .default(() => new Date())
+        .optional(),
 
     diasLocacao: z.number({
         required_error: "A quantidade de dias para locação é obrigatória!",
         invalid_type_error: "A quantidade de dias para locação deve ser um número!"
     })
-    .positive("A quantidade de dias para locação deve ser um número positivo!")
+        .positive("A quantidade de dias para locação deve ser um número positivo!")
 })
 
 export const emprestimoValidator = (emprestimo, partial = null) => {
@@ -44,7 +44,7 @@ export async function createEmprestimo(emprestimo) {
             id_exemplar: true
         }
     })
-    
+
     return result
 }
 
@@ -57,6 +57,28 @@ export async function listEmprestimo() {
             id_leitor: true,
             id_exemplar: true
         }
+    })
+
+    return result
+}
+
+export async function listEmprestimosAtrasados() {
+    const dataAtual = new Date()
+
+    const emprestimos = await prisma.Emprestimo.findMany({
+        select: {
+            id: true,
+            dataInicio: true,
+            diasLocacao: true,
+            id_leitor: true,
+            id_exemplar: true
+        }
+    })
+
+    const result = emprestimos.filter(e => {
+        const dataDevolicao = new Date(e.dataInicio)
+        dataDevolicao.setDate(dataDevolicao.getDate() + e.diasLocacao)
+        return dataDevolicao.getTime() < dataAtual.getTime()
     })
 
     return result
@@ -98,7 +120,7 @@ export async function updateEmprestimo(id, emprestimo) {
     const result = await prisma.Emprestimo.delete({
         where: {
             id: id
-        }, 
+        },
         data: emprestimo,
         select: {
             id: true,

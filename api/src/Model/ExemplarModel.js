@@ -47,6 +47,22 @@ export async function listExemplar() {
     return result
 }
 
+export async function listExemplarDisponivel() {
+    const result = await prisma.Exemplar.findMany({
+        where: {
+            disponivel: true
+        },
+        select: {
+            id: true,
+            id_obra: true,
+            numeroInventario: true,
+            disponivel: true
+        }
+    })
+
+    return result
+}
+
 export async function getExemplarById(id) {
     const result = await prisma.Exemplar.findUnique({
         where: {
