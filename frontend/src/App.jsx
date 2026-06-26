@@ -36,30 +36,31 @@ function AppContent() {
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [obrasApi, setObrasApi] = useState(null);
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoadingData(true)
+  const loadData = async () => {
+    setIsLoadingData(true)
 
-      try{
-        const responseObras = await apiFetch("/obra/list", {}, token)
-        setObrasApi(responseObras.data)
+    try{
+      const responseObras = await apiFetch("/obra/list", {}, token)
+      setObrasApi(responseObras.data)
 
-        const responseExemplares = await apiFetch("/exemplar/list", {}, token)
-        setExemplares(responseExemplares.data)
+      const responseExemplares = await apiFetch("/exemplar/list", {}, token)
+      setExemplares(responseExemplares.data)
 
-        const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
-        setEmprestimos(responseEmprestimo.data)
+      const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
+      setEmprestimos(responseEmprestimo.data)
 
-        console.log(emprestimos)
-      }finally{
-        setIsLoadingData(false)
-      }
+      console.log(emprestimos)
+    }finally{
+      setIsLoadingData(false)
     }
+  }
+
+  useEffect(() => {
 
     if(isAuthenticated){
       loadData()
     }
-  }, [isAuthenticated])
+  }, [])
 
   // === DRAWER STATE ===
   const [loanDrawerOpen, setLoanDrawerOpen] = useState(false);

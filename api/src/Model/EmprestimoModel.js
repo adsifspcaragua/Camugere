@@ -41,7 +41,9 @@ export async function createEmprestimo(emprestimo) {
             dataInicio: true,
             diasLocacao: true,
             id_leitor: true,
-            id_exemplar: true
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
         }
     })
 
@@ -55,7 +57,9 @@ export async function listEmprestimo() {
             dataInicio: true,
             diasLocacao: true,
             id_leitor: true,
-            id_exemplar: true
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
         }
     })
 
@@ -71,7 +75,9 @@ export async function listEmprestimosAtrasados() {
             dataInicio: true,
             diasLocacao: true,
             id_leitor: true,
-            id_exemplar: true
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
         }
     })
 
@@ -93,7 +99,9 @@ export async function getEmprestimoById(id) {
             dataInicio: true,
             diasLocacao: true,
             id_leitor: true,
-            id_exemplar: true
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
         }
     })
 
@@ -109,7 +117,9 @@ export async function deleteEmprestimo(id) {
             dataInicio: true,
             diasLocacao: true,
             id_leitor: true,
-            id_exemplar: true
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
         }
     })
 
@@ -127,7 +137,9 @@ export async function updateEmprestimo(id, emprestimo) {
             dataInicio: true,
             diasLocacao: true,
             id_leitor: true,
-            id_exemplar: true
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
         }
     })
 
