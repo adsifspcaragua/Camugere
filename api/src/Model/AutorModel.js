@@ -7,6 +7,11 @@ const autorSchema = z.object({
     nome: z.string({
         required_error: "O nome é obrigatório",
         invalid_type_error: "O nome deve ser uma string"
+    }),
+    
+    sobrenome: z.string({
+        required_error: "O nome é obrigatório",
+        invalid_type_error: "O nome deve ser uma string"
     })
 })
 
@@ -23,7 +28,8 @@ export async function createAutor(autor) {
         data: autor,
         select: {
             id: true,
-            nome: true
+            nome: true,
+            sobrenome: true
         }
     })
     
@@ -34,7 +40,8 @@ export async function listAutor() {
     const result = await prisma.Autor.findMany({
         select: {
             id: true,
-            nome: true
+            nome: true,
+            sobrenome: true
         }
     })
 
@@ -48,7 +55,8 @@ export async function getAutorById(id) {
         },
         select: {
             id: true,
-            nome: true
+            nome: true,
+            sobrenome: true
         }
     })
     
@@ -61,7 +69,8 @@ export async function deleteAutor(id) {
             id: id
         }, select: {
             id: true,
-            nome: true
+            nome: true,
+            sobrenome: true
         }
     })
 
@@ -76,7 +85,8 @@ export async function updateAutor(id, autor) {
         data: autor,
         select: {
             id: true,
-            nome: true
+            nome: true,
+            sobrenome: true
         }
     })
 
