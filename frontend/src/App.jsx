@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider, useToast } from "./context/ToastContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import NewLoanDrawer from "./components/NewLoanDrawer";
@@ -14,12 +15,15 @@ import LeitoresPage from "./pages/LeitoresPage";
 import EmprestimosPage from "./pages/EmprestimosPage";
 import RelatoriosPage from "./pages/RelatoriosPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
+import LoginPage from "./pages/LoginPage";
 import { mockExemplares, mockEmprestimos, mockObras, mockLeitores } from "./data/mockData";
+import { apiFetch } from "./utils/api.js";
 
 function AppContent() {
   const [activePage, setActivePage] = useState("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
   const { addToast } = useToast();
+  const { isAuthenticated, isLoading, token } = useAuth();
 
   // === DATA STATE ===
   const [obras, setObras] = useState(mockObras);
@@ -28,6 +32,34 @@ function AppContent() {
   const [emprestimos, setEmprestimos] = useState(
     mockEmprestimos.map((e) => ({ ...e, status: "ativo", dataDevolvido: null }))
   );
+
+  const [isLoadingData, setIsLoadingData] = useState(true)
+  const [obrasApi, setObrasApi] = useState(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoadingData(true)
+
+      try{
+        const responseObras = await apiFetch("/obra/list", {}, token)
+        setObrasApi(responseObras.data)
+
+        const responseExemplares = await apiFetch("/exemplar/list", {}, token)
+        setExemplares(responseExemplares.data)
+
+        const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
+        setEmprestimos(responseEmprestimo.data)
+
+        console.log(emprestimos)
+      }finally{
+        setIsLoadingData(false)
+      }
+    }
+
+    if(isAuthenticated){
+      loadData()
+    }
+  }, [isAuthenticated])
 
   // === DRAWER STATE ===
   const [loanDrawerOpen, setLoanDrawerOpen] = useState(false);
@@ -39,6 +71,7 @@ function AppContent() {
   const [confirmDialog, setConfirmDialog] = useState(null);
 
   // Body scroll lock when any drawer is open
+  // Trava o scroll da página caso um drawer esteja aberto
   useEffect(() => {
     const anyOpen = loanDrawerOpen || returnDrawerOpen || obraDrawerOpen || leitorDrawerOpen || confirmDialog;
     document.body.style.overflow = anyOpen ? "hidden" : "";
@@ -46,6 +79,7 @@ function AppContent() {
   }, [loanDrawerOpen, returnDrawerOpen, obraDrawerOpen, leitorDrawerOpen, confirmDialog]);
 
   // Global keyboard shortcuts
+  // Seta atalhos: e -> emprestimo; d -> devolução;
   useEffect(() => {
     const handler = (e) => {
       const tag = document.activeElement?.tagName;
@@ -57,7 +91,8 @@ function AppContent() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  // Ctrl+K / slash to focus search
+  // Ctrl+K / slash to focus search]
+  // Seta atalhos: Ctrl + k ou / -> foca no input de busca;
   useEffect(() => {
     const handler = (e) => {
       if ((e.ctrlKey && e.key === "k") || (e.key === "/" && document.activeElement?.tagName !== "INPUT")) {
@@ -72,34 +107,51 @@ function AppContent() {
   // ============ EMPRÉSTIMO CRUD ============
 
   const handleNewLoan = useCallback((idExemplar, idLeitor) => {
+    //Procura o exemplar no banco, e troca o status de disponível pra false
     setExemplares((prev) => prev.map((e) => e.idExemplar === idExemplar ? { ...e, disponivel: false } : e));
+
+    // pega a data de hora sem a hora
     const today = new Date().toISOString().split("T")[0];
+
+    // seta a data de retorno para 14 dias
     const returnDate = new Date();
     returnDate.setDate(returnDate.getDate() + 14);
+
+    //cria um objeto emprestimo
     const newEmprestimo = {
       idEmprestimo: Date.now(), idExemplar, idLeitor,
       dataInicio: today, dataDevolucaoPrevista: returnDate.toISOString().split("T")[0],
       status: "ativo", dataDevolvido: null,
     };
+
+    // adiciona o novo emprestimo no useState
     setEmprestimos((prev) => [...prev, newEmprestimo]);
+
     const ex = exemplares.find((e) => e.idExemplar === idExemplar);
     const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
     const leitor = leitores.find((l) => l.idLeitor === idLeitor);
     addToast(`Empréstimo registrado: ${obra?.titulo || "Livro"} → ${leitor?.nome || "Leitor"}`);
+
   }, [exemplares, obras, leitores, addToast]);
 
+  // metodo para registrar a devolução de um exemplar
   const handleReturn = useCallback((idExemplar) => {
+    // procura o exemplar e seta a variavel disponivel para true
     setExemplares((prev) => prev.map((e) => e.idExemplar === idExemplar ? { ...e, disponivel: true } : e));
+
+    // pega a data de devolução
     const today = new Date().toISOString().split("T")[0];
     setEmprestimos((prev) => prev.map((e) =>
       e.idExemplar === idExemplar && e.status === "ativo"
         ? { ...e, status: "devolvido", dataDevolvido: today } : e
     ));
+
     const ex = exemplares.find((e) => e.idExemplar === idExemplar);
     const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
     addToast(`Devolução registrada: ${obra?.titulo || "Livro"} retornado ao acervo`);
   }, [exemplares, obras, addToast]);
 
+  //método para renovar um empréstimo
   const handleRenewLoan = useCallback((idEmprestimo) => {
     setEmprestimos((prev) => prev.map((e) => {
       if (e.idEmprestimo === idEmprestimo && e.status === "ativo") {
@@ -114,7 +166,9 @@ function AppContent() {
 
   // ============ OBRA CRUD ============
 
+  // metodo para criar ou editar uma obra
   const handleObraSubmit = useCallback((data) => {
+    //verifica se o objeto veio com id, se sim edita a obra, se nao cria outra
     if (data.idObra) {
       // Edit
       setObras((prev) => prev.map((o) => o.idObra === data.idObra
@@ -123,7 +177,9 @@ function AppContent() {
       addToast(`Obra "${data.titulo}" atualizada`);
     } else {
       // Create
+      //cria um novo id
       const newId = Math.max(0, ...obras.map((o) => o.idObra)) + 1;
+      //cria uma obra
       const newObra = { idObra: newId, titulo: data.titulo, autor: data.autor, cdd: data.cdd, capa: data.capa };
       setObras((prev) => [...prev, newObra]);
       // Generate exemplares
@@ -139,8 +195,11 @@ function AppContent() {
     setEditingObra(null);
   }, [obras, exemplares, addToast]);
 
+  //metodo para deletar a obra
   const handleDeleteObra = useCallback((idObra) => {
+    //acha a obra com id passado
     const obra = obras.find((o) => o.idObra === idObra);
+    //acha os exemplares da obra
     const obraExemplares = exemplares.filter((e) => e.idObra === idObra);
     const hasActive = obraExemplares.some((ex) =>
       emprestimos.some((e) => e.idExemplar === ex.idExemplar && e.status === "ativo")
@@ -158,7 +217,9 @@ function AppContent() {
     });
   }, [obras, exemplares, emprestimos, addToast]);
 
+  //metodo para adicionar um exemplar
   const handleAddExemplar = useCallback((idObra) => {
+
     const maxInv = Math.max(0, ...exemplares.map((e) => parseInt(e.numeroInventario.replace("INV-", ""))));
     const newExemplar = {
       idExemplar: Date.now(), idObra,
@@ -170,6 +231,7 @@ function AppContent() {
     addToast(`Novo exemplar adicionado a "${obra?.titulo}"`);
   }, [exemplares, obras, addToast]);
 
+  //metodo para deletar um exemplar
   const handleDeleteExemplar = useCallback((idExemplar) => {
     const ex = exemplares.find((e) => e.idExemplar === idExemplar);
     if (!ex?.disponivel) { addToast("Não é possível excluir exemplar emprestado", "error"); return; }
@@ -245,7 +307,7 @@ function AppContent() {
           <DashboardPage
             exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
             onOpenLoan={() => setLoanDrawerOpen(true)} onOpenReturn={() => setReturnDrawerOpen(true)}
-            onNavigate={setActivePage}
+            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData}
           />
         );
       case "acervo":
@@ -286,6 +348,18 @@ function AppContent() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50 text-surface-700 dark:bg-surface-950 dark:text-surface-200">
+        <p>Carregando...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="flex min-h-screen bg-surface-50 transition-colors duration-300 dark:bg-surface-950">
       <Sidebar activePage={activePage} onNavigate={setActivePage} overdueCount={overdueCount} />
@@ -311,12 +385,16 @@ function AppContent() {
   );
 }
 
-export default function App() {
+function App() {
   return (
     <ThemeProvider>
       <ToastProvider>
-        <AppContent />
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </ToastProvider>
     </ThemeProvider>
   );
 }
+
+export default App;

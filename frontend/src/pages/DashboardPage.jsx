@@ -10,17 +10,23 @@ import {
 import StatCard from "../components/StatCard";
 import RecentMovements from "../components/RecentMovements";
 
-export default function DashboardPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onOpenReturn, onNavigate }) {
+export default function DashboardPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onOpenReturn, onNavigate, obrasApi, isLoading }) {
   const activeEmprestimos = useMemo(() => emprestimos.filter((e) => e.status === "ativo"), [emprestimos]);
 
   const stats = useMemo(() => {
-    const totalObras = obras.length;
+    if(isLoading) return { totalObras: 0, totalExemplares: 0, emprestimosAtivos: 0, atrasos: 0 };
+
+    const totalObras = obrasApi.length
     const totalExemplares = exemplares.length;
     const emprestimosAtivos = activeEmprestimos.length;
     const today = new Date().toISOString().split("T")[0];
     const atrasos = activeEmprestimos.filter((e) => e.dataDevolucaoPrevista < today).length;
     return { totalObras, totalExemplares, emprestimosAtivos, atrasos };
-  }, [obras, exemplares, activeEmprestimos]);
+  }, [obrasApi, obras, exemplares, activeEmprestimos, isLoading]);
+
+  if(isLoading){
+    return <div>Carregando...</div>
+  }
 
   return (
     <div className="space-y-6">

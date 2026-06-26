@@ -74,6 +74,7 @@ model ObraAutor{
 model Autor{
   id    Int   @id @default(autoincrement())
   nome    String    @db.VarChar(40)
+  sobrenome    String    @db.VarChar(40)
 
   obras ObraAutor[]
 }
@@ -118,6 +119,8 @@ model Emprestimo{
   id    Int     @id @default(autoincrement())
   dataInicio    DateTime    @default(now())
   diasLocacao   Int
+  statusDevolucao   Boolean   @default(false)
+  dataDevolucao     DateTime?    
   
   id_leitor     Int
   leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)

@@ -20,17 +20,27 @@ async function main() {
 		cdds.push(created);
 	}
 
-	// Create Authors (5)
-	const autorNames = ['João Silva', 'Maria Oliveira', 'Carlos Souza', 'Ana Pereira', 'Luiz Gomes'];
+	// Create Authors (10)
+	const autorNames = [
+		{nome: 'João', sobrenome: 'Silva'},
+		{nome: 'Maria', sobrenome: 'Oliveira'}, 
+		{nome: 'Carlos', sobrenome: 'Souza'}, 
+		{nome: 'Ana', sobrenome: 'Pereira'}, 
+		{nome: 'Luiz', sobrenome: 'Gomes'},
+		{nome: 'Fernanda', sobrenome: 'Almeida'},
+		{nome: 'Paulo', sobrenome: 'Santana'},
+		{nome: 'Beatriz', sobrenome: 'Ribeiro'},
+		{nome: 'Marcos', sobrenome: 'Lima'},
+		{nome: 'Patrícia', sobrenome: 'Fernandes'}];
 	const autores = [];
-	for (const nome of autorNames) {
-		const created = await prisma.autor.create({ data: { nome } });
-		autores.push(created);
+	for(const autor of autorNames){
+		const created = await prisma.autor.create({data: autor})
+		autores.push(created)
 	}
 
-	// Create Users (10)
+	// Create Users (20)
 	const usuarios = [];
-	for (let i = 1; i <= 10; i++) {
+	for (let i = 1; i <= 20; i++) {
 		const plain = `hash${i}`;
 		const hashed = await bcrypt.hash(plain, 10);
 		const u = await prisma.usuario.create({
@@ -43,9 +53,9 @@ async function main() {
 		usuarios.push(u);
 	}
 
-	// Create Leitors (5) using first 5 users
+	// Create Leitors (12) using first 12 users
 	const leitores = [];
-	for (let i = 0; i < 5; i++) {
+	for (let i = 0; i < 12; i++) {
 		const l = await prisma.leitor.create({
 			data: {
 				id_usuario: usuarios[i].id,
@@ -56,9 +66,9 @@ async function main() {
 		leitores.push(l);
 	}
 
-	// Create Bibliotecarios (5) using users 6-10
+	// Create Bibliotecarios (5) using users 13-17
 	const bibliotecarios = [];
-	for (let i = 5; i < 10; i++) {
+	for (let i = 12; i < 17; i++) {
 		const b = await prisma.bibliotecario.create({
 			data: {
 				id_usuario: usuarios[i].id,
@@ -67,9 +77,9 @@ async function main() {
 		bibliotecarios.push(b);
 	}
 
-	// Create Obras (5), each linked to a CDD
+	// Create Obras (10), each linked to a CDD
 	const obras = [];
-	for (let i = 1; i <= 5; i++) {
+	for (let i = 1; i <= 10; i++) {
 		const obra = await prisma.obra.create({
 			data: {
 				titulo: `Obra Titulo ${i}`,
@@ -86,15 +96,15 @@ async function main() {
 		obras.push(obra);
 	}
 
-	// Create Exemplares: 2 exemplares por obra (>=10 exemplares)
+	// Create Exemplares: 5 exemplares por obra (>=50 exemplares)
 	const exemplares = [];
 	for (const obra of obras) {
-		for (let n = 1; n <= 2; n++) {
+		for (let n = 1; n <= 5; n++) {
 			const ex = await prisma.exemplar.create({
 				data: {
 					id_obra: obra.id,
-					numeroInventario: `${obra.id}-${n}`.slice(0, 6),
-					disponivel: n % 2 === 0,
+					numeroInventario: `${obra.id}-${n}`,
+					disponivel: true,
 				},
 			});
 			exemplares.push(ex);
@@ -113,17 +123,25 @@ async function main() {
 		}
 	}
 
-	// Create Emprestimos (5) linking leitores to exemplares
+	// Create Emprestimos linking leitores to exemplares
 	const emprestimos = [];
-	for (let i = 0; i < 5; i++) {
+	const emprestimosToCreate = Math.min(15, leitores.length, exemplares.length);
+	for (let i = 0; i < emprestimosToCreate; i++) {
+		const exemplar = exemplares[i];
+		const leitor = leitores[i % leitores.length];
+
 		const e = await prisma.emprestimo.create({
 			data: {
 				dataInicio: new Date(),
-				diasLocacao: 7 + i,
-				id_leitor: leitores[i % leitores.length].id,
-				id_exemplar: exemplares[i].id,
+				diasLocacao: 7 + (i % 10),
+				id_leitor: leitor.id,
+				id_exemplar: exemplar.id,
 			},
 		});
+
+		// After creating the emprestimo, mark the exemplar as unavailable
+		await prisma.exemplar.update({ where: { id: exemplar.id }, data: { disponivel: false } });
+
 		emprestimos.push(e);
 	}
 
