@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { getExemplarById } from "../../services/exemplarService.js";
 import { getObraById } from "../../services/obraService.js";
@@ -6,29 +6,37 @@ import { getLeitorById } from "../../services/leitorService.js";
 
 export default function RecentMovements({ emprestimos, exemplares, obras, leitores, onNavigate }) {
 
-  const data = useMemo(() => {
-    const emprestimosRecentes = emprestimos.sort((a, b) => a.dataInicio < b.dataInicio).slice(0, 6)
-    return emprestimosRecentes.map(async (emp) => {
-      const exe = await getExemplarById(emp.id_exemplar)
-      const lei = await getLeitorById(emp.id_leitor)
-      const obr = await getObraById(exe.id_obra)
-      return { emprestimo: emp, exemplar: exe, leitor: lei, obra: obr }
-    })
-  })
+  const [data, setData] = useState([])
 
-  console.log(data)
+  useEffect(() => {
+    let cancelado = false;
 
-  const enriched = useMemo(() => {
-    return emprestimos
-      .map((emp) => {
-        const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar);
-        const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
-        const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor);
-        return { ...emp, exemplar: ex, obra, leitor };
-      })
-      .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
-      .slice(0, 6);
-  }, [emprestimos, exemplares, obras, leitores]);
+    async function carregarDados() {
+      const emprestimosRecentes = [...emprestimos]
+        .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
+        .slice(0, 6);
+
+      const resultados = await Promise.all(
+        emprestimosRecentes.map(async (emp) => {
+          const exe = await getExemplarById(emp.id_exemplar);
+          const lei = await getLeitorById(emp.id_leitor);
+          const obr = await getObraById(exe.data.id_obra);
+          return { emprestimo: emp, exemplar: exe.data, leitor: lei.data, obra: obr.data };
+        })
+      );
+
+      if (!cancelado) {
+        setData(resultados);
+      }
+    }
+
+    carregarDados()
+    console.log(data)
+
+    return () => {
+      cancelado = true;
+    };
+  }, [emprestimos])
 
   return (
     <div className="rounded-2xl border border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
@@ -41,7 +49,12 @@ export default function RecentMovements({ emprestimos, exemplares, obras, leitor
         </span>
       </div>
       <div className="divide-y divide-surface-100 dark:divide-surface-800">
-        {enriched.map((mov) => (
+        {data.map((item) => (
+          <div>
+            <p>{item.emprestimo.id}</p>
+          </div>
+        ))}
+        {/* {enriched.map((mov) => (
           <button
             key={mov.idEmprestimo}
             onClick={() => onNavigate && onNavigate("emprestimos")}
@@ -72,7 +85,7 @@ export default function RecentMovements({ emprestimos, exemplares, obras, leitor
           <div className="px-5 py-8 text-center text-base text-surface-400 dark:text-surface-500">
             Nenhum empréstimo ativo.
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
     const response = await fetch(`${API_BASE_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, hash: password }),
+      body: JSON.stringify({ email: email, hash: password }),
     });
 
     if (!response.ok) {
