@@ -11,18 +11,25 @@ import StatCard from "../components/StatCard";
 import RecentMovements from "../components/RecentMovements";
 
 export default function DashboardPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onOpenReturn, onNavigate, obrasApi, isLoading }) {
-  const activeEmprestimos = useMemo(() => emprestimos.filter((e) => e.status === "ativo"), [emprestimos]);
 
   const stats = useMemo(() => {
     if(isLoading) return { totalObras: 0, totalExemplares: 0, emprestimosAtivos: 0, atrasos: 0 };
 
     const totalObras = obrasApi.length
     const totalExemplares = exemplares.length;
-    const emprestimosAtivos = activeEmprestimos.length;
+    const emprestimosAtivos = emprestimos.filter((e) => {
+      const dataFim = new Date(e.dataInicio)
+      dataFim.setDate(dataFim.getDate() + e.diasLocacao);
+      return dataFim >= new Date();
+    }).length
+    const atrasos = emprestimos.filter((e) => {
+      const dataFim = new Date(e.dataInicio)
+      dataFim.setDate(dataFim.getDate() + e.diasLocacao);
+      return dataFim <= new Date();
+    }).length
     const today = new Date().toISOString().split("T")[0];
-    const atrasos = activeEmprestimos.filter((e) => e.dataDevolucaoPrevista < today).length;
     return { totalObras, totalExemplares, emprestimosAtivos, atrasos };
-  }, [obrasApi, obras, exemplares, activeEmprestimos, isLoading]);
+  }, [obrasApi, obras, exemplares, isLoading]);
 
   if(isLoading){
     return <div>Carregando...</div>
@@ -88,7 +95,7 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
         </div>
 
         <div className="lg:col-span-2">
-          <RecentMovements emprestimos={activeEmprestimos} exemplares={exemplares} obras={obras} leitores={leitores} onNavigate={onNavigate} />
+          <RecentMovements emprestimos={emprestimos} exemplares={exemplares} obras={obras} leitores={leitores} onNavigate={onNavigate} />
         </div>
       </div>
     </div>

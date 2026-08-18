@@ -38,9 +38,28 @@ function AppContent() {
 
   const loadData = async () => {
     setIsLoadingData(true)
-    console.log(token)
 
-    try{
+    switch (activePage) {
+      case 'dashboard':
+        try {
+          const responseObras = await apiFetch("/obra/list", {}, token)
+          setObrasApi(responseObras.data)
+
+          const responseExemplares = await apiFetch("/exemplar/list", {}, token)
+          setExemplares(responseExemplares.data)
+
+          const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
+          setEmprestimos(responseEmprestimo.data)
+
+          const resposeLeitores = await apiFetch("/leitor/list", {}, token)
+          setLeitores(resposeLeitores.data)
+
+        } finally {
+          setIsLoadingData(false)
+        }
+    }
+
+    try {
       const responseObras = await apiFetch("/obra/list", {}, token)
       setObrasApi(responseObras.data)
 
@@ -50,17 +69,15 @@ function AppContent() {
       const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
       setEmprestimos(responseEmprestimo.data)
 
-      console.log(emprestimos)
-    }finally{
+    } finally {
       setIsLoadingData(false)
     }
   }
 
-  docu
+  // Toda vez que o site carrega uma pagina nova, ou o usuário faz autenticação, faz a requisição na api 
 
   useEffect(() => {
-
-    if(isAuthenticated){
+    if (isAuthenticated) {
       loadData()
     }
   }, [isAuthenticated, activePage])

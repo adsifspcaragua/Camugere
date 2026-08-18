@@ -3,8 +3,8 @@ API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const headers = token ? { "Content-Type": "application/json", "jwt_token": token } : { "Content-Type": "application/json" };
 
-export async function getObraById(id){
-    const response = await fetch(`${API_BASE_URL}obra/get/${id}`, headers)
+export async function getExemplarById(id){
+    const response = await fetch(`${API_BASE_URL}exemplar/get/${id}`, headers)
     const data = await response.json()
 
     return data

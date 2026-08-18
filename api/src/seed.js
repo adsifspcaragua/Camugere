@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client"
-import bcrypt from "bcrypt" 
+import bcrypt from "bcrypt"
 const prisma = new PrismaClient();
 
 async function main() {
@@ -22,19 +22,19 @@ async function main() {
 
 	// Create Authors (10)
 	const autorNames = [
-		{nome: 'João', sobrenome: 'Silva'},
-		{nome: 'Maria', sobrenome: 'Oliveira'}, 
-		{nome: 'Carlos', sobrenome: 'Souza'}, 
-		{nome: 'Ana', sobrenome: 'Pereira'}, 
-		{nome: 'Luiz', sobrenome: 'Gomes'},
-		{nome: 'Fernanda', sobrenome: 'Almeida'},
-		{nome: 'Paulo', sobrenome: 'Santana'},
-		{nome: 'Beatriz', sobrenome: 'Ribeiro'},
-		{nome: 'Marcos', sobrenome: 'Lima'},
-		{nome: 'Patrícia', sobrenome: 'Fernandes'}];
+		{ nome: 'João', sobrenome: 'Silva' },
+		{ nome: 'Maria', sobrenome: 'Oliveira' },
+		{ nome: 'Carlos', sobrenome: 'Souza' },
+		{ nome: 'Ana', sobrenome: 'Pereira' },
+		{ nome: 'Luiz', sobrenome: 'Gomes' },
+		{ nome: 'Fernanda', sobrenome: 'Almeida' },
+		{ nome: 'Paulo', sobrenome: 'Santana' },
+		{ nome: 'Beatriz', sobrenome: 'Ribeiro' },
+		{ nome: 'Marcos', sobrenome: 'Lima' },
+		{ nome: 'Patrícia', sobrenome: 'Fernandes' }];
 	const autores = [];
-	for(const autor of autorNames){
-		const created = await prisma.autor.create({data: autor})
+	for (const autor of autorNames) {
+		const created = await prisma.autor.create({ data: autor })
 		autores.push(created)
 	}
 
@@ -126,13 +126,20 @@ async function main() {
 	// Create Emprestimos linking leitores to exemplares
 	const emprestimos = [];
 	const emprestimosToCreate = Math.min(15, leitores.length, exemplares.length);
+
 	for (let i = 0; i < emprestimosToCreate; i++) {
 		const exemplar = exemplares[i];
 		const leitor = leitores[i % leitores.length];
 
+		// todos os registros nascem com data aleatória entre 0 e 30 dias atrás
+		const diasNoPassado = Math.floor(Math.random() * 31); // 0 a 30
+
+		const dataInicio = new Date();
+		dataInicio.setDate(dataInicio.getDate() - diasNoPassado);
+
 		const e = await prisma.emprestimo.create({
 			data: {
-				dataInicio: new Date(),
+				dataInicio,
 				diasLocacao: 7 + (i % 10),
 				id_leitor: leitor.id,
 				id_exemplar: exemplar.id,

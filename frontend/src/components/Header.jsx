@@ -52,7 +52,7 @@ export default function Header({ onNavigate, searchQuery, onSearchChange, obras 
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-surface-200 bg-white/80 px-6 backdrop-blur-xl transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900/80">
+    <header className="sticky top-0 z-30 h-20 flex justify-between items-center gap-4 border-b border-surface-200 bg-white/80 px-6 backdrop-blur-xl transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900/80">
       {/* Search with Autocomplete */}
       <div ref={ref} className="relative flex-1 max-w-xl">
         <Search
@@ -126,7 +126,7 @@ export default function Header({ onNavigate, searchQuery, onSearchChange, obras 
           )}
         </button>
 
-        <div className="mx-1 h-8 w-px bg-surface-200 dark:bg-surface-700" />
+        {/* <div className="mx-1 h-8 w-px bg-surface-200 dark:bg-surface-700" />
 
         <button
           className="flex items-center gap-2.5 rounded-2xl p-2 pr-4 transition-colors duration-200 hover:bg-surface-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:hover:bg-surface-800"
@@ -138,7 +138,7 @@ export default function Header({ onNavigate, searchQuery, onSearchChange, obras 
           <span className="hidden text-base font-medium text-surface-700 dark:text-surface-300 sm:inline">
             Mariana
           </span>
-        </button>
+        </button> */}
       </div>
     </header>
   );

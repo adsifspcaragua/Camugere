@@ -1,7 +1,23 @@
 import { useMemo } from "react";
 import { ArrowUpRight } from "lucide-react";
+import { getExemplarById } from "../../services/exemplarService.js";
+import { getObraById } from "../../services/obraService.js";
+import { getLeitorById } from "../../services/leitorService.js";
 
 export default function RecentMovements({ emprestimos, exemplares, obras, leitores, onNavigate }) {
+
+  const data = useMemo(() => {
+    const emprestimosRecentes = emprestimos.sort((a, b) => a.dataInicio < b.dataInicio).slice(0, 6)
+    return emprestimosRecentes.map(async (emp) => {
+      const exe = await getExemplarById(emp.id_exemplar)
+      const lei = await getLeitorById(emp.id_leitor)
+      const obr = await getObraById(exe.id_obra)
+      return { emprestimo: emp, exemplar: exe, leitor: lei, obra: obr }
+    })
+  })
+
+  console.log(data)
+
   const enriched = useMemo(() => {
     return emprestimos
       .map((emp) => {
