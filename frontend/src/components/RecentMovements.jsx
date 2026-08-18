@@ -14,14 +14,14 @@ export default function RecentMovements({ emprestimos, exemplares, obras, leitor
     async function carregarDados() {
       const emprestimosRecentes = [...emprestimos]
         .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
-        .slice(0, 6);
+        .slice(0, 5);
 
       const resultados = await Promise.all(
         emprestimosRecentes.map(async (emp) => {
           const exe = await getExemplarById(emp.id_exemplar);
           const lei = await getLeitorById(emp.id_leitor);
           const obr = await getObraById(exe.data.id_obra);
-          return { emprestimo: emp, exemplar: exe.data, leitor: lei.data, obra: obr.data };
+          return { emprestimo: emp, exemplar: exe.data, leitor: lei.usuario, obra: obr.data };
         })
       );
 
@@ -31,12 +31,11 @@ export default function RecentMovements({ emprestimos, exemplares, obras, leitor
     }
 
     carregarDados()
-    console.log(data)
 
     return () => {
       cancelado = true;
     };
-  }, [emprestimos])
+  }, [])
 
   return (
     <div className="rounded-2xl border border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
@@ -50,13 +49,7 @@ export default function RecentMovements({ emprestimos, exemplares, obras, leitor
       </div>
       <div className="divide-y divide-surface-100 dark:divide-surface-800">
         {data.map((item) => (
-          <div>
-            <p>{item.emprestimo.id}</p>
-          </div>
-        ))}
-        {/* {enriched.map((mov) => (
           <button
-            key={mov.idEmprestimo}
             onClick={() => onNavigate && onNavigate("emprestimos")}
             className="w-full flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-surface-50 focus:bg-surface-50 focus:outline-none dark:hover:bg-surface-800/50 dark:focus:bg-surface-800/50 text-left cursor-pointer"
           >
@@ -65,27 +58,27 @@ export default function RecentMovements({ emprestimos, exemplares, obras, leitor
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">
-                {mov.obra?.titulo || "Obra desconhecida"}
+                {item.obra.titulo}
               </p>
               <p className="truncate text-base text-surface-400 dark:text-surface-500">
-                {mov.leitor?.nome || "—"} · {mov.exemplar?.numeroInventario}
+                {item.leitor.nome || ''} · Inventário -  {item.exemplar?.numeroInventario}
               </p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-base font-medium text-surface-600 dark:text-surface-300">
-                {new Date(mov.dataInicio).toLocaleDateString("pt-BR")}
+                {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
               </p>
               <p className="text-base text-surface-400 dark:text-surface-500">
-                Até {new Date(mov.dataDevolucaoPrevista).toLocaleDateString("pt-BR")}
+                Até
+                {((item) => {
+                  const data = new Date(item.emprestimo.dataInicio)
+                  data.setDate(data.getDate() + item.emprestimo.diasLocacao)
+                  return " " + data.toLocaleDateString('pt-BR')
+                })(item)}
               </p>
             </div>
           </button>
         ))}
-        {enriched.length === 0 && (
-          <div className="px-5 py-8 text-center text-base text-surface-400 dark:text-surface-500">
-            Nenhum empréstimo ativo.
-          </div>
-        )} */}
       </div>
     </div>
   );
