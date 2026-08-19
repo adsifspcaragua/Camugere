@@ -16,7 +16,6 @@ import EmprestimosPage from "./pages/EmprestimosPage";
 import RelatoriosPage from "./pages/RelatoriosPage";
 import ConfiguracoesPage from "./pages/ConfiguracoesPage";
 import LoginPage from "./pages/LoginPage";
-import { mockExemplares, mockEmprestimos, mockObras, mockLeitores } from "./data/mockData";
 import { apiFetch } from "./utils/api.js";
 
 function AppContent() {
@@ -26,12 +25,10 @@ function AppContent() {
   const { isAuthenticated, isLoading, token } = useAuth();
 
   // === DATA STATE ===
-  const [obras, setObras] = useState(mockObras);
-  const [leitores, setLeitores] = useState(mockLeitores);
-  const [exemplares, setExemplares] = useState(mockExemplares);
-  const [emprestimos, setEmprestimos] = useState(
-    mockEmprestimos.map((e) => ({ ...e, status: "ativo", dataDevolvido: null }))
-  );
+  const [obras, setObras] = useState([]);
+  const [leitores, setLeitores] = useState([]);
+  const [exemplares, setExemplares] = useState([]);
+  const [emprestimos, setEmprestimos] = useState([]);
 
   const [isLoadingData, setIsLoadingData] = useState(true)
   const [obrasApi, setObrasApi] = useState(null);
@@ -75,7 +72,6 @@ function AppContent() {
   }
 
   // Toda vez que o site carrega uma pagina nova, ou o usuário faz autenticação, faz a requisição na api 
-
   useEffect(() => {
     if (isAuthenticated) {
       loadData()
@@ -328,7 +324,7 @@ function AppContent() {
           <DashboardPage
             exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
             onOpenLoan={() => setLoanDrawerOpen(true)} onOpenReturn={() => setReturnDrawerOpen(true)}
-            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData}
+            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData} isAuthenticated={isAuthenticated} 
           />
         );
       case "acervo":

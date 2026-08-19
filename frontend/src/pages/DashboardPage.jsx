@@ -10,7 +10,7 @@ import {
 import StatCard from "../components/StatCard";
 import RecentMovements from "../components/RecentMovements";
 
-export default function DashboardPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onOpenReturn, onNavigate, obrasApi, isLoading }) {
+export default function DashboardPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onOpenReturn, onNavigate, obrasApi, isLoading, isAuthenticated }) {
 
   const stats = useMemo(() => {
     if(isLoading) return { totalObras: 0, totalExemplares: 0, emprestimosAtivos: 0, atrasos: 0 };
@@ -95,7 +95,7 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
         </div>
 
         <div className="lg:col-span-2">
-          <RecentMovements emprestimos={emprestimos} exemplares={exemplares} obras={obras} leitores={leitores} onNavigate={onNavigate} />
+          <RecentMovements emprestimos={emprestimos} exemplares={exemplares} obras={obras} leitores={leitores} onNavigate={onNavigate} isAuthenticated={isAuthenticated} />
         </div>
       </div>
     </div>

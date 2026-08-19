@@ -2,11 +2,16 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X, BookOpen, User, Calendar, Search, Hash, ChevronRight } from "lucide-react";
 import Autocomplete from "./Autocomplete";
 import { mockObras, mockLeitores } from "../data/mockData";
+import { listLeitores } from "../../services/leitorService.js";
+import { listExemplaresDisponiveis } from "../../services/exemplarService.js";
+import { getUsuarioById } from "../../services/usuarioService.js";
 
-export default function NewLoanDrawer({ isOpen, onClose, exemplares, emprestimos, onConfirm }) {
+export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares, onConfirm }) {
   const [selectedLeitor, setSelectedLeitor] = useState(null);
   const [selectedExemplar, setSelectedExemplar] = useState(null);
   const [dataDevolucao, setDataDevolucao] = useState("");
+  const [exemplaresDisponiveis, setExemplares] = useState([])
+  const [leitores, setLeitores] = useState([])
   const drawerRef = useRef(null);
 
   useEffect(() => {
@@ -18,6 +23,24 @@ export default function NewLoanDrawer({ isOpen, onClose, exemplares, emprestimos
       setSelectedExemplar(null);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const lei = await listLeitores()
+      const dataLeitores = await Promise.all( 
+        lei.data.map(async (l) => {
+          const usu = await getUsuarioById(l.id_usuario)
+          return { usuario: usu.data, leitor: l }
+      }))
+      console.log(dataLeitores)
+      setLeitores(dataLeitores)
+
+      const exe = await listExemplaresDisponiveis()
+      setExemplares(exe.data)
+    }
+
+    loadData()
+  }, [])
 
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === "Escape") onClose(); };
@@ -34,17 +57,6 @@ export default function NewLoanDrawer({ isOpen, onClose, exemplares, emprestimos
       return { ...e, titulo: obra?.titulo || "—", autor: obra?.autor || "—", capa: obra?.capa || "📕" };
     });
   }, [exemplares]);
-
-  // Count active loans per reader
-  const loanCountByReader = useMemo(() => {
-    const counts = {};
-    emprestimos.forEach((e) => {
-      if (e.status === "ativo") {
-        counts[e.idLeitor] = (counts[e.idLeitor] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [emprestimos]);
 
   const filterLeitores = useCallback((items, query) => {
     if (!query.trim()) return items;
@@ -115,25 +127,15 @@ export default function NewLoanDrawer({ isOpen, onClose, exemplares, emprestimos
                 Leitor
               </label>
               <Autocomplete
-                items={mockLeitores}
+                items={leitores}
                 filterFn={filterLeitores}
                 renderItem={(l) => {
-                  const count = loanCountByReader[l.idLeitor] || 0;
                   return (
                     <div className="flex w-full items-center justify-between">
                       <div>
-                        <p className="text-base font-medium text-surface-800 dark:text-surface-200">{l.nome}</p>
-                        <p className="text-base text-surface-400 dark:text-surface-500">{l.contato}</p>
+                        <p className="text-base font-medium text-surface-800 dark:text-surface-200">{l.usuario.nome}</p>
+                        <p className="text-base text-surface-400 dark:text-surface-500">{l.leitor.telefone}</p>
                       </div>
-                      {count > 0 && (
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                          count >= 3
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400"
-                            : "bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400"
-                        }`}>
-                          {count} livro{count !== 1 && "s"}
-                        </span>
-                      )}
                     </div>
                   );
                 }}

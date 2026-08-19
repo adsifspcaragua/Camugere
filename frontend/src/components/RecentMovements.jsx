@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { getExemplarById } from "../../services/exemplarService.js";
 import { getObraById } from "../../services/obraService.js";
 import { getLeitorById } from "../../services/leitorService.js";
 
-export default function RecentMovements({ emprestimos, exemplares, obras, leitores, onNavigate }) {
+export default function RecentMovements({ emprestimos, onNavigate }) {
 
   const [data, setData] = useState([])
 

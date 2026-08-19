@@ -15,3 +15,16 @@ export async function getLeitorById(id){
 
     return data
 }
+
+export async function listLeitores() {
+    const response = await fetch(`${API_BASE_URL}/leitor/list`, {headers})
+    const data = await response.json()
+
+    if(!response.ok){
+        const errorJson = await response.json().catch(() => null);
+        const message = errorJson?.message || "Falha ao autenticar";
+        console.log(message)
+    }
+
+    return data
+}
