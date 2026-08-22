@@ -32,7 +32,6 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
           const usu = await getUsuarioById(l.id_usuario)
           return { usuario: usu.data, leitor: l }
       }))
-      console.log(dataLeitores)
       setLeitores(dataLeitores)
 
       const exe = await listExemplaresDisponiveis()
@@ -61,7 +60,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
   const filterLeitores = useCallback((items, query) => {
     if (!query.trim()) return items;
     const q = query.toLowerCase();
-    return items.filter((l) => l.nome.toLowerCase().includes(q) || l.contato.toLowerCase().includes(q));
+    return items.filter((l) => l.usuario.nome.toLowerCase().includes(q) || l.leitor.telefone.toLowerCase().includes(q));
   }, []);
 
   const filterExemplares = useCallback((items, query) => {
@@ -84,7 +83,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onConfirm(selectedExemplar.idExemplar, selectedLeitor.idLeitor);
+    onConfirm(selectedExemplar.id, selectedLeitor.leitor.id);
     onClose();
   };
 
@@ -139,10 +138,13 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                     </div>
                   );
                 }}
-                onSelect={(l) => setSelectedLeitor(l)}
+                onSelect={(l) => {
+                  setSelectedLeitor(l)
+                  console.log(selectedLeitor)
+                }}
                 placeholder="Buscar leitor pelo nome..."
                 selected={selectedLeitor}
-                selectedLabel={selectedLeitor?.nome}
+                selectedLabel={selectedLeitor?.usuario.nome}
                 onClear={() => setSelectedLeitor(null)}
                 icon={User}
               />
@@ -208,7 +210,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                   </div>
                   <div className="flex items-center gap-2 text-base text-surface-600 dark:text-surface-300">
                     <ChevronRight size={16} className="text-brand-500" />
-                    <span>Para: <strong>{selectedLeitor.nome}</strong></span>
+                    <span>Para: <strong>{selectedLeitor.usuario.nome}</strong></span>
                   </div>
                   <div className="flex items-center gap-2 text-base text-surface-600 dark:text-surface-300">
                     <ChevronRight size={16} className="text-brand-500" />
