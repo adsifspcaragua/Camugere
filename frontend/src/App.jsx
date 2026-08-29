@@ -123,32 +123,8 @@ function AppContent() {
 
   // ============ EMPRÉSTIMO CRUD ============
 
-  const handleNewLoan = useCallback((idExemplar, idLeitor) => {
-    //Procura o exemplar no banco, e troca o status de disponível pra false
-    setExemplares((prev) => prev.map((e) => e.idExemplar === idExemplar ? { ...e, disponivel: false } : e));
-
-    // pega a data de hora sem a hora
-    const today = new Date().toISOString().split("T")[0];
-
-    // seta a data de retorno para 14 dias
-    const returnDate = new Date();
-    returnDate.setDate(returnDate.getDate() + 14);
-
-    //cria um objeto emprestimo
-    const newEmprestimo = {
-      idEmprestimo: Date.now(), idExemplar, idLeitor,
-      dataInicio: today, dataDevolucaoPrevista: returnDate.toISOString().split("T")[0],
-      status: "ativo", dataDevolvido: null,
-    };
-
-    // adiciona o novo emprestimo no useState
-    setEmprestimos((prev) => [...prev, newEmprestimo]);
-
-    const ex = exemplares.find((e) => e.idExemplar === idExemplar);
-    const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
-    const leitor = leitores.find((l) => l.idLeitor === idLeitor);
+  const handleNewLoan = useCallback(() => {
     addToast(`Empréstimo registrado: ${obra?.titulo || "Livro"} → ${leitor?.nome || "Leitor"}`);
-
   }, [exemplares, obras, leitores, addToast]);
 
   // metodo para registrar a devolução de um exemplar
