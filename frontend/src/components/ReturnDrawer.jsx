@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { X, BookOpen, Search, Hash, CornerDownLeft } from "lucide-react";
 import { mockObras, mockLeitores } from "../data/mockData";
+import { listExemplaresIndisponiveis } from "../../services/exemplarService.js";
 
 export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos, onConfirm }) {
   const [query, setQuery] = useState("");

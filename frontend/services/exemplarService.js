@@ -20,6 +20,21 @@ export async function getExemplarById(id){
 }
 
 export async function listExemplaresDisponiveis(){
+    const headers = getHeaders()
+    const response = await fetch(`${API_BASE_URL}list/disponivel`, {headers})
+
+    if(!response.ok){
+        const errorJson = await response.json().catch(() => null);
+        console.log(errorJson)
+        return
+    }
+
+    const data = await response.json()
+    return data
+}
+
+export async function listExemplaresIndisponiveis(){
+    const headers = getHeaders()
     const response = await fetch(`${API_BASE_URL}list/disponivel`, {headers})
 
     if(!response.ok){

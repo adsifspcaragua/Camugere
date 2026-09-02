@@ -21,6 +21,7 @@ export async function getLeitorById(id){
 }
 
 export async function listLeitores() {
+    const headers = getHeaders()
     const response = await fetch(`${API_BASE_URL}/leitor/list`, {headers})
 
     if(!response.ok){
