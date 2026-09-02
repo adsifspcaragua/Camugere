@@ -13,7 +13,7 @@ import RecentMovements from "../components/RecentMovements";
 export default function DashboardPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onOpenReturn, onNavigate, obrasApi, isLoading, isAuthenticated }) {
 
   const stats = useMemo(() => {
-    if(isLoading) return { totalObras: 0, totalExemplares: 0, emprestimosAtivos: 0, atrasos: 0 };
+    if (isLoading) return { totalObras: 0, totalExemplares: 0, emprestimosAtivos: 0, atrasos: 0 };
 
     const totalObras = obrasApi.length
     const totalExemplares = exemplares.length;
@@ -31,7 +31,7 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
     return { totalObras, totalExemplares, emprestimosAtivos, atrasos };
   }, [obrasApi, obras, exemplares, isLoading]);
 
-  if(isLoading){
+  if (isLoading) {
     return <div>Carregando...</div>
   }
 
@@ -94,9 +94,11 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
           </p>
         </div>
 
-        <div className="lg:col-span-2">
-          <RecentMovements emprestimos={emprestimos} exemplares={exemplares} obras={obras} leitores={leitores} onNavigate={onNavigate} isAuthenticated={isAuthenticated} />
-        </div>
+        { isAuthenticated && (
+          <div className="lg:col-span-2">
+            <RecentMovements emprestimos={emprestimos} exemplares={exemplares} obras={obras} leitores={leitores} onNavigate={onNavigate} isAuthenticated={isAuthenticated} />
+          </div>
+        )}
       </div>
     </div>
   );

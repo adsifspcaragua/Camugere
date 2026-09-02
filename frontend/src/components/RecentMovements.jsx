@@ -3,10 +3,12 @@ import { ArrowUpRight } from "lucide-react";
 import { getExemplarById } from "../../services/exemplarService.js";
 import { getObraById } from "../../services/obraService.js";
 import { getLeitorById } from "../../services/leitorService.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function RecentMovements({ emprestimos, onNavigate }) {
 
   const [data, setData] = useState([])
+  const { isLoading, token } = useAuth();
 
   useEffect(() => {
     let cancelado = false;
@@ -35,7 +37,7 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
     return () => {
       cancelado = true;
     };
-  }, [])
+  }, [isLoading, token])
 
   return (
     <div className="rounded-2xl border border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
