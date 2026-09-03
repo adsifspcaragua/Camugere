@@ -9,8 +9,13 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
   const [cdd, setCdd] = useState("");
   const [numExemplares, setNumExemplares] = useState(1);
   const [capaIndex, setCapaIndex] = useState(0);
+  // Adicione estas duas linhas:
+  const [isbn, setIsbn] = useState("");
+  const [buscandoIsbn, setBuscandoIsbn] = useState(false);
   const inputRef = useRef(null);
   const isEdit = !!editingObra;
+
+
 
   useEffect(() => {
     if (isOpen) {
@@ -54,6 +59,43 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
     onClose();
   };
 
+  const buscarDadosPorIsbn = async () => {
+    if (!isbn) return;
+
+    const isbnLimpo = isbn.replace(/\D/g, '');
+
+    if (isbnLimpo.length !== 13 && isbnLimpo.length !== 10) {
+      alert("Por favor, digite um ISBN válido de 10 ou 13 dígitos.");
+      return;
+    }
+
+    setBuscandoIsbn(true);
+
+    try {
+      const response = await fetch(`https://brasilapi.com.br/api/isbn/v1/${isbnLimpo}`);
+
+      if (!response.ok) {
+        throw new Error("ISBN não encontrado na base de dados.");
+      }
+
+      const data = await response.json();
+
+      setTitulo(data.title || '');
+
+      if (data.authors && data.authors.length > 0) {
+        setAutor(data.authors.join(', '));
+      } else {
+        setAutor('');
+      }
+
+    } catch (error) {
+      console.error("Erro ao buscar ISBN:", error);
+      alert(error.message);
+    } finally {
+      setBuscandoIsbn(false);
+    }
+  };
+
   return (
     <>
       <div
@@ -89,14 +131,37 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
                 {CAPAS.map((c, i) => (
                   <button
                     key={i} type="button" onClick={() => setCapaIndex(i)}
-                    className={`flex h-12 w-10 items-center justify-center rounded-xl text-xl transition-all ${
-                      capaIndex === i ? "bg-brand-100 ring-2 ring-brand-500 dark:bg-brand-500/10" : "bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700"
-                    }`}
+                    className={`flex h-12 w-10 items-center justify-center rounded-xl text-xl transition-all ${capaIndex === i ? "bg-brand-100 ring-2 ring-brand-500 dark:bg-brand-500/10" : "bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700"
+                      }`}
                   >{c}</button>
                 ))}
               </div>
             </div>
 
+            {/* Busca por ISBN */}
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                <Hash size={18} className="text-surface-400" /> Buscar por ISBN
+              </label>
+              <div className="flex gap-3">
+                <input
+                  type="text"
+                  value={isbn}
+                  onChange={(e) => setIsbn(e.target.value)}
+                  placeholder="Digite apenas números (opcional)"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
+                />
+                <button
+                  type="button"
+                  onClick={buscarDadosPorIsbn}
+                  disabled={buscandoIsbn || !isbn}
+                  className="flex whitespace-nowrap items-center justify-center rounded-2xl bg-brand-100 px-5 font-semibold text-brand-700 transition-colors hover:bg-brand-200 disabled:opacity-50 dark:bg-brand-500/20 dark:text-brand-400 dark:hover:bg-brand-500/30"
+                >
+                  {buscandoIsbn ? 'Buscando...' : 'Buscar'}
+                </button>
+              </div>
+            </div>
+            
             {/* Título */}
             <div>
               <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
