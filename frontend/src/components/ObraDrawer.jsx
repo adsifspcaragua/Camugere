@@ -1,35 +1,43 @@
 import { useState, useEffect, useRef } from "react";
 import { X, BookOpen, UserRound, Hash, Layers, Plus } from "lucide-react";
 
-const CAPAS = ["📕", "📗", "📘", "📙"];
-
 export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = null }) {
   const [titulo, setTitulo] = useState("");
   const [autor, setAutor] = useState("");
   const [cdd, setCdd] = useState("");
-  const [numExemplares, setNumExemplares] = useState(1);
-  const [capaIndex, setCapaIndex] = useState(0);
-  // Adicione estas duas linhas:
+  const [cddDescricao, setCddDescricao] = useState("");
+  const [resumo, setResumo] = useState("");
+  const [capaUrl, setCapaUrl] = useState("");
   const [isbn, setIsbn] = useState("");
+  const [anoPublicacao, setAnoPublicacao] = useState(""); // NOVO
+  const [localPublicacao, setLocalPublicacao] = useState(""); // NOVO
+  const [numExemplares, setNumExemplares] = useState(1);
   const [buscandoIsbn, setBuscandoIsbn] = useState(false);
   const inputRef = useRef(null);
   const isEdit = !!editingObra;
-
-
-
+  
   useEffect(() => {
     if (isOpen) {
       if (editingObra) {
-        setTitulo(editingObra.titulo);
-        setAutor(editingObra.autor);
-        setCdd(editingObra.cdd);
-        setCapaIndex(CAPAS.indexOf(editingObra.capa) >= 0 ? CAPAS.indexOf(editingObra.capa) : 0);
+        setTitulo(editingObra.titulo || "");
+        setAutor(editingObra.autor || "");
+        setCdd(editingObra.cdd || "");
+        setCddDescricao(editingObra.cddDescricao || "");
+        setResumo(editingObra.resumo || "");
+        setCapaUrl(editingObra.capaUrl || ""); 
+        setAnoPublicacao(editingObra.anoPublicacao || ""); // Agora puxa ao editar
+        setLocalPublicacao(editingObra.localPublicacao || ""); // Agora puxa ao editar
       } else {
         setTitulo("");
         setAutor("");
         setCdd("");
+        setCddDescricao("");
+        setResumo("");
+        setCapaUrl("");
+        setAnoPublicacao(""); // Limpa o campo ao abrir novo
+        setLocalPublicacao(""); // Limpa o campo ao abrir novo
         setNumExemplares(1);
-        setCapaIndex(Math.floor(Math.random() * 4));
+        setIsbn("");
       }
       setTimeout(() => inputRef.current?.focus(), 200);
     }
@@ -43,49 +51,70 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
     }
   }, [isOpen, onClose]);
 
-  const canSubmit = titulo.trim() && autor.trim();
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    onConfirm({
-      titulo: titulo.trim(),
-      autor: autor.trim(),
-      cdd: cdd.trim(),
-      capa: CAPAS[capaIndex],
-      numExemplares: isEdit ? 0 : numExemplares,
-      ...(editingObra && { idObra: editingObra.idObra }),
-    });
-    onClose();
+  // Dicionário temporário para o auto-preenchimento. 
+  // Dica: Futuramente, você pode puxar isso da sua rota GET /cdd
+  const dicionarioCdd = {
+    "005.1": "Desenvolvimento de Sistemas e Programação",
+    "869.3": "Literatura Brasileira - Ficção e Romance",
+    "150": "Psicologia",
+    "900": "Geografia e História"
   };
 
-  const buscarDadosPorIsbn = async () => {
-    if (!isbn) return;
-
-    const isbnLimpo = isbn.replace(/\D/g, '');
-
-    if (isbnLimpo.length !== 13 && isbnLimpo.length !== 10) {
-      alert("Por favor, digite um ISBN válido de 10 ou 13 dígitos.");
-      return;
+  // Se digitar o número, preenche o texto
+  const handleCddChange = (e) => {
+    const numero = e.target.value;
+    setCdd(numero);
+    if (dicionarioCdd[numero]) {
+      setCddDescricao(dicionarioCdd[numero]);
     }
+  };
 
+  // Se digitar o texto, busca o número correspondente
+  const handleCddDescricaoChange = (e) => {
+    const texto = e.target.value;
+    setCddDescricao(texto);
+    const numeroEncontrado = Object.keys(dicionarioCdd).find(
+      key => dicionarioCdd[key].toLowerCase() === texto.toLowerCase()
+    );
+    if (numeroEncontrado) {
+      setCdd(numeroEncontrado);
+    }
+  };
+
+const buscarDadosPorIsbn = async () => {
+    if (!isbn) return;
+    const isbnLimpo = isbn.replace(/\D/g, '');
+    if (isbnLimpo.length !== 13 && isbnLimpo.length !== 10) {
+      alert("Por favor, digite um ISBN válido de 10 ou 13 dígitos."); return;
+    }
     setBuscandoIsbn(true);
 
     try {
       const response = await fetch(`https://brasilapi.com.br/api/isbn/v1/${isbnLimpo}`);
-
-      if (!response.ok) {
-        throw new Error("ISBN não encontrado na base de dados.");
-      }
-
+      if (!response.ok) throw new Error("ISBN não encontrado na base de dados.");
+      
       const data = await response.json();
 
       setTitulo(data.title || '');
+      setAutor(data.authors?.length > 0 ? data.authors.join(', ') : '');
+      setResumo(data.synopsis || '');
+      setCapaUrl(data.cover_url || '');
+      
+      // Preenchendo os novos campos de publicação
+      setAnoPublicacao(data.year || '');
+      const localEditora = [data.location, data.publisher].filter(Boolean).join(' - ');
+      setLocalPublicacao(localEditora || '');
 
-      if (data.authors && data.authors.length > 0) {
-        setAutor(data.authors.join(', '));
+      // Lógica do CDD
+      if (data.subjects && data.subjects.length > 0) {
+        setCddDescricao(data.subjects[0]);
+        const numEncontrado = Object.keys(dicionarioCdd).find(
+          key => dicionarioCdd[key].toLowerCase() === data.subjects[0].toLowerCase()
+        );
+        setCdd(numEncontrado || "");
       } else {
-        setAutor('');
+        setCddDescricao("");
+        setCdd("");
       }
 
     } catch (error) {
@@ -95,6 +124,34 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
       setBuscandoIsbn(false);
     }
   };
+
+  // Só permite salvar se Título e Autor estiverem preenchidos
+  const canSubmit = Boolean(titulo && titulo.trim() !== "" && autor && autor.trim() !== "");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    
+    onConfirm({
+      titulo: titulo.trim(),
+      autor: autor.trim(),
+      cdd: cdd.trim(),
+      cddDescricao: cddDescricao.trim(),
+      resumo: resumo.trim(),
+      capaUrl: capaUrl.trim(),
+      anoPublicacao: anoPublicacao.trim(),
+      localPublicacao: localPublicacao.trim(),
+      
+      // O truque: envia um emoji padrão para o banco antigo não quebrar
+      capa: "📕", 
+      
+      numExemplares: isEdit ? 0 : numExemplares,
+      ...(editingObra && { idObra: editingObra.idObra }),
+    });
+    
+    onClose();
+  };
+
 
   return (
     <>
@@ -122,19 +179,29 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col">
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6 scrollbar-thin">
-            {/* Capa Picker */}
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">Capa</label>
-              <div className="flex gap-2">
-                {CAPAS.map((c, i) => (
-                  <button
-                    key={i} type="button" onClick={() => setCapaIndex(i)}
-                    className={`flex h-12 w-10 items-center justify-center rounded-xl text-xl transition-all ${capaIndex === i ? "bg-brand-100 ring-2 ring-brand-500 dark:bg-brand-500/10" : "bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700"
-                      }`}
-                  >{c}</button>
-                ))}
+            
+            {/* Visualização da Capa Real e URL */}
+            <div className="flex gap-4 items-end">
+              <div className="flex-shrink-0">
+                {capaUrl ? (
+                  <img src={capaUrl} alt="Capa" className="h-32 w-24 rounded-lg object-cover shadow-md" />
+                ) : (
+                  <div className="flex h-32 w-24 items-center justify-center rounded-lg bg-surface-100 text-surface-400 border border-dashed border-surface-300 dark:bg-surface-800 dark:border-surface-700 text-sm text-center px-2">
+                    Sem Capa
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                  URL da Capa
+                </label>
+                <input
+                  type="text" value={capaUrl} onChange={(e) => setCapaUrl(e.target.value)}
+                  placeholder="Link da imagem (opcional)"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
+                />
               </div>
             </div>
 
@@ -145,23 +212,19 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
               </label>
               <div className="flex gap-3">
                 <input
-                  type="text"
-                  value={isbn}
-                  onChange={(e) => setIsbn(e.target.value)}
-                  placeholder="Digite apenas números (opcional)"
-                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
+                  type="text" value={isbn} onChange={(e) => setIsbn(e.target.value)}
+                  placeholder="Digite apenas os números"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
                 />
                 <button
-                  type="button"
-                  onClick={buscarDadosPorIsbn}
-                  disabled={buscandoIsbn || !isbn}
+                  type="button" onClick={buscarDadosPorIsbn} disabled={buscandoIsbn || !isbn}
                   className="flex whitespace-nowrap items-center justify-center rounded-2xl bg-brand-100 px-5 font-semibold text-brand-700 transition-colors hover:bg-brand-200 disabled:opacity-50 dark:bg-brand-500/20 dark:text-brand-400 dark:hover:bg-brand-500/30"
                 >
                   {buscandoIsbn ? 'Buscando...' : 'Buscar'}
                 </button>
               </div>
             </div>
-            
+
             {/* Título */}
             <div>
               <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
@@ -169,8 +232,8 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
               </label>
               <input
                 ref={inputRef} type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)}
-                placeholder="Ex: O escravo" required
-                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
+                placeholder="Ex: Dom Casmurro" required
+                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
               />
             </div>
 
@@ -181,24 +244,73 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
               </label>
               <input
                 type="text" value={autor} onChange={(e) => setAutor(e.target.value)}
-                placeholder="Ex: Carolina Maria de Jesus" required
-                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
+                placeholder="Ex: Machado de Assis" required
+                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
               />
             </div>
 
-            {/* CDD */}
+            {/* Publicação (Ano e Local) */}
+            <div className="flex gap-4">
+              <div className="w-1/3">
+                <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                  Ano
+                </label>
+                <input
+                  type="text" value={anoPublicacao} onChange={(e) => setAnoPublicacao(e.target.value)}
+                  placeholder="Ex: 1899"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                  Editora / Local
+                </label>
+                <input
+                  type="text" value={localPublicacao} onChange={(e) => setLocalPublicacao(e.target.value)}
+                  placeholder="Ex: Editora Ática - São Paulo"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
+                />
+              </div>
+            </div>
+
+            {/* Resumo */}
             <div>
               <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
-                <Hash size={18} className="text-surface-400" /> Classificação CDD
+                Resumo da Obra
               </label>
-              <input
-                type="text" value={cdd} onChange={(e) => setCdd(e.target.value)}
-                placeholder="Ex: 869e"
-                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
+              <textarea
+                value={resumo} onChange={(e) => setResumo(e.target.value)}
+                placeholder="Descrição do livro..."
+                rows={4}
+                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500 scrollbar-thin"
               />
             </div>
 
-            {/* Nº de Exemplares (only on create) */}
+            {/* Campos de CDD */}
+            <div className="flex gap-4">
+              <div className="w-1/3">
+                <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                  <Hash size={18} className="text-surface-400" /> CDD
+                </label>
+                <input
+                  type="text" value={cdd} onChange={handleCddChange}
+                  placeholder="Ex: 869.3"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                  Descrição (Assunto)
+                </label>
+                <input
+                  type="text" value={cddDescricao} onChange={handleCddDescricaoChange}
+                  placeholder="Ex: Literatura Brasileira"
+                  className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
+                />
+              </div>
+            </div>
+
+            {/* Nº de Exemplares */}
             {!isEdit && (
               <div>
                 <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
@@ -206,33 +318,18 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
                 </label>
                 <div className="flex items-center gap-3">
                   <button type="button" onClick={() => setNumExemplares((v) => Math.max(1, v - 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-200 text-lg font-semibold text-surface-600 hover:bg-surface-100 dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-200 text-lg font-semibold text-surface-600 hover:bg-surface-100 dark:border-surface-700 dark:text-white dark:hover:bg-surface-800"
                   >−</button>
                   <span className="w-10 text-center text-xl font-bold text-surface-900 dark:text-white">{numExemplares}</span>
                   <button type="button" onClick={() => setNumExemplares((v) => Math.min(20, v + 1))}
-                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-200 text-lg font-semibold text-surface-600 hover:bg-surface-100 dark:border-surface-700 dark:text-surface-400 dark:hover:bg-surface-800"
+                    className="flex h-10 w-10 items-center justify-center rounded-xl border border-surface-200 text-lg font-semibold text-surface-600 hover:bg-surface-100 dark:border-surface-700 dark:text-white dark:hover:bg-surface-800"
                   >+</button>
-                </div>
-                <p className="mt-2 text-sm text-surface-400 dark:text-surface-500">Cada exemplar recebe um nº de inventário automático</p>
-              </div>
-            )}
-
-            {/* Preview */}
-            {canSubmit && (
-              <div className="rounded-2xl border border-brand-200 bg-brand-50/50 p-5 dark:border-brand-500/20 dark:bg-brand-500/5">
-                <p className="mb-3 text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Prévia</p>
-                <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-10 items-center justify-center rounded-xl bg-white text-2xl shadow-sm dark:bg-surface-800">{CAPAS[capaIndex]}</span>
-                  <div>
-                    <p className="text-base font-semibold text-surface-900 dark:text-white">{titulo}</p>
-                    <p className="text-base text-surface-500 dark:text-surface-400">{autor}{cdd && ` · ${cdd}`}</p>
-                    {!isEdit && <p className="text-sm text-brand-600 dark:text-brand-400">{numExemplares} exemplar{numExemplares !== 1 && "es"}</p>}
-                  </div>
                 </div>
               </div>
             )}
           </div>
 
+          {/* Botão Salvar (Fixo no rodapé da gaveta) */}
           <div className="border-t border-surface-200 px-6 py-5 dark:border-surface-800">
             <button
               type="submit" disabled={!canSubmit}
