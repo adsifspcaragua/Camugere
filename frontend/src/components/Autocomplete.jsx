@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react"
+import { Search, X } from "lucide-react"
 
 export default function Autocomplete({
   items,
@@ -13,94 +13,94 @@ export default function Autocomplete({
   icon: Icon = Search,
   disabled = false,
 }) {
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(-1);
-  const ref = useRef(null);
-  const inputRef = useRef(null);
-  const listRef = useRef(null);
+  const [query, setQuery] = useState("")
+  const [open, setOpen] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState(-1)
+  const ref = useRef(null)
+  const inputRef = useRef(null)
+  const listRef = useRef(null)
 
   useEffect(() => {
-    if (!selected) setQuery("");
-  }, [selected]);
+    if (!selected) setQuery("")
+  }, [selected])
 
   useEffect(() => {
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
 
   const filteredItems = useMemo(() => {
-    if (!filterFn) return items;
-    return filterFn(items, query);
-  }, [items, query, filterFn]);
+    if (!filterFn) return items
+    return filterFn(items, query)
+  }, [items, query, filterFn])
 
   // Reset highlight when filtered items change
   useEffect(() => {
-    setHighlightIndex(-1);
-  }, [filteredItems]);
+    setHighlightIndex(-1)
+  }, [filteredItems])
 
   // Scroll highlighted item into view
   useEffect(() => {
     if (highlightIndex >= 0 && listRef.current) {
-      const el = listRef.current.children[highlightIndex];
-      if (el) el.scrollIntoView({ block: "nearest" });
+      const el = listRef.current.children[highlightIndex]
+      if (el) el.scrollIntoView({ block: "nearest" })
     }
-  }, [highlightIndex]);
+  }, [highlightIndex])
 
   const handleSelect = (item) => {
-    onSelect(item);
-    setQuery("");
-    setOpen(false);
-    setHighlightIndex(-1);
-  };
+    onSelect(item)
+    setQuery("")
+    setOpen(false)
+    setHighlightIndex(-1)
+  }
 
   const handleClear = () => {
-    onClear();
-    setQuery("");
+    onClear()
+    setQuery("")
     setTimeout(() => {
-      if (inputRef.current) inputRef.current.focus();
-    }, 50);
-  };
+      if (inputRef.current) inputRef.current.focus()
+    }, 50)
+  }
 
   const handleKeyDown = (e) => {
     if (!open || filteredItems.length === 0) {
       if (e.key === "ArrowDown" && filteredItems.length > 0) {
-        setOpen(true);
-        setHighlightIndex(0);
-        e.preventDefault();
+        setOpen(true)
+        setHighlightIndex(0)
+        e.preventDefault()
       }
-      return;
+      return
     }
 
     switch (e.key) {
       case "ArrowDown":
-        e.preventDefault();
+        e.preventDefault()
         setHighlightIndex((prev) =>
-          prev < filteredItems.length - 1 ? prev + 1 : 0
-        );
-        break;
+          prev < filteredItems.length - 1 ? prev + 1 : 0,
+        )
+        break
       case "ArrowUp":
-        e.preventDefault();
+        e.preventDefault()
         setHighlightIndex((prev) =>
-          prev > 0 ? prev - 1 : filteredItems.length - 1
-        );
-        break;
+          prev > 0 ? prev - 1 : filteredItems.length - 1,
+        )
+        break
       case "Enter":
-        e.preventDefault();
+        e.preventDefault()
         if (highlightIndex >= 0 && highlightIndex < filteredItems.length) {
-          handleSelect(filteredItems[highlightIndex]);
+          handleSelect(filteredItems[highlightIndex])
         }
-        break;
+        break
       case "Escape":
-        e.preventDefault();
-        setOpen(false);
-        setHighlightIndex(-1);
-        break;
+        e.preventDefault()
+        setOpen(false)
+        setHighlightIndex(-1)
+        break
     }
-  };
+  }
 
   if (selected && selectedLabel) {
     return (
@@ -116,7 +116,7 @@ export default function Autocomplete({
           <X size={18} />
         </button>
       </div>
-    );
+    )
   }
 
   return (
@@ -131,8 +131,8 @@ export default function Autocomplete({
           type="text"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
+            setQuery(e.target.value)
+            setOpen(true)
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
@@ -143,7 +143,9 @@ export default function Autocomplete({
           role="combobox"
           aria-expanded={open}
           aria-haspopup="listbox"
-          aria-activedescendant={highlightIndex >= 0 ? `ac-item-${highlightIndex}` : undefined}
+          aria-activedescendant={
+            highlightIndex >= 0 ? `ac-item-${highlightIndex}` : undefined
+          }
         />
       </div>
       {open && filteredItems.length > 0 && (
@@ -178,5 +180,5 @@ export default function Autocomplete({
         </div>
       )}
     </div>
-  );
+  )
 }

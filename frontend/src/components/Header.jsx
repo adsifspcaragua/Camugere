@@ -1,55 +1,62 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, Sun, Moon, Bell, X } from "lucide-react";
-import { useTheme } from "../context/ThemeContext";
+import { useState, useRef, useEffect, useMemo } from "react"
+import { Search, Sun, Moon, Bell, X } from "lucide-react"
+import { useTheme } from "../context/ThemeContext"
 
-export default function Header({ onNavigate, searchQuery, onSearchChange, obras }) {
-  const { dark, toggle } = useTheme();
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+export default function Header({
+  onNavigate,
+  searchQuery,
+  onSearchChange,
+  obras,
+}) {
+  const { dark, toggle } = useTheme()
+  const [query, setQuery] = useState("")
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
 
   // Sync external searchQuery with internal query when navigating away from acervo
   useEffect(() => {
-    if (searchQuery === "") setQuery("");
-  }, [searchQuery]);
+    if (searchQuery === "") setQuery("")
+  }, [searchQuery])
 
   useEffect(() => {
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return [];
-    const q = query.toLowerCase();
-    return obras.filter(
-      (o) =>
-        o.titulo.toLowerCase().includes(q) ||
-        o.autor.toLowerCase().includes(q)
-    ).slice(0, 8);
-  }, [query, obras]);
+    if (!query.trim()) return []
+    const q = query.toLowerCase()
+    return obras
+      .filter(
+        (o) =>
+          o.titulo.toLowerCase().includes(q) ||
+          o.autor.toLowerCase().includes(q),
+      )
+      .slice(0, 8)
+  }, [query, obras])
 
   const handleSelect = (obra) => {
-    setQuery(obra.titulo);
-    setOpen(false);
-    if (onSearchChange) onSearchChange(obra.titulo);
-    if (onNavigate) onNavigate("acervo");
-  };
+    setQuery(obra.titulo)
+    setOpen(false)
+    if (onSearchChange) onSearchChange(obra.titulo)
+    if (onNavigate) onNavigate("acervo")
+  }
 
   const handleInputChange = (e) => {
-    const val = e.target.value;
-    setQuery(val);
-    setOpen(true);
-    if (onSearchChange) onSearchChange(val);
-  };
+    const val = e.target.value
+    setQuery(val)
+    setOpen(true)
+    if (onSearchChange) onSearchChange(val)
+  }
 
   const clearSearch = () => {
-    setQuery("");
-    setOpen(false);
-    if (onSearchChange) onSearchChange("");
-  };
+    setQuery("")
+    setOpen(false)
+    if (onSearchChange) onSearchChange("")
+  }
 
   return (
     <header className="sticky top-0 z-30 h-20 flex justify-between items-center gap-4 border-b border-surface-200 bg-white/80 px-6 backdrop-blur-xl transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900/80">
@@ -141,5 +148,5 @@ export default function Header({ onNavigate, searchQuery, onSearchChange, obras 
         </button> */}
       </div>
     </header>
-  );
+  )
 }

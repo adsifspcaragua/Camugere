@@ -1,37 +1,71 @@
-import { useMemo, useState } from "react";
-import { Mail, Phone, Hash, BookOpen, AlertTriangle, Search, Plus, Pencil, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react"
+import {
+  Mail,
+  Phone,
+  Hash,
+  BookOpen,
+  AlertTriangle,
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+} from "lucide-react"
 
-export default function LeitoresPage({ emprestimos, leitores, onAddLeitor, onEditLeitor, onDeleteLeitor }) {
-  const [search, setSearch] = useState("");
+export default function LeitoresPage({
+  emprestimos,
+  leitores,
+  onAddLeitor,
+  onEditLeitor,
+  onDeleteLeitor,
+}) {
+  const [search, setSearch] = useState("")
 
   const leitoresEnriched = useMemo(() => {
     return leitores.map((leitor) => {
-      const ativos = emprestimos.filter((e) => e.idLeitor === leitor.idLeitor && e.status === "ativo");
-      const devolvidos = emprestimos.filter((e) => e.idLeitor === leitor.idLeitor && e.status === "devolvido");
-      const today = new Date().toISOString().split("T")[0];
-      const atrasos = ativos.filter((e) => e.dataDevolucaoPrevista < today);
-      return { ...leitor, ativos, devolvidos, atrasos, totalEmprestimos: ativos.length + devolvidos.length };
-    });
-  }, [emprestimos, leitores]);
+      const ativos = emprestimos.filter(
+        (e) => e.idLeitor === leitor.idLeitor && e.status === "ativo",
+      )
+      const devolvidos = emprestimos.filter(
+        (e) => e.idLeitor === leitor.idLeitor && e.status === "devolvido",
+      )
+      const today = new Date().toISOString().split("T")[0]
+      const atrasos = ativos.filter((e) => e.dataDevolucaoPrevista < today)
+      return {
+        ...leitor,
+        ativos,
+        devolvidos,
+        atrasos,
+        totalEmprestimos: ativos.length + devolvidos.length,
+      }
+    })
+  }, [emprestimos, leitores])
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return leitoresEnriched;
-    const q = search.toLowerCase();
-    return leitoresEnriched.filter((l) => l.nome.toLowerCase().includes(q) || l.contato.toLowerCase().includes(q));
-  }, [leitoresEnriched, search]);
+    if (!search.trim()) return leitoresEnriched
+    const q = search.toLowerCase()
+    return leitoresEnriched.filter(
+      (l) =>
+        l.nome.toLowerCase().includes(q) || l.contato.toLowerCase().includes(q),
+    )
+  }, [leitoresEnriched, search])
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">Leitores</h2>
+          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">
+            Leitores
+          </h2>
           <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
             {leitores.length} leitores cadastrados na comunidade
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative max-w-xs w-full">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400"
+            />
             <input
               type="text"
               value={search}
@@ -51,13 +85,22 @@ export default function LeitoresPage({ emprestimos, leitores, onAddLeitor, onEdi
       </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {filtered.map((leitor) => (
-          <div key={leitor.idLeitor} className="rounded-2xl border border-surface-200 bg-white p-5 transition-all duration-200 hover:shadow-md dark:border-surface-800 dark:bg-surface-900">
+          <div
+            key={leitor.idLeitor}
+            className="rounded-2xl border border-surface-200 bg-white p-5 transition-all duration-200 hover:shadow-md dark:border-surface-800 dark:bg-surface-900"
+          >
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-base font-bold text-white">
-                {leitor.nome.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                {leitor.nome
+                  .split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-base font-semibold text-surface-800 dark:text-surface-200">{leitor.nome}</p>
+                <p className="truncate text-base font-semibold text-surface-800 dark:text-surface-200">
+                  {leitor.nome}
+                </p>
                 <div className="mt-2 space-y-1.5">
                   <div className="flex items-center gap-2 text-base text-surface-400 dark:text-surface-500">
                     <Mail size={16} />
@@ -81,9 +124,15 @@ export default function LeitoresPage({ emprestimos, leitores, onAddLeitor, onEdi
                   <Pencil size={15} />
                 </button>
                 <button
-                  onClick={() => onDeleteLeitor && onDeleteLeitor(leitor.idLeitor)}
+                  onClick={() =>
+                    onDeleteLeitor && onDeleteLeitor(leitor.idLeitor)
+                  }
                   className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                  title={leitor.ativos.length > 0 ? "Leitor com empréstimos ativos" : "Excluir leitor"}
+                  title={
+                    leitor.ativos.length > 0
+                      ? "Leitor com empréstimos ativos"
+                      : "Excluir leitor"
+                  }
                 >
                   <Trash2 size={15} />
                 </button>
@@ -94,7 +143,8 @@ export default function LeitoresPage({ emprestimos, leitores, onAddLeitor, onEdi
               <div className="flex flex-1 items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 dark:bg-surface-800">
                 <BookOpen size={14} className="text-brand-500" />
                 <span className="text-sm font-medium text-surface-600 dark:text-surface-400">
-                  {leitor.ativos.length} ativo{leitor.ativos.length !== 1 && "s"}
+                  {leitor.ativos.length} ativo
+                  {leitor.ativos.length !== 1 && "s"}
                 </span>
               </div>
               <div className="flex flex-1 items-center gap-2 rounded-xl bg-surface-50 px-3 py-2 dark:bg-surface-800">
@@ -116,10 +166,12 @@ export default function LeitoresPage({ emprestimos, leitores, onAddLeitor, onEdi
         ))}
         {filtered.length === 0 && (
           <div className="col-span-full py-12 text-center">
-            <p className="text-base text-surface-400 dark:text-surface-500">Nenhum leitor encontrado.</p>
+            <p className="text-base text-surface-400 dark:text-surface-500">
+              Nenhum leitor encontrado.
+            </p>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

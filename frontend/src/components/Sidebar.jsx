@@ -6,7 +6,7 @@ import {
   BarChart3,
   Settings,
   BookMarked,
-} from "lucide-react";
+} from "lucide-react"
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,7 +15,7 @@ const navItems = [
   { id: "emprestimos", label: "Empréstimos", icon: ArrowLeftRight },
   { id: "relatorios", label: "Relatórios", icon: BarChart3 },
   { id: "configuracoes", label: "Configurações", icon: Settings },
-];
+]
 
 export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
   return (
@@ -38,8 +38,8 @@ export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4 scrollbar-thin">
         {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activePage === item.id;
+          const Icon = item.icon
+          const isActive = activePage === item.id
           return (
             <button
               key={item.id}
@@ -72,7 +72,7 @@ export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
                 <span className="ml-auto h-2 w-2 rounded-full bg-brand-600 dark:bg-brand-400" />
               )}
             </button>
-          );
+          )
         })}
       </nav>
 
@@ -93,5 +93,5 @@ export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
         </div>
       </div>
     </aside>
-  );
+  )
 }

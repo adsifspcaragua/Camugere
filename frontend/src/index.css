@@ -27,7 +27,7 @@
   --color-surface-900: #554c41;
   --color-surface-950: #2d2822;
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
