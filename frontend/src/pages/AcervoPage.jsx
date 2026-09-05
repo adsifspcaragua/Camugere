@@ -1,16 +1,29 @@
-import BookTable from "../components/BookTable";
-import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import BookTable from "../components/BookTable"
+import { useState } from "react"
+import { Search, Plus } from "lucide-react"
 
-export default function AcervoPage({ exemplares, searchQuery, emprestimos, obras, leitores, onAddObra, onEditObra, onDeleteObra, onAddExemplar, onDeleteExemplar }) {
-  const [localSearch, setLocalSearch] = useState("");
-  const effectiveQuery = searchQuery || localSearch;
+export default function AcervoPage({
+  exemplares,
+  searchQuery,
+  emprestimos,
+  obras,
+  leitores,
+  onAddObra,
+  onEditObra,
+  onDeleteObra,
+  onAddExemplar,
+  onDeleteExemplar,
+}) {
+  const [localSearch, setLocalSearch] = useState("")
+  const effectiveQuery = searchQuery || localSearch
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">Acervo</h2>
+          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">
+            Acervo
+          </h2>
           <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
             Obras e exemplares da Biblioteca Camugerê
           </p>
@@ -18,7 +31,10 @@ export default function AcervoPage({ exemplares, searchQuery, emprestimos, obras
         <div className="flex items-center gap-3">
           {!searchQuery && (
             <div className="relative max-w-xs w-full">
-              <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400"
+              />
               <input
                 type="text"
                 value={localSearch}
@@ -38,11 +54,16 @@ export default function AcervoPage({ exemplares, searchQuery, emprestimos, obras
         </div>
       </div>
       <BookTable
-        exemplares={exemplares} searchQuery={effectiveQuery} emprestimos={emprestimos}
-        obras={obras} leitores={leitores}
-        onEditObra={onEditObra} onDeleteObra={onDeleteObra}
-        onAddExemplar={onAddExemplar} onDeleteExemplar={onDeleteExemplar}
+        exemplares={exemplares}
+        searchQuery={effectiveQuery}
+        emprestimos={emprestimos}
+        obras={obras}
+        leitores={leitores}
+        onEditObra={onEditObra}
+        onDeleteObra={onDeleteObra}
+        onAddExemplar={onAddExemplar}
+        onDeleteExemplar={onDeleteExemplar}
       />
     </div>
-  );
+  )
 }

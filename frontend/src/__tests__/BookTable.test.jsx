@@ -9,7 +9,7 @@ const mockObras = [
     titulo: "React for Beginners",
     autor: "John Doe",
     cdd: "005.133",
-  }
+  },
 ]
 
 const mockExemplares = [
@@ -18,11 +18,20 @@ const mockExemplares = [
     idObra: 1,
     numeroInventario: "INV-0001",
     disponivel: true,
-  }
+  },
 ]
 
 test("renders BookTable with correct data", () => {
-  render(<BookTable obras={mockObras} exemplares={mockExemplares} emprestimos={[]} leitores={[]} searchQuery="" filter="all" />)
+  render(
+    <BookTable
+      obras={mockObras}
+      exemplares={mockExemplares}
+      emprestimos={[]}
+      leitores={[]}
+      searchQuery=""
+      filter="all"
+    />,
+  )
   expect(screen.getByText("React for Beginners")).toBeInTheDocument()
   expect(screen.getByText("John Doe")).toBeInTheDocument()
   expect(screen.getByText("005.133")).toBeInTheDocument()

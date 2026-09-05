@@ -1,4 +1,4 @@
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react"
 
 export default function StatCard({
   title,
@@ -14,17 +14,17 @@ export default function StatCard({
       "border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900",
     danger:
       "border-red-200 bg-red-50/50 dark:border-red-500/20 dark:bg-red-500/5",
-  };
+  }
 
   const iconVariants = {
     default:
       "bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400",
     danger: "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400",
-  };
+  }
 
-  const isPositive = trend === "up";
-  
-  const Component = onClick ? "button" : "div";
+  const isPositive = trend === "up"
+
+  const Component = onClick ? "button" : "div"
 
   return (
     <Component
@@ -69,5 +69,5 @@ export default function StatCard({
         </div>
       )}
     </Component>
-  );
+  )
 }

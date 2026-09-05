@@ -1,63 +1,103 @@
-import { useMemo, useState, useCallback } from "react";
-import { Hash, CornerDownLeft, Clock, CheckCircle2, AlertTriangle, RefreshCcw } from "lucide-react";
+import { useMemo, useState, useCallback } from "react"
+import {
+  Hash,
+  CornerDownLeft,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  RefreshCcw,
+} from "lucide-react"
 
 const TABS = [
   { id: "ativos", label: "Ativos", icon: Clock },
   { id: "atrasados", label: "Atrasados", icon: AlertTriangle },
   { id: "devolvidos", label: "Devolvidos", icon: CheckCircle2 },
-];
+]
 
-export default function EmprestimosPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onReturn, onRenew }) {
-  const [activeTab, setActiveTab] = useState("ativos");
-  const today = new Date().toISOString().split("T")[0];
+export default function EmprestimosPage({
+  exemplares,
+  emprestimos,
+  obras,
+  leitores,
+  onOpenLoan,
+  onReturn,
+  onRenew,
+}) {
+  const [activeTab, setActiveTab] = useState("ativos")
+  const today = new Date().toISOString().split("T")[0]
 
   const enriched = useMemo(() => {
-    return emprestimos.map((emp) => {
-      const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar);
-      const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
-      const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor);
-      const isOverdue = emp.status === "ativo" && emp.dataDevolucaoPrevista < today;
-      return { ...emp, exemplar: ex, obra, leitor, isOverdue };
-    }).sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
-  }, [emprestimos, exemplares, obras, leitores, today]);
+    return emprestimos
+      .map((emp) => {
+        const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar)
+        const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null
+        const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor)
+        const isOverdue =
+          emp.status === "ativo" && emp.dataDevolucaoPrevista < today
+        return { ...emp, exemplar: ex, obra, leitor, isOverdue }
+      })
+      .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
+  }, [emprestimos, exemplares, obras, leitores, today])
 
   const filtered = useMemo(() => {
     switch (activeTab) {
       case "ativos":
-        return enriched.filter((e) => e.status === "ativo" && !e.isOverdue);
+        return enriched.filter((e) => e.status === "ativo" && !e.isOverdue)
       case "atrasados":
-        return enriched.filter((e) => e.isOverdue);
+        return enriched.filter((e) => e.isOverdue)
       case "devolvidos":
-        return enriched.filter((e) => e.status === "devolvido");
+        return enriched.filter((e) => e.status === "devolvido")
       default:
-        return enriched;
+        return enriched
     }
-  }, [enriched, activeTab]);
+  }, [enriched, activeTab])
 
-  const tabCounts = useMemo(() => ({
-    ativos: enriched.filter((e) => e.status === "ativo" && !e.isOverdue).length,
-    atrasados: enriched.filter((e) => e.isOverdue).length,
-    devolvidos: enriched.filter((e) => e.status === "devolvido").length,
-  }), [enriched]);
+  const tabCounts = useMemo(
+    () => ({
+      ativos: enriched.filter((e) => e.status === "ativo" && !e.isOverdue)
+        .length,
+      atrasados: enriched.filter((e) => e.isOverdue).length,
+      devolvidos: enriched.filter((e) => e.status === "devolvido").length,
+    }),
+    [enriched],
+  )
 
-  const handleInlineReturn = useCallback((idExemplar) => {
-    if (onReturn) onReturn(idExemplar);
-  }, [onReturn]);
+  const handleInlineReturn = useCallback(
+    (idExemplar) => {
+      if (onReturn) onReturn(idExemplar)
+    },
+    [onReturn],
+  )
 
-  const handleInlineRenew = useCallback((idEmprestimo) => {
-    if (onRenew) onRenew(idEmprestimo);
-  }, [onRenew]);
+  const handleInlineRenew = useCallback(
+    (idEmprestimo) => {
+      if (onRenew) onRenew(idEmprestimo)
+    },
+    [onRenew],
+  )
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">Empréstimos & Devoluções</h2>
+          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">
+            Empréstimos & Devoluções
+          </h2>
           <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
-            {enriched.filter((e) => e.status === "ativo").length} ativo{enriched.filter((e) => e.status === "ativo").length !== 1 && "s"} · {tabCounts.atrasados > 0 && <span className="text-red-500 font-semibold">{tabCounts.atrasados} atrasado{tabCounts.atrasados !== 1 && "s"}</span>}
+            {enriched.filter((e) => e.status === "ativo").length} ativo
+            {enriched.filter((e) => e.status === "ativo").length !== 1 &&
+              "s"} ·{" "}
+            {tabCounts.atrasados > 0 && (
+              <span className="text-red-500 font-semibold">
+                {tabCounts.atrasados} atrasado{tabCounts.atrasados !== 1 && "s"}
+              </span>
+            )}
           </p>
         </div>
-        <button onClick={onOpenLoan} className="rounded-2xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+        <button
+          onClick={onOpenLoan}
+          className="rounded-2xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        >
           Novo Empréstimo
         </button>
       </div>
@@ -65,9 +105,9 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
       {/* Tabs */}
       <div className="flex gap-1 rounded-2xl border border-surface-200 bg-surface-100 p-1 dark:border-surface-700 dark:bg-surface-800">
         {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const count = tabCounts[tab.id];
-          const isActive = activeTab === tab.id;
+          const Icon = tab.icon
+          const count = tabCounts[tab.id]
+          const isActive = activeTab === tab.id
           return (
             <button
               key={tab.id}
@@ -78,19 +118,26 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                   : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-300"
               }`}
             >
-              <Icon size={16} className={tab.id === "atrasados" && count > 0 ? "text-red-500" : ""} />
+              <Icon
+                size={16}
+                className={
+                  tab.id === "atrasados" && count > 0 ? "text-red-500" : ""
+                }
+              />
               {tab.label}
               {count > 0 && (
-                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                  tab.id === "atrasados"
-                    ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
-                    : "bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-400"
-                }`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                    tab.id === "atrasados"
+                      ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                      : "bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-400"
+                  }`}
+                >
                   {count}
                 </span>
               )}
             </button>
-          );
+          )
         })}
       </div>
 
@@ -100,15 +147,27 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-surface-100 dark:border-surface-800">
-                <th className="py-3.5 pl-5 pr-3 text-base font-semibold text-surface-500 dark:text-surface-400">Obra</th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Inventário</th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Leitor</th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Início</th>
+                <th className="py-3.5 pl-5 pr-3 text-base font-semibold text-surface-500 dark:text-surface-400">
+                  Obra
+                </th>
                 <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
-                  {activeTab === "devolvidos" ? "Devolvido em" : "Devolução Prevista"}
+                  Inventário
+                </th>
+                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
+                  Leitor
+                </th>
+                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
+                  Início
+                </th>
+                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
+                  {activeTab === "devolvidos"
+                    ? "Devolvido em"
+                    : "Devolução Prevista"}
                 </th>
                 {activeTab !== "devolvidos" && (
-                  <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">Ações</th>
+                  <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">
+                    Ações
+                  </th>
                 )}
               </tr>
             </thead>
@@ -124,9 +183,13 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                 >
                   <td className="py-3.5 pl-5 pr-3">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">{mov.obra?.capa || "📕"}</span>
+                      <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
+                        {mov.obra?.capa || "📕"}
+                      </span>
                       <div className="min-w-0">
-                        <span className="block truncate text-base font-medium text-surface-800 dark:text-surface-200">{mov.obra?.titulo || "—"}</span>
+                        <span className="block truncate text-base font-medium text-surface-800 dark:text-surface-200">
+                          {mov.obra?.titulo || "—"}
+                        </span>
                         {mov.isOverdue && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
                             <AlertTriangle size={12} />
@@ -142,17 +205,24 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                       {mov.exemplar?.numeroInventario || "—"}
                     </span>
                   </td>
-                  <td className="px-3 py-3.5 text-base text-surface-600 dark:text-surface-300">{mov.leitor?.nome || "—"}</td>
-                  <td className="px-3 py-3.5 text-base text-surface-500 dark:text-surface-400">{new Date(mov.dataInicio).toLocaleDateString("pt-BR")}</td>
-                  <td className={`px-3 py-3.5 text-base ${
-                    mov.isOverdue
-                      ? "font-semibold text-red-600 dark:text-red-400"
-                      : "text-surface-500 dark:text-surface-400"
-                  }`}>
+                  <td className="px-3 py-3.5 text-base text-surface-600 dark:text-surface-300">
+                    {mov.leitor?.nome || "—"}
+                  </td>
+                  <td className="px-3 py-3.5 text-base text-surface-500 dark:text-surface-400">
+                    {new Date(mov.dataInicio).toLocaleDateString("pt-BR")}
+                  </td>
+                  <td
+                    className={`px-3 py-3.5 text-base ${
+                      mov.isOverdue
+                        ? "font-semibold text-red-600 dark:text-red-400"
+                        : "text-surface-500 dark:text-surface-400"
+                    }`}
+                  >
                     {activeTab === "devolvidos" && mov.dataDevolvido
                       ? new Date(mov.dataDevolvido).toLocaleDateString("pt-BR")
-                      : new Date(mov.dataDevolucaoPrevista).toLocaleDateString("pt-BR")
-                    }
+                      : new Date(mov.dataDevolucaoPrevista).toLocaleDateString(
+                          "pt-BR",
+                        )}
                   </td>
                   {activeTab !== "devolvidos" && (
                     <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
@@ -184,19 +254,36 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                     <div className="flex flex-col items-center gap-3">
                       {activeTab === "atrasados" ? (
                         <>
-                          <CheckCircle2 size={40} className="text-emerald-400" />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">Nenhum atraso! 🎉</p>
-                          <p className="text-base text-surface-400 dark:text-surface-500">Todos os empréstimos estão em dia.</p>
+                          <CheckCircle2
+                            size={40}
+                            className="text-emerald-400"
+                          />
+                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
+                            Nenhum atraso! 🎉
+                          </p>
+                          <p className="text-base text-surface-400 dark:text-surface-500">
+                            Todos os empréstimos estão em dia.
+                          </p>
                         </>
                       ) : activeTab === "devolvidos" ? (
                         <>
-                          <Clock size={40} className="text-surface-300 dark:text-surface-600" />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">Nenhuma devolução registrada ainda.</p>
+                          <Clock
+                            size={40}
+                            className="text-surface-300 dark:text-surface-600"
+                          />
+                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
+                            Nenhuma devolução registrada ainda.
+                          </p>
                         </>
                       ) : (
                         <>
-                          <Clock size={40} className="text-surface-300 dark:text-surface-600" />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">Nenhum empréstimo ativo.</p>
+                          <Clock
+                            size={40}
+                            className="text-surface-300 dark:text-surface-600"
+                          />
+                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
+                            Nenhum empréstimo ativo.
+                          </p>
                         </>
                       )}
                     </div>
@@ -208,5 +295,5 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
         </div>
       </div>
     </div>
-  );
+  )
 }
