@@ -1,37 +1,52 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { X, BookOpen, User, Calendar, Search, Hash, ChevronRight } from "lucide-react";
-import Autocomplete from "./Autocomplete";
-import { mockObras, mockLeitores } from "../data/mockData";
-import { listLeitores } from "../../services/leitorService.js";
-import { listExemplaresDisponiveis } from "../../services/exemplarService.js";
-import { getUsuarioById } from "../../services/usuarioService.js";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import {
+  X,
+  BookOpen,
+  User,
+  Calendar,
+  Search,
+  Hash,
+  ChevronRight,
+} from "lucide-react"
+import Autocomplete from "./Autocomplete"
+import { mockObras, mockLeitores } from "../data/mockData"
+import { listLeitores } from "../../services/leitorService.js"
+import { listExemplaresDisponiveis } from "../../services/exemplarService.js"
+import { getUsuarioById } from "../../services/usuarioService.js"
 
-export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares, onConfirm }) {
-  const [selectedLeitor, setSelectedLeitor] = useState(null);
-  const [selectedExemplar, setSelectedExemplar] = useState(null);
-  const [dataDevolucao, setDataDevolucao] = useState("");
+export default function NewLoanDrawer({
+  isOpen,
+  onClose,
+  emprestimos,
+  exemplares,
+  onConfirm,
+}) {
+  const [selectedLeitor, setSelectedLeitor] = useState(null)
+  const [selectedExemplar, setSelectedExemplar] = useState(null)
+  const [dataDevolucao, setDataDevolucao] = useState("")
   const [exemplaresDisponiveis, setExemplares] = useState([])
   const [leitores, setLeitores] = useState([])
-  const drawerRef = useRef(null);
+  const drawerRef = useRef(null)
 
   useEffect(() => {
     if (isOpen) {
-      const date = new Date();
-      date.setDate(date.getDate() + 14);
-      setDataDevolucao(date.toISOString().split("T")[0]);
-      setSelectedLeitor(null);
-      setSelectedExemplar(null);
+      const date = new Date()
+      date.setDate(date.getDate() + 14)
+      setDataDevolucao(date.toISOString().split("T")[0])
+      setSelectedLeitor(null)
+      setSelectedExemplar(null)
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   useEffect(() => {
     const loadData = async () => {
       const lei = await listLeitores()
-      const dataLeitores = await Promise.all( 
+      const dataLeitores = await Promise.all(
         lei.data.map(async (l) => {
           const usu = await getUsuarioById(l.id_usuario)
           return { usuario: usu.data, leitor: l }
-      }))
+        }),
+      )
       setLeitores(dataLeitores)
 
       const exe = await listExemplaresDisponiveis()
@@ -42,50 +57,66 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
   }, [])
 
   useEffect(() => {
-    const handleEsc = (e) => { if (e.key === "Escape") onClose(); };
-    if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
-      return () => document.removeEventListener("keydown", handleEsc);
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose()
     }
-  }, [isOpen, onClose]);
+    if (isOpen) {
+      document.addEventListener("keydown", handleEsc)
+      return () => document.removeEventListener("keydown", handleEsc)
+    }
+  }, [isOpen, onClose])
 
   // All available exemplares enriched with obra info
   const availableExemplares = useMemo(() => {
-    return exemplares.filter((e) => e.disponivel).map((e) => {
-      const obra = mockObras.find((o) => o.idObra === e.idObra);
-      return { ...e, titulo: obra?.titulo || "—", autor: obra?.autor || "—", capa: obra?.capa || "📕" };
-    });
-  }, [exemplares]);
+    return exemplares
+      .filter((e) => e.disponivel)
+      .map((e) => {
+        const obra = mockObras.find((o) => o.idObra === e.idObra)
+        return {
+          ...e,
+          titulo: obra?.titulo || "—",
+          autor: obra?.autor || "—",
+          capa: obra?.capa || "📕",
+        }
+      })
+  }, [exemplares])
 
   const filterLeitores = useCallback((items, query) => {
-    if (!query.trim()) return items;
-    const q = query.toLowerCase();
-    return items.filter((l) => l.usuario.nome.toLowerCase().includes(q) || l.leitor.telefone.toLowerCase().includes(q));
-  }, []);
+    if (!query.trim()) return items
+    const q = query.toLowerCase()
+    return items.filter(
+      (l) =>
+        l.usuario.nome.toLowerCase().includes(q) ||
+        l.leitor.telefone.toLowerCase().includes(q),
+    )
+  }, [])
 
   const filterExemplares = useCallback((items, query) => {
-    if (!query.trim()) return items;
-    const q = query.toLowerCase();
+    if (!query.trim()) return items
+    const q = query.toLowerCase()
     return items.filter(
-      (e) => e.titulo.toLowerCase().includes(q) || e.numeroInventario.toLowerCase().includes(q) || e.autor.toLowerCase().includes(q)
-    );
-  }, []);
+      (e) =>
+        e.titulo.toLowerCase().includes(q) ||
+        e.numeroInventario.toLowerCase().includes(q) ||
+        e.autor.toLowerCase().includes(q),
+    )
+  }, [])
 
   // Day of week for return date
   const returnDayLabel = useMemo(() => {
-    if (!dataDevolucao) return "";
-    const d = new Date(dataDevolucao + "T12:00:00");
-    return d.toLocaleDateString("pt-BR", { weekday: "long" });
-  }, [dataDevolucao]);
+    if (!dataDevolucao) return ""
+    const d = new Date(dataDevolucao + "T12:00:00")
+    return d.toLocaleDateString("pt-BR", { weekday: "long" })
+  }, [dataDevolucao])
 
-  const canSubmit = selectedLeitor && selectedExemplar && dataDevolucao;
+  const canSubmit = selectedLeitor && selectedExemplar && dataDevolucao
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!canSubmit) return;
-    onConfirm(selectedExemplar.id, selectedLeitor.leitor.id);
-    onClose();
-  };
+    e.preventDefault()
+    if (!canSubmit) return
+    onConfirm(selectedExemplar.id, selectedLeitor.leitor.id)
+    onClose()
+  }
 
   return (
     <>
@@ -108,11 +139,19 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
               <BookOpen size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Novo Empréstimo</h2>
-              <p className="text-base text-surface-400 dark:text-surface-500">Registrar saída de exemplar</p>
+              <h2 className="text-lg font-semibold text-surface-900 dark:text-white">
+                Novo Empréstimo
+              </h2>
+              <p className="text-base text-surface-400 dark:text-surface-500">
+                Registrar saída de exemplar
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-2xl p-3 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-surface-500 dark:hover:bg-surface-800" aria-label="Fechar">
+          <button
+            onClick={onClose}
+            className="rounded-2xl p-3 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-surface-500 dark:hover:bg-surface-800"
+            aria-label="Fechar"
+          >
             <X size={22} />
           </button>
         </div>
@@ -132,11 +171,15 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                   return (
                     <div className="flex w-full items-center justify-between">
                       <div>
-                        <p className="text-base font-medium text-surface-800 dark:text-surface-200">{l.usuario.nome}</p>
-                        <p className="text-base text-surface-400 dark:text-surface-500">{l.leitor.telefone}</p>
+                        <p className="text-base font-medium text-surface-800 dark:text-surface-200">
+                          {l.usuario.nome}
+                        </p>
+                        <p className="text-base text-surface-400 dark:text-surface-500">
+                          {l.leitor.telefone}
+                        </p>
                       </div>
                     </div>
-                  );
+                  )
                 }}
                 onSelect={(l) => {
                   setSelectedLeitor(l)
@@ -161,17 +204,27 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                 filterFn={filterExemplares}
                 renderItem={(e) => (
                   <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">{e.capa}</span>
+                    <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
+                      {e.capa}
+                    </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">{e.titulo}</p>
-                      <p className="text-base text-surface-400 dark:text-surface-500">{e.numeroInventario} · {e.autor}</p>
+                      <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">
+                        {e.titulo}
+                      </p>
+                      <p className="text-base text-surface-400 dark:text-surface-500">
+                        {e.numeroInventario} · {e.autor}
+                      </p>
                     </div>
                   </div>
                 )}
                 onSelect={(e) => setSelectedExemplar(e)}
                 placeholder="Buscar por título ou nº inventário..."
                 selected={selectedExemplar}
-                selectedLabel={selectedExemplar ? `${selectedExemplar.titulo} — ${selectedExemplar.numeroInventario}` : ""}
+                selectedLabel={
+                  selectedExemplar
+                    ? `${selectedExemplar.titulo} — ${selectedExemplar.numeroInventario}`
+                    : ""
+                }
                 onClear={() => setSelectedExemplar(null)}
                 icon={Search}
               />
@@ -179,7 +232,10 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
 
             {/* Data de Devolução */}
             <div>
-              <label htmlFor="data-devolucao" className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+              <label
+                htmlFor="data-devolucao"
+                className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300"
+              >
                 <Calendar size={18} className="text-surface-400" />
                 Data de Devolução
               </label>
@@ -199,22 +255,40 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
             {/* #6 — Summary Card (only shows when both are selected) */}
             {canSubmit && (
               <div className="rounded-2xl border border-brand-200 bg-brand-50/50 p-5 dark:border-brand-500/20 dark:bg-brand-500/5">
-                <p className="mb-3 text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">Resumo do Empréstimo</p>
+                <p className="mb-3 text-sm font-bold uppercase tracking-wider text-brand-600 dark:text-brand-400">
+                  Resumo do Empréstimo
+                </p>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-8 items-center justify-center rounded-lg bg-white text-lg shadow-sm dark:bg-surface-800">{selectedExemplar.capa}</span>
+                    <span className="flex h-10 w-8 items-center justify-center rounded-lg bg-white text-lg shadow-sm dark:bg-surface-800">
+                      {selectedExemplar.capa}
+                    </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-base font-semibold text-surface-900 dark:text-white">{selectedExemplar.titulo}</p>
-                      <p className="font-mono text-sm text-surface-500 dark:text-surface-400">{selectedExemplar.numeroInventario}</p>
+                      <p className="truncate text-base font-semibold text-surface-900 dark:text-white">
+                        {selectedExemplar.titulo}
+                      </p>
+                      <p className="font-mono text-sm text-surface-500 dark:text-surface-400">
+                        {selectedExemplar.numeroInventario}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-base text-surface-600 dark:text-surface-300">
                     <ChevronRight size={16} className="text-brand-500" />
-                    <span>Para: <strong>{selectedLeitor.usuario.nome}</strong></span>
+                    <span>
+                      Para: <strong>{selectedLeitor.usuario.nome}</strong>
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-base text-surface-600 dark:text-surface-300">
                     <ChevronRight size={16} className="text-brand-500" />
-                    <span>Devolver até: <strong>{new Date(dataDevolucao + "T12:00:00").toLocaleDateString("pt-BR")} ({returnDayLabel})</strong></span>
+                    <span>
+                      Devolver até:{" "}
+                      <strong>
+                        {new Date(
+                          dataDevolucao + "T12:00:00",
+                        ).toLocaleDateString("pt-BR")}{" "}
+                        ({returnDayLabel})
+                      </strong>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -233,5 +307,5 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
         </form>
       </div>
     </>
-  );
+  )
 }
