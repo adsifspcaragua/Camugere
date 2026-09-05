@@ -5,7 +5,7 @@ import getEmprestimoByIdController from '../Controller/Emprestimo/getEmprestimoB
 import deleteEmprestimoController from '../Controller/Emprestimo/deleteEmprestimoController.js';
 import updateEmprestimoController from '../Controller/Emprestimo/listEmprestimoController.js';
 import listEmprestimoAtrasadoController from '../Controller/Emprestimo/listEmprestimoAtrasadoController.js';
-
+import getEmprestimoByIdExemplarController from '../Controller/Emprestimo/getEmprestimoByIdExemplarController.js';
 
 const router = express.Router();
 
@@ -15,5 +15,6 @@ router.get('/list/atrasados', listEmprestimoAtrasadoController)
 router.get('/get/:id', getEmprestimoByIdController)
 router.delete('/delete/:id', deleteEmprestimoController)
 router.put('/update/:id', updateEmprestimoController)
+router.get('/getbyexemplar/:id', getEmprestimoByIdExemplarController)
 
 export default router

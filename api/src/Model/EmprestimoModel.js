@@ -108,6 +108,24 @@ export async function getEmprestimoById(id) {
     return result
 }
 
+export async function getEmprestimoByIdExemplar(id) {
+    const result = await prisma.Emprestimo.findFirst({
+        where: {
+            id_exemplar: id
+        }, select: {
+            id: true,
+            dataInicio: true,
+            diasLocacao: true,
+            id_leitor: true,
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
+        }
+    })
+
+    return result
+}
+
 export async function deleteEmprestimo(id) {
     const result = await prisma.Emprestimo.delete({
         where: {

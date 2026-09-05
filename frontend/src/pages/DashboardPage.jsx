@@ -20,12 +20,12 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
     const emprestimosAtivos = emprestimos.filter((e) => {
       const dataFim = new Date(e.dataInicio)
       dataFim.setDate(dataFim.getDate() + e.diasLocacao);
-      return dataFim >= new Date();
+      return dataFim <= new Date();
     }).length
     const atrasos = emprestimos.filter((e) => {
       const dataFim = new Date(e.dataInicio)
       dataFim.setDate(dataFim.getDate() + e.diasLocacao);
-      return dataFim <= new Date();
+      return dataFim >= new Date();
     }).length
     const today = new Date().toISOString().split("T")[0];
     return { totalObras, totalExemplares, emprestimosAtivos, atrasos };

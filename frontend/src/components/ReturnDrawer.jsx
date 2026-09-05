@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { X, BookOpen, Search, Hash, CornerDownLeft } from "lucide-react";
 import { mockObras, mockLeitores } from "../data/mockData";
-import { listExemplaresIndisponiveis } from "../../services/exemplarService.js";
+import { getExemplarById } from "../../services/exemplarService.js";
+import { getObraById } from "../../services/obraService.js";
+import { listEmprestimos } from "../../services/emprestimoService.js";
+import { getLeitorById } from "../../services/leitorService.js";
 
 export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos, onConfirm }) {
   const [query, setQuery] = useState("");
@@ -11,6 +14,7 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
   const drawerRef = useRef(null);
   const searchRef = useRef(null);
   const listRef = useRef(null);
+  const [exemplaresData, setExemplaresData] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -53,13 +57,35 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
       });
   }, [exemplares, emprestimos]);
 
+  useEffect(() => {
+    async function carregar() {
+      const emprestimos = await listEmprestimos()
+
+      const resultados = await Promise.all(
+        emprestimos.data.map(async (e) => {
+          const exemplar = await getExemplarById(e.id_exemplar);
+          const obra = await getObraById(exemplar.data.id_obra);
+          const leitor = await getLeitorById(e.id_leitor);
+          const dataFim = new Date(e.dataInicio)
+          dataFim.setDate(dataFim.getDate() + e.diasLocacao);
+          const isOverdue = dataFim > new Date();
+          return { exemplar: exemplar.data, obra: obra.data, emprestimo: e, leitor: leitor.leitor, usuario: leitor.usuario, isOverdue};
+        })
+      );
+
+      setExemplaresData(resultados);
+    }
+
+    carregar();
+  }, []);
+
   const filtered = useMemo(() => {
-    if (!query.trim()) return borrowedExemplares;
+    if (!query.trim()) return exemplaresData
     const q = query.toLowerCase();
-    return borrowedExemplares.filter(
-      (e) => e.numeroInventario.toLowerCase().includes(q) || e.titulo.toLowerCase().includes(q) || (e.leitor?.nome || "").toLowerCase().includes(q)
+    return exemplaresData.filter(
+      (e) => e.exemplar.numeroInventario.toLowerCase().includes(q) || e.obra.titulo.toLowerCase().includes(q) || (e.leitor?.nome || "").toLowerCase().includes(q)
     );
-  }, [borrowedExemplares, query]);
+  }, [exemplaresData, query]);
 
   // Reset highlight when filtered changes
   useEffect(() => { setHighlightIndex(-1); }, [filtered]);
@@ -173,22 +199,20 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                     <div ref={listRef} role="listbox" className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 scrollbar-thin">
                       {filtered.map((e, i) => (
                         <button
-                          key={e.idExemplar}
+                          key={e.exemplar.id}
                           type="button"
                           role="option"
                           aria-selected={i === highlightIndex}
                           onClick={() => handleSelect(e)}
                           onMouseEnter={() => setHighlightIndex(i)}
-                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors focus:outline-none ${
-                            i === highlightIndex
+                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors focus:outline-none ${i === highlightIndex
                               ? "bg-brand-50 dark:bg-brand-500/10"
                               : "hover:bg-surface-50 dark:hover:bg-surface-800"
-                          }`}
+                            }`}
                         >
-                          <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">{e.capa}</span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">{e.titulo}</p>
-                            <p className="text-base text-surface-400 dark:text-surface-500">{e.numeroInventario} · {e.leitor?.nome || "—"}</p>
+                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">{e.obra.titulo}</p>
+                            <p className="text-base text-surface-400 dark:text-surface-500">{e.exemplar.numeroInventario} · {e.usuario.nome }</p>
                           </div>
                           {e.isOverdue && (
                             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
@@ -206,7 +230,7 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                   )}
                 </div>
                 <p className="mt-2 text-base text-surface-400 dark:text-surface-500">
-                  {borrowedExemplares.length} exemplar{borrowedExemplares.length !== 1 && "es"} emprestado{borrowedExemplares.length !== 1 && "s"}
+                  {exemplaresData.length} exemplar{exemplaresData.length !== 1 && "es"} emprestado{exemplaresData.length !== 1 && "s"}
                 </p>
               </div>
             )}
@@ -226,9 +250,6 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                 </div>
                 <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 dark:border-surface-700 dark:bg-surface-800">
                   <div className="flex items-start gap-4">
-                    <span className="flex h-14 w-11 items-center justify-center rounded-xl bg-white text-2xl shadow-sm dark:bg-surface-700">
-                      {selectedExemplar.capa}
-                    </span>
                     <div className="min-w-0 flex-1 space-y-2">
                       <p className="text-lg font-semibold text-surface-900 dark:text-white">{selectedExemplar.titulo}</p>
                       <p className="text-base text-surface-500 dark:text-surface-400">{selectedExemplar.autor}</p>
