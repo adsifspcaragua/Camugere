@@ -1,40 +1,44 @@
-import { useEffect, useState } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { getExemplarById } from "../../services/exemplarService.js";
-import { getObraById } from "../../services/obraService.js";
-import { getLeitorById } from "../../services/leitorService.js";
+import { useEffect, useState } from "react"
+import { ArrowUpRight } from "lucide-react"
+import { getExemplarById } from "../../services/exemplarService.js"
+import { getObraById } from "../../services/obraService.js"
+import { getLeitorById } from "../../services/leitorService.js"
 
 export default function RecentMovements({ emprestimos, onNavigate }) {
-
   const [data, setData] = useState([])
 
   useEffect(() => {
-    let cancelado = false;
+    let cancelado = false
 
     async function carregarDados() {
       const emprestimosRecentes = [...emprestimos]
         .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
-        .slice(0, 5);
+        .slice(0, 5)
 
       const resultados = await Promise.all(
         emprestimosRecentes.map(async (emp) => {
-          const exe = await getExemplarById(emp.id_exemplar);
-          const lei = await getLeitorById(emp.id_leitor);
-          const obr = await getObraById(exe.data.id_obra);
-          return { emprestimo: emp, exemplar: exe.data, leitor: lei.usuario, obra: obr.data };
-        })
-      );
+          const exe = await getExemplarById(emp.id_exemplar)
+          const lei = await getLeitorById(emp.id_leitor)
+          const obr = await getObraById(exe.data.id_obra)
+          return {
+            emprestimo: emp,
+            exemplar: exe.data,
+            leitor: lei.usuario,
+            obra: obr.data,
+          }
+        }),
+      )
 
       if (!cancelado) {
-        setData(resultados);
+        setData(resultados)
       }
     }
 
     carregarDados()
 
     return () => {
-      cancelado = true;
-    };
+      cancelado = true
+    }
   }, [])
 
   return (
@@ -61,19 +65,22 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
                 {item.obra.titulo}
               </p>
               <p className="truncate text-base text-surface-400 dark:text-surface-500">
-                {item.leitor.nome || ''} · Inventário -  {item.exemplar?.numeroInventario}
+                {item.leitor.nome || ""} · Inventário -{" "}
+                {item.exemplar?.numeroInventario}
               </p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-base font-medium text-surface-600 dark:text-surface-300">
-                {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
+                {new Date(item.emprestimo.dataInicio).toLocaleDateString(
+                  "pt-BR",
+                )}
               </p>
               <p className="text-base text-surface-400 dark:text-surface-500">
                 Até
                 {((item) => {
                   const data = new Date(item.emprestimo.dataInicio)
                   data.setDate(data.getDate() + item.emprestimo.diasLocacao)
-                  return " " + data.toLocaleDateString('pt-BR')
+                  return " " + data.toLocaleDateString("pt-BR")
                 })(item)}
               </p>
             </div>
@@ -81,5 +88,5 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
         ))}
       </div>
     </div>
-  );
+  )
 }

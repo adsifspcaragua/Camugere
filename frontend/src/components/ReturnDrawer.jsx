@@ -1,118 +1,144 @@
-import { useState, useEffect, useRef, useMemo } from "react";
-import { X, BookOpen, Search, Hash, CornerDownLeft } from "lucide-react";
-import { mockObras, mockLeitores } from "../data/mockData";
+import { useState, useEffect, useRef, useMemo } from "react"
+import { X, BookOpen, Search, Hash, CornerDownLeft } from "lucide-react"
+import { mockObras, mockLeitores } from "../data/mockData"
 
-export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos, onConfirm }) {
-  const [query, setQuery] = useState("");
-  const [selectedExemplar, setSelectedExemplar] = useState(null);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [highlightIndex, setHighlightIndex] = useState(-1);
-  const drawerRef = useRef(null);
-  const searchRef = useRef(null);
-  const listRef = useRef(null);
+export default function ReturnDrawer({
+  isOpen,
+  onClose,
+  exemplares,
+  emprestimos,
+  onConfirm,
+}) {
+  const [query, setQuery] = useState("")
+  const [selectedExemplar, setSelectedExemplar] = useState(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState(-1)
+  const drawerRef = useRef(null)
+  const searchRef = useRef(null)
+  const listRef = useRef(null)
 
   useEffect(() => {
     if (isOpen) {
-      setQuery("");
-      setSelectedExemplar(null);
-      setDropdownOpen(false);
-      setHighlightIndex(-1);
+      setQuery("")
+      setSelectedExemplar(null)
+      setDropdownOpen(false)
+      setHighlightIndex(-1)
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   useEffect(() => {
-    const handleEsc = (e) => { if (e.key === "Escape") onClose(); };
-    if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
-      return () => document.removeEventListener("keydown", handleEsc);
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose()
     }
-  }, [isOpen, onClose]);
+    if (isOpen) {
+      document.addEventListener("keydown", handleEsc)
+      return () => document.removeEventListener("keydown", handleEsc)
+    }
+  }, [isOpen, onClose])
 
   useEffect(() => {
     const handler = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) setDropdownOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+      if (searchRef.current && !searchRef.current.contains(e.target))
+        setDropdownOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
 
   // Only active (not yet returned) borrowed exemplares
   const borrowedExemplares = useMemo(() => {
-    const activeEmprestimos = emprestimos.filter((e) => e.status === "ativo");
-    const empIds = new Set(activeEmprestimos.map((e) => e.idExemplar));
+    const activeEmprestimos = emprestimos.filter((e) => e.status === "ativo")
+    const empIds = new Set(activeEmprestimos.map((e) => e.idExemplar))
     return exemplares
       .filter((e) => !e.disponivel && empIds.has(e.idExemplar))
       .map((e) => {
-        const obra = mockObras.find((o) => o.idObra === e.idObra);
-        const emp = activeEmprestimos.find((em) => em.idExemplar === e.idExemplar);
-        const leitor = emp ? mockLeitores.find((l) => l.idLeitor === emp.idLeitor) : null;
-        const today = new Date().toISOString().split("T")[0];
-        const isOverdue = emp && emp.dataDevolucaoPrevista < today;
-        return { ...e, titulo: obra?.titulo || "—", autor: obra?.autor || "—", capa: obra?.capa || "📕", leitor, emprestimo: emp, isOverdue };
-      });
-  }, [exemplares, emprestimos]);
+        const obra = mockObras.find((o) => o.idObra === e.idObra)
+        const emp = activeEmprestimos.find(
+          (em) => em.idExemplar === e.idExemplar,
+        )
+        const leitor = emp
+          ? mockLeitores.find((l) => l.idLeitor === emp.idLeitor)
+          : null
+        const today = new Date().toISOString().split("T")[0]
+        const isOverdue = emp && emp.dataDevolucaoPrevista < today
+        return {
+          ...e,
+          titulo: obra?.titulo || "—",
+          autor: obra?.autor || "—",
+          capa: obra?.capa || "📕",
+          leitor,
+          emprestimo: emp,
+          isOverdue,
+        }
+      })
+  }, [exemplares, emprestimos])
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return borrowedExemplares;
-    const q = query.toLowerCase();
+    if (!query.trim()) return borrowedExemplares
+    const q = query.toLowerCase()
     return borrowedExemplares.filter(
-      (e) => e.numeroInventario.toLowerCase().includes(q) || e.titulo.toLowerCase().includes(q) || (e.leitor?.nome || "").toLowerCase().includes(q)
-    );
-  }, [borrowedExemplares, query]);
+      (e) =>
+        e.numeroInventario.toLowerCase().includes(q) ||
+        e.titulo.toLowerCase().includes(q) ||
+        (e.leitor?.nome || "").toLowerCase().includes(q),
+    )
+  }, [borrowedExemplares, query])
 
   // Reset highlight when filtered changes
-  useEffect(() => { setHighlightIndex(-1); }, [filtered]);
+  useEffect(() => {
+    setHighlightIndex(-1)
+  }, [filtered])
 
   // Scroll highlight into view
   useEffect(() => {
     if (highlightIndex >= 0 && listRef.current) {
-      const el = listRef.current.children[highlightIndex];
-      if (el) el.scrollIntoView({ block: "nearest" });
+      const el = listRef.current.children[highlightIndex]
+      if (el) el.scrollIntoView({ block: "nearest" })
     }
-  }, [highlightIndex]);
+  }, [highlightIndex])
 
   const handleSelect = (exemplar) => {
-    setSelectedExemplar(exemplar);
-    setDropdownOpen(false);
-    setQuery("");
-    setHighlightIndex(-1);
-  };
+    setSelectedExemplar(exemplar)
+    setDropdownOpen(false)
+    setQuery("")
+    setHighlightIndex(-1)
+  }
 
   const handleKeyDown = (e) => {
     if (!dropdownOpen || filtered.length === 0) {
       if (e.key === "ArrowDown" && filtered.length > 0) {
-        setDropdownOpen(true);
-        setHighlightIndex(0);
-        e.preventDefault();
+        setDropdownOpen(true)
+        setHighlightIndex(0)
+        e.preventDefault()
       }
-      return;
+      return
     }
     switch (e.key) {
       case "ArrowDown":
-        e.preventDefault();
-        setHighlightIndex((prev) => prev < filtered.length - 1 ? prev + 1 : 0);
-        break;
+        e.preventDefault()
+        setHighlightIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : 0))
+        break
       case "ArrowUp":
-        e.preventDefault();
-        setHighlightIndex((prev) => prev > 0 ? prev - 1 : filtered.length - 1);
-        break;
+        e.preventDefault()
+        setHighlightIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
+        break
       case "Enter":
-        e.preventDefault();
-        if (highlightIndex >= 0) handleSelect(filtered[highlightIndex]);
-        break;
+        e.preventDefault()
+        if (highlightIndex >= 0) handleSelect(filtered[highlightIndex])
+        break
       case "Escape":
-        e.preventDefault();
-        setDropdownOpen(false);
-        setHighlightIndex(-1);
-        break;
+        e.preventDefault()
+        setDropdownOpen(false)
+        setHighlightIndex(-1)
+        break
     }
-  };
+  }
 
   const handleSubmit = () => {
-    if (!selectedExemplar) return;
-    onConfirm(selectedExemplar.idExemplar);
-    onClose();
-  };
+    if (!selectedExemplar) return
+    onConfirm(selectedExemplar.idExemplar)
+    onClose()
+  }
 
   return (
     <>
@@ -135,11 +161,19 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
               <CornerDownLeft size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Registrar Devolução</h2>
-              <p className="text-base text-surface-400 dark:text-surface-500">Dar baixa em exemplar emprestado</p>
+              <h2 className="text-lg font-semibold text-surface-900 dark:text-white">
+                Registrar Devolução
+              </h2>
+              <p className="text-base text-surface-400 dark:text-surface-500">
+                Dar baixa em exemplar emprestado
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-2xl p-3 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-surface-500 dark:hover:bg-surface-800" aria-label="Fechar">
+          <button
+            onClick={onClose}
+            className="rounded-2xl p-3 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-surface-500 dark:hover:bg-surface-800"
+            aria-label="Fechar"
+          >
             <X size={22} />
           </button>
         </div>
@@ -154,11 +188,17 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                   Buscar Exemplar Emprestado
                 </label>
                 <div ref={searchRef} className="relative">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                  <Search
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400"
+                  />
                   <input
                     type="text"
                     value={query}
-                    onChange={(e) => { setQuery(e.target.value); setDropdownOpen(true); }}
+                    onChange={(e) => {
+                      setQuery(e.target.value)
+                      setDropdownOpen(true)
+                    }}
                     onFocus={() => setDropdownOpen(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="INV-XXXX, título ou nome do leitor..."
@@ -169,7 +209,11 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                     aria-haspopup="listbox"
                   />
                   {dropdownOpen && filtered.length > 0 && (
-                    <div ref={listRef} role="listbox" className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 scrollbar-thin">
+                    <div
+                      ref={listRef}
+                      role="listbox"
+                      className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 scrollbar-thin"
+                    >
                       {filtered.map((e, i) => (
                         <button
                           key={e.idExemplar}
@@ -184,10 +228,16 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                               : "hover:bg-surface-50 dark:hover:bg-surface-800"
                           }`}
                         >
-                          <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">{e.capa}</span>
+                          <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
+                            {e.capa}
+                          </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">{e.titulo}</p>
-                            <p className="text-base text-surface-400 dark:text-surface-500">{e.numeroInventario} · {e.leitor?.nome || "—"}</p>
+                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">
+                              {e.titulo}
+                            </p>
+                            <p className="text-base text-surface-400 dark:text-surface-500">
+                              {e.numeroInventario} · {e.leitor?.nome || "—"}
+                            </p>
                           </div>
                           {e.isOverdue && (
                             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
@@ -205,7 +255,9 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                   )}
                 </div>
                 <p className="mt-2 text-base text-surface-400 dark:text-surface-500">
-                  {borrowedExemplares.length} exemplar{borrowedExemplares.length !== 1 && "es"} emprestado{borrowedExemplares.length !== 1 && "s"}
+                  {borrowedExemplares.length} exemplar
+                  {borrowedExemplares.length !== 1 && "es"} emprestado
+                  {borrowedExemplares.length !== 1 && "s"}
                 </p>
               </div>
             )}
@@ -214,7 +266,9 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
             {selectedExemplar && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-base font-medium text-surface-700 dark:text-surface-300">Confirmar devolução:</p>
+                  <p className="text-base font-medium text-surface-700 dark:text-surface-300">
+                    Confirmar devolução:
+                  </p>
                   <button
                     type="button"
                     onClick={() => setSelectedExemplar(null)}
@@ -229,20 +283,37 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
                       {selectedExemplar.capa}
                     </span>
                     <div className="min-w-0 flex-1 space-y-2">
-                      <p className="text-lg font-semibold text-surface-900 dark:text-white">{selectedExemplar.titulo}</p>
-                      <p className="text-base text-surface-500 dark:text-surface-400">{selectedExemplar.autor}</p>
+                      <p className="text-lg font-semibold text-surface-900 dark:text-white">
+                        {selectedExemplar.titulo}
+                      </p>
+                      <p className="text-base text-surface-500 dark:text-surface-400">
+                        {selectedExemplar.autor}
+                      </p>
                       <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 dark:bg-surface-700">
                         <Hash size={16} className="text-brand-500" />
-                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">{selectedExemplar.numeroInventario}</span>
+                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">
+                          {selectedExemplar.numeroInventario}
+                        </span>
                       </div>
                     </div>
                   </div>
                   <div className="mt-4 rounded-xl border border-surface-200 bg-white p-4 dark:border-surface-600 dark:bg-surface-700">
-                    <p className="text-base text-surface-400 dark:text-surface-500">Emprestado para:</p>
-                    <p className="mt-1 text-base font-semibold text-surface-800 dark:text-surface-200">{selectedExemplar.leitor?.nome || "Leitor não registrado"}</p>
+                    <p className="text-base text-surface-400 dark:text-surface-500">
+                      Emprestado para:
+                    </p>
+                    <p className="mt-1 text-base font-semibold text-surface-800 dark:text-surface-200">
+                      {selectedExemplar.leitor?.nome || "Leitor não registrado"}
+                    </p>
                     {selectedExemplar.emprestimo && (
                       <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
-                        Desde {new Date(selectedExemplar.emprestimo.dataInicio).toLocaleDateString("pt-BR")} · Previsto {new Date(selectedExemplar.emprestimo.dataDevolucaoPrevista).toLocaleDateString("pt-BR")}
+                        Desde{" "}
+                        {new Date(
+                          selectedExemplar.emprestimo.dataInicio,
+                        ).toLocaleDateString("pt-BR")}{" "}
+                        · Previsto{" "}
+                        {new Date(
+                          selectedExemplar.emprestimo.dataDevolucaoPrevista,
+                        ).toLocaleDateString("pt-BR")}
                       </p>
                     )}
                     {selectedExemplar.isOverdue && (
@@ -270,5 +341,5 @@ export default function ReturnDrawer({ isOpen, onClose, exemplares, emprestimos,
         </div>
       </div>
     </>
-  );
+  )
 }

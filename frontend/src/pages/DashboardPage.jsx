@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo } from "react"
 import {
   BookOpen,
   ArrowLeftRight,
@@ -6,32 +6,48 @@ import {
   UserPlus,
   Plus,
   CornerDownLeft,
-} from "lucide-react";
-import StatCard from "../components/StatCard";
-import RecentMovements from "../components/RecentMovements";
+} from "lucide-react"
+import StatCard from "../components/StatCard"
+import RecentMovements from "../components/RecentMovements"
 
-export default function DashboardPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onOpenReturn, onNavigate, obrasApi, isLoading, isAuthenticated }) {
-
+export default function DashboardPage({
+  exemplares,
+  emprestimos,
+  obras,
+  leitores,
+  onOpenLoan,
+  onOpenReturn,
+  onNavigate,
+  obrasApi,
+  isLoading,
+  isAuthenticated,
+}) {
   const stats = useMemo(() => {
-    if(isLoading) return { totalObras: 0, totalExemplares: 0, emprestimosAtivos: 0, atrasos: 0 };
+    if (isLoading)
+      return {
+        totalObras: 0,
+        totalExemplares: 0,
+        emprestimosAtivos: 0,
+        atrasos: 0,
+      }
 
     const totalObras = obrasApi.length
-    const totalExemplares = exemplares.length;
+    const totalExemplares = exemplares.length
     const emprestimosAtivos = emprestimos.filter((e) => {
       const dataFim = new Date(e.dataInicio)
-      dataFim.setDate(dataFim.getDate() + e.diasLocacao);
-      return dataFim >= new Date();
+      dataFim.setDate(dataFim.getDate() + e.diasLocacao)
+      return dataFim >= new Date()
     }).length
     const atrasos = emprestimos.filter((e) => {
       const dataFim = new Date(e.dataInicio)
-      dataFim.setDate(dataFim.getDate() + e.diasLocacao);
-      return dataFim <= new Date();
+      dataFim.setDate(dataFim.getDate() + e.diasLocacao)
+      return dataFim <= new Date()
     }).length
-    const today = new Date().toISOString().split("T")[0];
-    return { totalObras, totalExemplares, emprestimosAtivos, atrasos };
-  }, [obrasApi, obras, exemplares, isLoading]);
 
-  if(isLoading){
+    return { totalObras, totalExemplares, emprestimosAtivos, atrasos }
+  }, [obrasApi, obras, exemplares, isLoading])
+
+  if (isLoading) {
     return <div>Carregando...</div>
   }
 
@@ -42,16 +58,45 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
           Dashboard
         </h2>
         <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
-          Biblioteca Camugerê — {new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+          Biblioteca Camugerê —{" "}
+          {new Date().toLocaleDateString("pt-BR", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })}
         </p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard onClick={() => onNavigate && onNavigate("acervo")} title="Obras Cadastradas" value={stats.totalObras} icon={BookOpen} trend="up" trendValue={`${stats.totalExemplares} exemplares`} />
-        <StatCard onClick={() => onNavigate && onNavigate("emprestimos")} title="Empréstimos Ativos" value={stats.emprestimosAtivos} icon={ArrowLeftRight} />
-        <StatCard onClick={() => onNavigate && onNavigate("emprestimos")} title="Atrasos" value={stats.atrasos} icon={AlertTriangle} variant={stats.atrasos > 0 ? "danger" : "default"} />
-        <StatCard onClick={() => onNavigate && onNavigate("leitores")} title="Leitores Cadastrados" value={leitores.length} icon={UserPlus} />
+        <StatCard
+          onClick={() => onNavigate && onNavigate("acervo")}
+          title="Obras Cadastradas"
+          value={stats.totalObras}
+          icon={BookOpen}
+          trend="up"
+          trendValue={`${stats.totalExemplares} exemplares`}
+        />
+        <StatCard
+          onClick={() => onNavigate && onNavigate("emprestimos")}
+          title="Empréstimos Ativos"
+          value={stats.emprestimosAtivos}
+          icon={ArrowLeftRight}
+        />
+        <StatCard
+          onClick={() => onNavigate && onNavigate("emprestimos")}
+          title="Atrasos"
+          value={stats.atrasos}
+          icon={AlertTriangle}
+          variant={stats.atrasos > 0 ? "danger" : "default"}
+        />
+        <StatCard
+          onClick={() => onNavigate && onNavigate("leitores")}
+          title="Leitores Cadastrados"
+          value={leitores.length}
+          icon={UserPlus}
+        />
       </div>
 
       {/* Quick Actions + Recent */}
@@ -70,8 +115,12 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
                 <Plus size={24} />
               </div>
               <div className="text-left">
-                <p className="text-base font-semibold text-surface-800 dark:text-surface-200">Novo Empréstimo</p>
-                <p className="text-base text-surface-400 dark:text-surface-500">Registrar saída de exemplar</p>
+                <p className="text-base font-semibold text-surface-800 dark:text-surface-200">
+                  Novo Empréstimo
+                </p>
+                <p className="text-base text-surface-400 dark:text-surface-500">
+                  Registrar saída de exemplar
+                </p>
               </div>
             </button>
 
@@ -84,20 +133,43 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
                 <CornerDownLeft size={24} />
               </div>
               <div className="text-left">
-                <p className="text-base font-semibold text-surface-800 dark:text-surface-200">Registrar Devolução</p>
-                <p className="text-base text-surface-400 dark:text-surface-500">Dar baixa em exemplar</p>
+                <p className="text-base font-semibold text-surface-800 dark:text-surface-200">
+                  Registrar Devolução
+                </p>
+                <p className="text-base text-surface-400 dark:text-surface-500">
+                  Dar baixa em exemplar
+                </p>
               </div>
             </button>
           </div>
           <p className="text-sm text-surface-400 dark:text-surface-500 pl-1">
-            Atalhos: <kbd className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs dark:bg-surface-800">N</kbd> empréstimo · <kbd className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs dark:bg-surface-800">D</kbd> devolução · <kbd className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs dark:bg-surface-800">/</kbd> busca
+            Atalhos:{" "}
+            <kbd className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs dark:bg-surface-800">
+              N
+            </kbd>{" "}
+            empréstimo ·{" "}
+            <kbd className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs dark:bg-surface-800">
+              D
+            </kbd>{" "}
+            devolução ·{" "}
+            <kbd className="rounded bg-surface-100 px-1.5 py-0.5 font-mono text-xs dark:bg-surface-800">
+              /
+            </kbd>{" "}
+            busca
           </p>
         </div>
 
         <div className="lg:col-span-2">
-          <RecentMovements emprestimos={emprestimos} exemplares={exemplares} obras={obras} leitores={leitores} onNavigate={onNavigate} isAuthenticated={isAuthenticated} />
+          <RecentMovements
+            emprestimos={emprestimos}
+            exemplares={exemplares}
+            obras={obras}
+            leitores={leitores}
+            onNavigate={onNavigate}
+            isAuthenticated={isAuthenticated}
+          />
         </div>
       </div>
     </div>
-  );
+  )
 }
