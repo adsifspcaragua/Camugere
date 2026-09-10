@@ -364,9 +364,7 @@ function AppContent() {
       <NewLoanDrawer isOpen={loanDrawerOpen} onClose={() => setLoanDrawerOpen(false)}
         exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
         onConfirm={handleNewLoan} />
-      <ReturnDrawer isOpen={returnDrawerOpen} onClose={() => setReturnDrawerOpen(false)}
-        exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
-        onConfirm={handleReturn} />
+      <ReturnDrawer isOpen={returnDrawerOpen} onClose={() => setReturnDrawerOpen(false)} obras={obras} leitores={leitores} />
       <ObraDrawer isOpen={obraDrawerOpen} onClose={() => { setObraDrawerOpen(false); setEditingObra(null); }}
         onConfirm={handleObraSubmit} editingObra={editingObra} />
       <LeitorDrawer isOpen={leitorDrawerOpen} onClose={() => { setLeitorDrawerOpen(false); setEditingLeitor(null); }}

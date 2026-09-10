@@ -68,7 +68,7 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-base font-medium text-surface-600 dark:text-surface-300">
-                {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
+                Feito em {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
               </p>
               <p className="text-base text-surface-400 dark:text-surface-500">
                 Até

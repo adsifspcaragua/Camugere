@@ -17,15 +17,16 @@ export default function DashboardPage({ exemplares, emprestimos, obras, leitores
 
     const totalObras = obrasApi.length
     const totalExemplares = exemplares.length;
-    const emprestimosAtivos = emprestimos.filter((e) => {
-      const dataFim = new Date(e.dataInicio)
-      dataFim.setDate(dataFim.getDate() + e.diasLocacao);
-      return dataFim <= new Date();
-    }).length
+    const emprestimosAtivos = emprestimos.filter((e) => e.statusDevolucao == false).length;
+    // const emprestimosAtivos = emprestimos.filter((e) => {
+    //   const dataFim = new Date(e.dataInicio)
+    //   dataFim.setDate(dataFim.getDate() + e.diasLocacao);
+    //   return dataFim >= new Date();
+    // }).length
     const atrasos = emprestimos.filter((e) => {
       const dataFim = new Date(e.dataInicio)
       dataFim.setDate(dataFim.getDate() + e.diasLocacao);
-      return dataFim >= new Date();
+      return dataFim <= new Date();
     }).length
     const today = new Date().toISOString().split("T")[0];
     return { totalObras, totalExemplares, emprestimosAtivos, atrasos };
