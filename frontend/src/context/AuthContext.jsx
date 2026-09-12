@@ -13,11 +13,9 @@ export function AuthProvider({ children }) {
 
     try {
       const response = await fetch(`${API_BASE_URL}/validate`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${tokenToCheck}`,
-          "Content-Type": "application/json",
-        },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: tokenToCheck }),
       });
 
       // 401/403 = token inválido ou expirado
@@ -60,6 +58,14 @@ export function AuthProvider({ children }) {
       isMounted = false;
     };
   }, [validateToken]);
+
+  // useEffect(() => {
+  //   const savedToken = localStorage.getItem(STORAGE_KEY);
+  //   if (savedToken) {
+  //     setToken(savedToken);
+  //   }
+  //   setIsLoading(false);
+  // }, []);
 
   const login = useCallback(async ({ email, password }) => {
     const response = await fetch(`${API_BASE_URL}/login`, {
