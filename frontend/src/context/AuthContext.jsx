@@ -8,13 +8,58 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem(STORAGE_KEY);
-    if (savedToken) {
-      setToken(savedToken);
+  const validateToken = useCallback(async (tokenToCheck) => {
+    if (!tokenToCheck) return false;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/validate`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${tokenToCheck}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // 401/403 = token inválido ou expirado
+      return response.ok;
+    } catch (err) {
+      console.error("Erro ao validar token:", err);
+      // Falha de rede não deve necessariamente deslogar o usuário;
+      // aqui optei por tratar como inválido, mas dá pra revisar isso
+      return false;
     }
-    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkSavedToken() {
+      const savedToken = localStorage.getItem(STORAGE_KEY);
+
+      if (!savedToken) {
+        if (isMounted) setIsLoading(false);
+        return;
+      }
+
+      const isValid = await validateToken(savedToken);
+
+      if (!isMounted) return;
+
+      if (isValid) {
+        setToken(savedToken);
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+        setToken(null);
+      }
+      setIsLoading(false);
+    }
+
+    checkSavedToken();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [validateToken]);
 
   const login = useCallback(async ({ email, password }) => {
     const response = await fetch(`${API_BASE_URL}/login`, {

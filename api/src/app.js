@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors"
 import authenticateUsuarioBibliotecarioController from "./Controller/Usuario/authenticateUsuarioController.js";
+import validateTokenUsuarioController from "./Controller/Usuario/validateTokenUsuarioController.js";
 import UsuarioRouter from "./Router/UsuarioRouter.js"
 import LeitorRouter from "./Router/LeitorRouter.js"
 import BibliotecarioRouter from "./Router/BibliotecarioRouter.js"
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
 })
 
 app.post("/login", authenticateUsuarioBibliotecarioController)
+app.post("/validate", validateTokenUsuarioController)
 
 app.use(authMiddleware)
 
