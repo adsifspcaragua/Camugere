@@ -3,7 +3,7 @@ import createEmprestimoController from '../Controller/Emprestimo/createEmprestim
 import listEmprestimoController from '../Controller/Emprestimo/listEmprestimoController.js';
 import getEmprestimoByIdController from '../Controller/Emprestimo/getEmprestimoByIdController.js';
 import deleteEmprestimoController from '../Controller/Emprestimo/deleteEmprestimoController.js';
-import updateEmprestimoController from '../Controller/Emprestimo/listEmprestimoController.js';
+import updateEmprestimoController from '../Controller/Emprestimo/updateEmprestimoController.js';
 import listEmprestimoAtrasadoController from '../Controller/Emprestimo/listEmprestimoAtrasadoController.js';
 
 

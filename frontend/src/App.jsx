@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider, useToast } from "./context/ToastContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { emprestimoService } from "../services/emprestimoService.js";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import NewLoanDrawer from "./components/NewLoanDrawer";
@@ -34,42 +35,47 @@ function AppContent() {
   const [obrasApi, setObrasApi] = useState(null);
 
   const loadData = async () => {
-    setIsLoadingData(true)
-
-    switch (activePage) {
-      case 'dashboard':
-        try {
-          const responseObras = await apiFetch("/obra/list", {}, token)
-          setObrasApi(responseObras.data)
-
-          const responseExemplares = await apiFetch("/exemplar/list", {}, token)
-          setExemplares(responseExemplares.data)
-
-          const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
-          setEmprestimos(responseEmprestimo.data)
-
-          const resposeLeitores = await apiFetch("/leitor/list", {}, token)
-          setLeitores(resposeLeitores.data)
-
-        } finally {
-          setIsLoadingData(false)
-        }
-    }
-
+    setIsLoadingData(true);
     try {
-      const responseObras = await apiFetch("/obra/list", {}, token)
-      setObrasApi(responseObras.data)
+      // 1. Puxa Obras
+      const responseObras = await apiFetch("/obra/list", {}, token);
+      setObrasApi(responseObras.data);
 
-      const responseExemplares = await apiFetch("/exemplar/list", {}, token)
-      setExemplares(responseExemplares.data)
+      // 2. Puxa Exemplares
+      const responseExemplares = await apiFetch("/exemplar/list", {}, token);
+      setExemplares(responseExemplares.data);
 
-      const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
-      setEmprestimos(responseEmprestimo.data)
+      // 3. Puxa Leitores
+      const resposeLeitores = await apiFetch("/leitor/list", {}, token);
+      setLeitores(resposeLeitores.data);
 
+      // 4. Puxa Empréstimos e já traduz os dados para a tabela visual
+      const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token);
+      
+      const emprestimosFormatados = responseEmprestimo.data.map(emp => {
+        const dataIn = new Date(emp.dataInicio);
+        const dataPrev = new Date(dataIn);
+        dataPrev.setDate(dataPrev.getDate() + emp.diasLocacao); 
+
+        return {
+          idEmprestimo: emp.id,
+          idExemplar: emp.id_exemplar,
+          idLeitor: emp.id_leitor,
+          dataInicio: dataIn.toISOString().split("T")[0],
+          dataDevolucaoPrevista: dataPrev.toISOString().split("T")[0],
+          status: emp.statusDevolucao ? "devolvido" : "ativo",
+          dataDevolvido: emp.dataDevolucao ? new Date(emp.dataDevolucao).toISOString().split("T")[0] : null
+        };
+      });
+      
+      setEmprestimos(emprestimosFormatados);
+
+    } catch (error) {
+      console.error("Erro ao carregar os dados:", error);
     } finally {
-      setIsLoadingData(false)
+      setIsLoadingData(false);
     }
-  }
+  };
 
   // Toda vez que o site carrega uma pagina nova, ou o usuário faz autenticação, faz a requisição na api 
   useEffect(() => {
@@ -121,35 +127,49 @@ function AppContent() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  // ============ EMPRÉSTIMO CRUD ============
 
-  const handleNewLoan = useCallback((idExemplar, idLeitor) => {
-    //Procura o exemplar no banco, e troca o status de disponível pra false
-    setExemplares((prev) => prev.map((e) => e.idExemplar === idExemplar ? { ...e, disponivel: false } : e));
+ // ============ EMPRÉSTIMO CRUD ============
 
-    // pega a data de hora sem a hora
+  const handleNewLoan = useCallback(async (idExemplar, idLeitor) => {
+    // 1. Configura as datas
     const today = new Date().toISOString().split("T")[0];
-
-    // seta a data de retorno para 14 dias
     const returnDate = new Date();
     returnDate.setDate(returnDate.getDate() + 14);
+    const dataDevolucaoPrevista = returnDate.toISOString().split("T")[0];
 
-    //cria um objeto emprestimo
-    const newEmprestimo = {
-      idEmprestimo: Date.now(), idExemplar, idLeitor,
-      dataInicio: today, dataDevolucaoPrevista: returnDate.toISOString().split("T")[0],
-      status: "ativo", dataDevolvido: null,
-    };
+    try {
+     // 2. Envia os dados para o back-end usando o novo serviço
+      const dadosEmprestimo = {
+        id_exemplar: parseInt(idExemplar),
+        id_leitor: parseInt(idLeitor),
+        diasLocacao: 14
+      };
+      
+      await emprestimoService.criar(dadosEmprestimo, token);
+      // 3. Atualiza a tela instantaneamente para o usuário não ter que esperar
+      setExemplares((prev) => prev.map((e) => e.idExemplar === idExemplar ? { ...e, disponivel: false } : e));
+      
+      const newEmprestimo = {
+        idEmprestimo: Date.now(), // Temporário até o loadData puxar o ID real do banco
+        idExemplar, 
+        idLeitor,
+        dataInicio: today, 
+        dataDevolucaoPrevista,
+        status: "ativo", 
+        dataDevolvido: null,
+      };
+      setEmprestimos((prev) => [...prev, newEmprestimo]);
 
-    // adiciona o novo emprestimo no useState
-    setEmprestimos((prev) => [...prev, newEmprestimo]);
+      // 4. Puxa a lista atualizada direto do banco de dados
+      loadData();
+      
+      addToast("Empréstimo salvo no banco com sucesso!");
 
-    const ex = exemplares.find((e) => e.idExemplar === idExemplar);
-    const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
-    const leitor = leitores.find((l) => l.idLeitor === idLeitor);
-    addToast(`Empréstimo registrado: ${obra?.titulo || "Livro"} → ${leitor?.nome || "Leitor"}`);
-
-  }, [exemplares, obras, leitores, addToast]);
+    } catch (error) {
+      console.error("Erro ao salvar no banco:", error);
+      addToast("Erro ao registrar empréstimo no servidor", "error");
+    }
+  }, [exemplares, addToast, token]);
 
   // metodo para registrar a devolução de um exemplar
   const handleReturn = useCallback((idExemplar) => {
