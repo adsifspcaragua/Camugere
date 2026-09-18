@@ -137,12 +137,14 @@ async function main() {
 		const dataInicio = new Date();
 		dataInicio.setDate(dataInicio.getDate() - diasNoPassado);
 
+		const diasLocacao = 7 + (i % 10); // 7 a 16 dias
+
 		const e = await prisma.emprestimo.create({
 			data: {
 				dataInicio,
-				diasLocacao: 7 + (i % 10),
+				diasLocacao,
 				id_leitor: leitor.id,
-				id_exemplar: exemplar.id,
+				id_exemplar: exemplar.id
 			},
 		});
 
