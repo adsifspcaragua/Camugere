@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import { jwtDecode } from "jwt-decode";
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = "biblioteca-auth-token";
@@ -7,6 +8,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   const validateToken = useCallback(async (tokenToCheck) => {
     if (!tokenToCheck) return false;
@@ -92,14 +94,44 @@ export function AuthProvider({ children }) {
     return accessToken;
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadUser() {
+      if (!token) {
+        setUser(null);
+        return;
+      }
+      try {
+        const payload = jwtDecode(token);
+        const response = await fetch(`${API_BASE_URL}/bibliotecario/get/${payload.id}`, {
+          method: 'GET',
+          headers: {
+            'jwt_token': token, 'Content-Type': 'application/json'
+          }
+        });
+        
+        const data = await response.json();
+        if (isMounted) setUser(data);
+      } catch (err) {
+        console.error(err);
+        if (isMounted) setUser(null);
+      }
+    }
+
+    loadUser();
+
+    return () => { isMounted = false; };
+  }, [token]);
+
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setToken(null);
   }, []);
 
   const value = useMemo(
-    () => ({ token, isAuthenticated: Boolean(token), login, logout, isLoading }),
-    [token, login, logout, isLoading]
+    () => ({ token, isAuthenticated: Boolean(token), user, login, logout, isLoading }),
+    [token, user, login, logout, isLoading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

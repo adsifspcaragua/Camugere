@@ -7,6 +7,7 @@ import {
   Settings,
   BookMarked,
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -18,6 +19,8 @@ const navItems = [
 ];
 
 export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
+  const { user } = useAuth();
+
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
       {/* Logo */}
@@ -84,7 +87,7 @@ export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-semibold text-surface-800 dark:text-surface-200">
-              Mariana
+              {user.usuario.nome}
             </p>
             <p className="truncate text-[13px] text-surface-400 dark:text-surface-500">
               Bibliotecária
