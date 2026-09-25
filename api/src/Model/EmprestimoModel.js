@@ -109,10 +109,11 @@ export async function getEmprestimoById(id) {
 }
 
 export async function deleteEmprestimo(id) {
-    const result = await prisma.Emprestimo.update({
+    const result = await prisma.Emprestimo.delete({
         where: {
             id: id
-        }, select: {
+        }, 
+        select: {
             id: true,
             dataInicio: true,
             diasLocacao: true,
@@ -127,7 +128,7 @@ export async function deleteEmprestimo(id) {
 }
 
 export async function updateEmprestimo(id, emprestimo) {
-    const result = await prisma.Emprestimo.delete({
+    const result = await prisma.Emprestimo.update({
         where: {
             id: id
         },
