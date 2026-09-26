@@ -42,24 +42,20 @@ export function AuthProvider({ children }) {
       }
 
       const isValid = await validateToken(savedToken);
-
       if (!isMounted) return;
 
       if (isValid) {
-        setToken(savedToken);
+        setToken(savedToken); // isLoading continua true; quem desliga é o loadUser
       } else {
         localStorage.removeItem(STORAGE_KEY);
         setToken(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
 
     checkSavedToken();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [validateToken]);
+    return () => { isMounted = false; };
+  }, [validateToken]); // sem 'user' na lista de dependências
 
   // useEffect(() => {
   //   const savedToken = localStorage.getItem(STORAGE_KEY);
@@ -73,22 +69,19 @@ export function AuthProvider({ children }) {
     const response = await fetch(`${API_BASE_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: email, hash: password }),
+      body: JSON.stringify({ email, hash: password }),
     });
 
     if (!response.ok) {
       const errorJson = await response.json().catch(() => null);
-      const message = errorJson?.message || "Falha ao autenticar";
-      console.log(errorJson)
-      throw new Error(message);
+      throw new Error(errorJson?.message || "Falha ao autenticar");
     }
 
     const result = await response.json();
     const accessToken = result?.data;
-    if (!accessToken) {
-      throw new Error("Resposta inválida do servidor");
-    }
+    if (!accessToken) throw new Error("Resposta inválida do servidor");
 
+    setIsLoading(true); // entra em estado de carregamento até o user chegar
     localStorage.setItem(STORAGE_KEY, accessToken);
     setToken(accessToken);
     return accessToken;
@@ -104,18 +97,24 @@ export function AuthProvider({ children }) {
       }
       try {
         const payload = jwtDecode(token);
-        const response = await fetch(`${API_BASE_URL}/bibliotecario/get/${payload.id}`, {
+        const response = await fetch(`${API_BASE_URL}/bibliotecario/get/${payload.id_bibliotecario}`, {
           method: 'GET',
           headers: {
             'jwt_token': token, 'Content-Type': 'application/json'
           }
         });
-        
+
         const data = await response.json();
-        if (isMounted) setUser(data);
+        if (isMounted) {
+          setUser({bibliotecario: data.bibliotecario, usuario: data.usuario});
+          setIsLoading(false)
+        }
+
       } catch (err) {
         console.error(err);
         if (isMounted) setUser(null);
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
     }
 
@@ -127,10 +126,11 @@ export function AuthProvider({ children }) {
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setToken(null);
+    setUser(null);
   }, []);
 
   const value = useMemo(
-    () => ({ token, isAuthenticated: Boolean(token), user, login, logout, isLoading }),
+    () => ({ token, isAuthenticated: Boolean(token) && Boolean(user), user, login, logout, isLoading }),
     [token, user, login, logout, isLoading]
   );
 
