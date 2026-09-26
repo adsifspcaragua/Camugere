@@ -8,6 +8,7 @@ import {
   BookMarked,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { useState, useEffect } from "react";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -20,6 +21,7 @@ const navItems = [
 
 export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
   const { user } = useAuth();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
@@ -81,9 +83,9 @@ export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
 
       {/* Footer - Logged User */}
       <div className="border-t border-surface-200 px-4 py-4 dark:border-surface-800">
-        <div className="flex items-center gap-3 rounded-2xl bg-surface-50 px-4 py-3 dark:bg-surface-800/50">
+        <div className="flex items-center gap-3 rounded-2xl bg-surface-50 px-4 py-3 dark:bg-surface-800/50 relative">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-base font-bold text-white">
-            MA
+            {user.usuario.nome.slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-semibold text-surface-800 dark:text-surface-200">
@@ -94,7 +96,13 @@ export default function Sidebar({ activePage, onNavigate, overdueCount = 0 }) {
             </p>
           </div>
         </div>
+        
+        
       </div>
     </aside>
   );
+}
+
+const styles = {
+
 }
