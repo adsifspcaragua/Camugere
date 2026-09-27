@@ -44,12 +44,8 @@ function AppContent() {
 
           const responseExemplares = await apiFetch("/exemplar/list", {}, token)
           setExemplares(responseExemplares.data)
-
-          const responseEmprestimo = await apiFetch(
-            "/emprestimo/list",
-            {},
-            token,
-          )
+          
+          const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
           setEmprestimos(responseEmprestimo.data)
 
           const resposeLeitores = await apiFetch("/leitor/list", {}, token)
@@ -147,45 +143,9 @@ function AppContent() {
 
   // ============ EMPRÉSTIMO CRUD ============
 
-  const handleNewLoan = useCallback(
-    (idExemplar, idLeitor) => {
-      //Procura o exemplar no banco, e troca o status de disponível pra false
-      setExemplares((prev) =>
-        prev.map((e) =>
-          e.idExemplar === idExemplar ? { ...e, disponivel: false } : e,
-        ),
-      )
-
-      // pega a data de hora sem a hora
-      const today = new Date().toISOString().split("T")[0]
-
-      // seta a data de retorno para 14 dias
-      const returnDate = new Date()
-      returnDate.setDate(returnDate.getDate() + 14)
-
-      //cria um objeto emprestimo
-      const newEmprestimo = {
-        idEmprestimo: Date.now(),
-        idExemplar,
-        idLeitor,
-        dataInicio: today,
-        dataDevolucaoPrevista: returnDate.toISOString().split("T")[0],
-        status: "ativo",
-        dataDevolvido: null,
-      }
-
-      // adiciona o novo emprestimo no useState
-      setEmprestimos((prev) => [...prev, newEmprestimo])
-
-      const ex = exemplares.find((e) => e.idExemplar === idExemplar)
-      const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null
-      const leitor = leitores.find((l) => l.idLeitor === idLeitor)
-      addToast(
-        `Empréstimo registrado: ${obra?.titulo || "Livro"} → ${leitor?.nome || "Leitor"}`,
-      )
-    },
-    [exemplares, obras, leitores, addToast],
-  )
+  const handleNewLoan = useCallback(() => {
+    addToast(`Empréstimo registrado: ${obra?.titulo || "Livro"} → ${leitor?.nome || "Leitor"}`);
+  }, [exemplares, obras, leitores, addToast]);
 
   // metodo para registrar a devolução de um exemplar
   const handleReturn = useCallback(
@@ -580,42 +540,14 @@ function AppContent() {
         <main className="flex-1 p-6">{renderPage()}</main>
       </div>
 
-      <NewLoanDrawer
-        isOpen={loanDrawerOpen}
-        onClose={() => setLoanDrawerOpen(false)}
-        exemplares={exemplares}
-        emprestimos={emprestimos}
-        obras={obras}
-        leitores={leitores}
-        onConfirm={handleNewLoan}
-      />
-      <ReturnDrawer
-        isOpen={returnDrawerOpen}
-        onClose={() => setReturnDrawerOpen(false)}
-        exemplares={exemplares}
-        emprestimos={emprestimos}
-        obras={obras}
-        leitores={leitores}
-        onConfirm={handleReturn}
-      />
-      <ObraDrawer
-        isOpen={obraDrawerOpen}
-        onClose={() => {
-          setObraDrawerOpen(false)
-          setEditingObra(null)
-        }}
-        onConfirm={handleObraSubmit}
-        editingObra={editingObra}
-      />
-      <LeitorDrawer
-        isOpen={leitorDrawerOpen}
-        onClose={() => {
-          setLeitorDrawerOpen(false)
-          setEditingLeitor(null)
-        }}
-        onConfirm={handleLeitorSubmit}
-        editingLeitor={editingLeitor}
-      />
+      <NewLoanDrawer isOpen={loanDrawerOpen} onClose={() => setLoanDrawerOpen(false)}
+        exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
+        onConfirm={handleNewLoan} />
+      <ReturnDrawer isOpen={returnDrawerOpen} onClose={() => setReturnDrawerOpen(false)} obras={obras} leitores={leitores} />
+      <ObraDrawer isOpen={obraDrawerOpen} onClose={() => { setObraDrawerOpen(false); setEditingObra(null); }}
+        onConfirm={handleObraSubmit} editingObra={editingObra} />
+      <LeitorDrawer isOpen={leitorDrawerOpen} onClose={() => { setLeitorDrawerOpen(false); setEditingLeitor(null); }}
+        onConfirm={handleLeitorSubmit} editingLeitor={editingLeitor} />
       <ConfirmDialog
         isOpen={!!confirmDialog}
         title={confirmDialog?.title || ""}

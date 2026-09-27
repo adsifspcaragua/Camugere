@@ -133,7 +133,7 @@ export async function getUsuarioByEmail(email){
 }
 
 export async function getBibliotecarioByUsuarioId(id_usuario){
-    const result = prisma.bibliotecario.findMany({
+    const result = prisma.bibliotecario.findFirst({
         where: {
             id_usuario: id_usuario
         }, select: {

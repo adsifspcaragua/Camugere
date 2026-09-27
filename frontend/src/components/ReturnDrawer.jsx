@@ -1,21 +1,19 @@
-import { useState, useEffect, useRef, useMemo } from "react"
-import { X, BookOpen, Search, Hash, CornerDownLeft } from "lucide-react"
-import { mockObras, mockLeitores } from "../data/mockData"
+import { useState, useEffect, useRef, useMemo } from "react";
+import { X, BookOpen, Search, Hash, CornerDownLeft } from "lucide-react";
+import { getExemplarById } from "../../services/exemplarService.js";
+import { getObraById } from "../../services/obraService.js";
+import { listEmprestimosAtivos, changeStatusDevolucaoEmprestimo } from "../../services/emprestimoService.js";
+import { getLeitorById } from "../../services/leitorService.js";
 
-export default function ReturnDrawer({
-  isOpen,
-  onClose,
-  exemplares,
-  emprestimos,
-  onConfirm,
-}) {
-  const [query, setQuery] = useState("")
-  const [selectedExemplar, setSelectedExemplar] = useState(null)
-  const [dropdownOpen, setDropdownOpen] = useState(false)
-  const [highlightIndex, setHighlightIndex] = useState(-1)
-  const drawerRef = useRef(null)
-  const searchRef = useRef(null)
-  const listRef = useRef(null)
+export default function ReturnDrawer({ isOpen, onClose }) {
+  const [query, setQuery] = useState("");
+  const [selectedExemplar, setSelectedExemplar] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const drawerRef = useRef(null);
+  const searchRef = useRef(null);
+  const listRef = useRef(null);
+  const [exemplaresData, setExemplaresData] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -45,44 +43,35 @@ export default function ReturnDrawer({
     return () => document.removeEventListener("mousedown", handler)
   }, [])
 
-  // Only active (not yet returned) borrowed exemplares
-  const borrowedExemplares = useMemo(() => {
-    const activeEmprestimos = emprestimos.filter((e) => e.status === "ativo")
-    const empIds = new Set(activeEmprestimos.map((e) => e.idExemplar))
-    return exemplares
-      .filter((e) => !e.disponivel && empIds.has(e.idExemplar))
-      .map((e) => {
-        const obra = mockObras.find((o) => o.idObra === e.idObra)
-        const emp = activeEmprestimos.find(
-          (em) => em.idExemplar === e.idExemplar,
-        )
-        const leitor = emp
-          ? mockLeitores.find((l) => l.idLeitor === emp.idLeitor)
-          : null
-        const today = new Date().toISOString().split("T")[0]
-        const isOverdue = emp && emp.dataDevolucaoPrevista < today
-        return {
-          ...e,
-          titulo: obra?.titulo || "—",
-          autor: obra?.autor || "—",
-          capa: obra?.capa || "📕",
-          leitor,
-          emprestimo: emp,
-          isOverdue,
-        }
-      })
-  }, [exemplares, emprestimos])
+  useEffect(() => {
+    async function carregar() {
+      const emprestimos = await listEmprestimosAtivos()
+
+      const resultados = await Promise.all(
+        emprestimos.data.map(async (e) => {
+          const exemplar = await getExemplarById(e.id_exemplar);
+          const obra = await getObraById(exemplar.data.id_obra);
+          const leitor = await getLeitorById(e.id_leitor);
+          const dataFim = new Date(e.dataInicio)
+          dataFim.setDate(dataFim.getDate() + e.diasLocacao);
+          const isOverdue = dataFim < new Date();
+          return { exemplar: exemplar.data, obra: obra.data, emprestimo: e, leitor: leitor.leitor, usuario: leitor.usuario, isOverdue, dataFim};
+        })
+      );
+
+      setExemplaresData(resultados);
+    }
+
+    carregar();
+  }, []);
 
   const filtered = useMemo(() => {
-    if (!query.trim()) return borrowedExemplares
-    const q = query.toLowerCase()
-    return borrowedExemplares.filter(
-      (e) =>
-        e.numeroInventario.toLowerCase().includes(q) ||
-        e.titulo.toLowerCase().includes(q) ||
-        (e.leitor?.nome || "").toLowerCase().includes(q),
-    )
-  }, [borrowedExemplares, query])
+    if (!query.trim()) return exemplaresData
+    const q = query.toLowerCase();
+    return exemplaresData.filter(
+      (e) => e.exemplar.numeroInventario.toLowerCase().includes(q) || e.obra.titulo.toLowerCase().includes(q) || (e.leitor?.nome || "").toLowerCase().includes(q)
+    );
+  }, [exemplaresData, query]);
 
   // Reset highlight when filtered changes
   useEffect(() => {
@@ -134,11 +123,14 @@ export default function ReturnDrawer({
     }
   }
 
-  const handleSubmit = () => {
-    if (!selectedExemplar) return
-    onConfirm(selectedExemplar.idExemplar)
-    onClose()
-  }
+  const handleSubmit = async () => {
+    if (!selectedExemplar) return;
+    
+    const emprestimo = changeStatusDevolucaoEmprestimo(selectedExemplar.emprestimo.id, true);
+    console.log(emprestimo)
+
+    onClose();
+  };
 
   return (
     <>
@@ -216,28 +208,20 @@ export default function ReturnDrawer({
                     >
                       {filtered.map((e, i) => (
                         <button
-                          key={e.idExemplar}
+                          key={e.exemplar.id}
                           type="button"
                           role="option"
                           aria-selected={i === highlightIndex}
                           onClick={() => handleSelect(e)}
                           onMouseEnter={() => setHighlightIndex(i)}
-                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors focus:outline-none ${
-                            i === highlightIndex
+                          className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors focus:outline-none ${i === highlightIndex
                               ? "bg-brand-50 dark:bg-brand-500/10"
                               : "hover:bg-surface-50 dark:hover:bg-surface-800"
-                          }`}
+                            }`}
                         >
-                          <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
-                            {e.capa}
-                          </span>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">
-                              {e.titulo}
-                            </p>
-                            <p className="text-base text-surface-400 dark:text-surface-500">
-                              {e.numeroInventario} · {e.leitor?.nome || "—"}
-                            </p>
+                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">{e.obra.titulo}</p>
+                            <p className="text-base text-surface-400 dark:text-surface-500">{e.exemplar.numeroInventario} · {e.usuario.nome }</p>
                           </div>
                           {e.isOverdue && (
                             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
@@ -255,9 +239,7 @@ export default function ReturnDrawer({
                   )}
                 </div>
                 <p className="mt-2 text-base text-surface-400 dark:text-surface-500">
-                  {borrowedExemplares.length} exemplar
-                  {borrowedExemplares.length !== 1 && "es"} emprestado
-                  {borrowedExemplares.length !== 1 && "s"}
+                  {exemplaresData.length} exemplar{exemplaresData.length !== 1 && "es"} emprestado{exemplaresData.length !== 1 && "s"}
                 </p>
               </div>
             )}
@@ -279,41 +261,21 @@ export default function ReturnDrawer({
                 </div>
                 <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 dark:border-surface-700 dark:bg-surface-800">
                   <div className="flex items-start gap-4">
-                    <span className="flex h-14 w-11 items-center justify-center rounded-xl bg-white text-2xl shadow-sm dark:bg-surface-700">
-                      {selectedExemplar.capa}
-                    </span>
                     <div className="min-w-0 flex-1 space-y-2">
-                      <p className="text-lg font-semibold text-surface-900 dark:text-white">
-                        {selectedExemplar.titulo}
-                      </p>
-                      <p className="text-base text-surface-500 dark:text-surface-400">
-                        {selectedExemplar.autor}
-                      </p>
+                      <p className="text-lg font-semibold text-surface-900 dark:text-white">{selectedExemplar.obra.titulo}</p>
+                      <p className="text-base text-surface-500 dark:text-surface-400">{selectedExemplar.autor}</p>
                       <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 dark:bg-surface-700">
                         <Hash size={16} className="text-brand-500" />
-                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">
-                          {selectedExemplar.numeroInventario}
-                        </span>
+                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">Número do inventário: {selectedExemplar.exemplar.numeroInventario}</span>
                       </div>
                     </div>
                   </div>
                   <div className="mt-4 rounded-xl border border-surface-200 bg-white p-4 dark:border-surface-600 dark:bg-surface-700">
-                    <p className="text-base text-surface-400 dark:text-surface-500">
-                      Emprestado para:
-                    </p>
-                    <p className="mt-1 text-base font-semibold text-surface-800 dark:text-surface-200">
-                      {selectedExemplar.leitor?.nome || "Leitor não registrado"}
-                    </p>
+                    <p className="text-base text-surface-400 dark:text-surface-500">Emprestado para:</p>
+                    <p className="mt-1 text-base font-semibold text-surface-800 dark:text-surface-200">{selectedExemplar.usuario.nome}</p>
                     {selectedExemplar.emprestimo && (
                       <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
-                        Desde{" "}
-                        {new Date(
-                          selectedExemplar.emprestimo.dataInicio,
-                        ).toLocaleDateString("pt-BR")}{" "}
-                        · Previsto{" "}
-                        {new Date(
-                          selectedExemplar.emprestimo.dataDevolucaoPrevista,
-                        ).toLocaleDateString("pt-BR")}
+                        Desde {new Date(selectedExemplar.emprestimo.dataInicio).toLocaleDateString("pt-BR")} · Previsto {selectedExemplar.dataFim.toLocaleDateString("pt-BR")}
                       </p>
                     )}
                     {selectedExemplar.isOverdue && (
