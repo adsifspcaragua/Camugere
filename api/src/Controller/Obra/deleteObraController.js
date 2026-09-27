@@ -2,22 +2,18 @@ import { deleteObra } from "../../Model/ObraModel.js";
 
 export default async function deleteObraController(req, res) {
     try {
-        const { id } = req.params
+        const { id } = req.params;
 
-        const result = await deleteObra(id)
-
-        if(!result) {
-            throw new Error("Não foi possível deletar a obra!")
-        }
+        const result = await deleteObra(Number(id));
 
         return res.status(200).json({
             message: "Obra deletada com sucesso!",
             data: result
-        })
+        });
     } catch (error) {
         return res.status(500).json({
-            message: "Erro!",
-            error: error.message 
-        })
-    }    
+            message: "Erro ao deletar a obra!",
+            error: error.message
+        });
+    }
 }

@@ -54,7 +54,7 @@ export default function LeitoresPage({ emprestimos, leitores, onAddLeitor, onEdi
           <div key={leitor.idLeitor} className="rounded-2xl border border-surface-200 bg-white p-5 transition-all duration-200 hover:shadow-md dark:border-surface-800 dark:bg-surface-900">
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-base font-bold text-white">
-                {leitor.nome.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                {/* {leitor.nome.split(" ").map((n) => n[0]).slice(0, 2).join("")} */}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-semibold text-surface-800 dark:text-surface-200">{leitor.nome}</p>
