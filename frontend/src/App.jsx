@@ -44,7 +44,7 @@ function AppContent() {
 
           const responseExemplares = await apiFetch("/exemplar/list", {}, token)
           setExemplares(responseExemplares.data)
-
+          
           const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
           setEmprestimos(responseEmprestimo.data)
 
