@@ -1,20 +1,23 @@
-import { useEffect, useState } from "react"
-import { ArrowUpRight } from "lucide-react"
-import { getExemplarById } from "../../services/exemplarService.js"
-import { getObraById } from "../../services/obraService.js"
-import { getLeitorById } from "../../services/leitorService.js"
+import { useEffect, useState } from "react";
+import { ArrowUpRight } from "lucide-react";
+import { getExemplarById } from "../../services/exemplarService.js";
+import { getObraById } from "../../services/obraService.js";
+import { getLeitorById } from "../../services/leitorService.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function RecentMovements({ emprestimos, onNavigate }) {
   const [data, setData] = useState([])
+  const { isLoading, token } = useAuth();
 
   useEffect(() => {
     let cancelado = false
 
     async function carregarDados() {
       const emprestimosRecentes = [...emprestimos]
+        .filter((e) => e.statusDevolucao === false)
         .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
-        .slice(0, 5)
-
+        .slice(0, 5);
+        
       const resultados = await Promise.all(
         emprestimosRecentes.map(async (emp) => {
           const exe = await getExemplarById(emp.id_exemplar)
@@ -37,9 +40,9 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
     carregarDados()
 
     return () => {
-      cancelado = true
-    }
-  }, [])
+      cancelado = true;
+    };
+  }, [emprestimos, isLoading, token])
 
   return (
     <div className="rounded-2xl border border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
@@ -71,9 +74,7 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-base font-medium text-surface-600 dark:text-surface-300">
-                {new Date(item.emprestimo.dataInicio).toLocaleDateString(
-                  "pt-BR",
-                )}
+                Feito em {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
               </p>
               <p className="text-base text-surface-400 dark:text-surface-500">
                 Até

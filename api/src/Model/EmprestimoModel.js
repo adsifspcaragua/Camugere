@@ -66,6 +66,25 @@ export async function listEmprestimo() {
     return result
 }
 
+export async function listEmprestimosAtivos() {
+    const result = await prisma.Emprestimo.findMany({
+        where: {
+            statusDevolucao: false
+        },
+        select: {
+            id: true,
+            dataInicio: true,
+            diasLocacao: true,
+            id_leitor: true,
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
+        }
+    })
+
+    return result
+}
+
 export async function listEmprestimosAtrasados() {
     const dataAtual = new Date()
 
@@ -108,6 +127,24 @@ export async function getEmprestimoById(id) {
     return result
 }
 
+export async function getEmprestimoByIdExemplar(id) {
+    const result = await prisma.Emprestimo.findFirst({
+        where: {
+            id_exemplar: id
+        }, select: {
+            id: true,
+            dataInicio: true,
+            diasLocacao: true,
+            id_leitor: true,
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
+        }
+    })
+
+    return result
+}
+
 export async function deleteEmprestimo(id) {
     const result = await prisma.Emprestimo.delete({
         where: {
@@ -132,6 +169,28 @@ export async function updateEmprestimo(id, emprestimo) {
             id: id
         },
         data: emprestimo,
+        select: {
+            id: true,
+            dataInicio: true,
+            diasLocacao: true,
+            id_leitor: true,
+            id_exemplar: true,
+            statusDevolucao: true,
+            dataDevolucao: true
+        }
+    })
+
+    return result
+}
+
+export async function changeStatusDevolucaoEmprestimo(id, status){
+    const result = await prisma.Emprestimo.update({
+        where: {
+            id: id
+        }, data: {
+            ...status,
+            dataDevolucao: new Date()
+        },
         select: {
             id: true,
             dataInicio: true,
