@@ -34,42 +34,37 @@ function AppContent() {
   const [obrasApi, setObrasApi] = useState(null);
 
   const loadData = async () => {
-    setIsLoadingData(true)
-
-    switch (activePage) {
-      case 'dashboard':
-        try {
-          const responseObras = await apiFetch("/obra/list", {}, token)
-          setObrasApi(responseObras.data)
-
-          const responseExemplares = await apiFetch("/exemplar/list", {}, token)
-          setExemplares(responseExemplares.data)
-
-          const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
-          setEmprestimos(responseEmprestimo.data)
-
-          const resposeLeitores = await apiFetch("/leitor/list", {}, token)
-          setLeitores(resposeLeitores.data)
-
-        } finally {
-          setIsLoadingData(false)
-        }
-    }
-
+    setIsLoadingData(true);
     try {
-      const responseObras = await apiFetch("/obra/list", {}, token)
-      setObrasApi(responseObras.data)
+      const [responseObras, responseExemplares, responseEmprestimo, responseLeitores] =
+        await Promise.all([
+          apiFetch("/obra/list", {}, token),
+          apiFetch("/exemplar/list", {}, token),
+          apiFetch("/emprestimo/list", {}, token),
+          apiFetch("/leitor/list", {}, token),
+        ]);
 
-      const responseExemplares = await apiFetch("/exemplar/list", {}, token)
-      setExemplares(responseExemplares.data)
+      const listaObras = responseObras.data || [];
+      setObras(listaObras);
+      setObrasApi(listaObras);
 
-      const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
-      setEmprestimos(responseEmprestimo.data)
+      // Normaliza idExemplar e idObra vindos do Prisma (id e id_obra) para a BookTable funcionar
+      const listaExemplares = (responseExemplares.data || []).map((ex) => ({
+        ...ex,
+        idExemplar: ex.idExemplar ?? ex.id,
+        idObra: ex.idObra ?? ex.id_obra,
+      }));
+      setExemplares(listaExemplares);
 
+      setEmprestimos(responseEmprestimo.data || []);
+      setLeitores(responseLeitores.data || []);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      addToast(error.message || "Erro ao carregar dados do servidor", "error");
     } finally {
-      setIsLoadingData(false)
+      setIsLoadingData(false);
     }
-  }
+  };
 
   // Toda vez que o site carrega uma pagina nova, ou o usuário faz autenticação, faz a requisição na api 
   useEffect(() => {
@@ -159,78 +154,146 @@ function AppContent() {
 
   // ============ OBRA CRUD ============
 
-  // metodo para criar ou editar uma obra
-  const handleObraSubmit = useCallback((data) => {
-    //verifica se o objeto veio com id, se sim edita a obra, se nao cria outra
-    if (data.idObra) {
-      // Edit
-      setObras((prev) => prev.map((o) => o.idObra === data.idObra
-        ? { ...o, titulo: data.titulo, autor: data.autor, cdd: data.cdd, capa: data.capa } : o
-      ));
-      addToast(`Obra "${data.titulo}" atualizada`);
-    } else {
-      // Create
-      //cria um novo id
-      const newId = Math.max(0, ...obras.map((o) => o.idObra)) + 1;
-      //cria uma obra
-      const newObra = { idObra: newId, titulo: data.titulo, autor: data.autor, cdd: data.cdd, capa: data.capa };
-      setObras((prev) => [...prev, newObra]);
-      // Generate exemplares
-      const maxInv = Math.max(0, ...exemplares.map((e) => parseInt(e.numeroInventario.replace("INV-", ""))));
-      const newExemplares = Array.from({ length: data.numExemplares }, (_, i) => ({
-        idExemplar: Date.now() + i, idObra: newId,
-        numeroInventario: `INV-${String(maxInv + 1 + i).padStart(4, "0")}`,
-        disponivel: true,
-      }));
-      setExemplares((prev) => [...prev, ...newExemplares]);
-      addToast(`Obra "${data.titulo}" cadastrada com ${data.numExemplares} exemplar(es)`);
-    }
-    setEditingObra(null);
-  }, [obras, exemplares, addToast]);
+  // Método para criar ou editar uma obra no banco de dados
+  const handleObraSubmit = useCallback(async (data) => {
+    const idEdicao = data.id || data.idObra;
 
-  //metodo para deletar a obra
+    try {
+      if (idEdicao) {
+        // EDIÇÃO: PUT /obra/update/:id
+        const response = await apiFetch(
+          `/obra/update/${idEdicao}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(data),
+          },
+          token
+        );
+        const obraAtualizada = response.data;
+
+        setObras((prev) =>
+          prev.map((o) => (o.idObra === idEdicao || o.id === idEdicao ? obraAtualizada : o))
+        );
+        setObrasApi((prev) =>
+          prev ? prev.map((o) => (o.idObra === idEdicao || o.id === idEdicao ? obraAtualizada : o)) : prev
+        );
+        addToast(`Obra "${obraAtualizada.titulo}" atualizada com sucesso!`);
+      } else {
+        // CRIAÇÃO: POST /obra/create (já cria Obra, CDD, Autores e Exemplares no Prisma)
+        const response = await apiFetch(
+          "/obra/create",
+          {
+            method: "POST",
+            body: JSON.stringify(data),
+          },
+          token
+        );
+        const novaObra = response.data;
+
+        setObras((prev) => [novaObra, ...prev]);
+        setObrasApi((prev) => (prev ? [novaObra, ...prev] : [novaObra]));
+
+        // Adiciona os exemplares recém-criados pelo Prisma diretamente na tabela
+        if (novaObra.exemplaresFormatados?.length > 0) {
+          setExemplares((prev) => [...novaObra.exemplaresFormatados, ...prev]);
+        }
+
+        addToast(`Obra "${novaObra.titulo}" cadastrada com ${data.numExemplares} exemplar(es)`);
+      }
+      setEditingObra(null);
+    } catch (error) {
+      console.error("Erro ao salvar obra:", error);
+      addToast(error.message || "Erro ao salvar obra no banco", "error");
+    }
+  }, [token, addToast]);
+
+  // Método para deletar a obra no banco de dados
   const handleDeleteObra = useCallback((idObra) => {
-    //acha a obra com id passado
-    const obra = obras.find((o) => o.idObra === idObra);
-    //acha os exemplares da obra
+    const obra = obras.find((o) => o.idObra === idObra || o.id === idObra);
     const obraExemplares = exemplares.filter((e) => e.idObra === idObra);
     const hasActive = obraExemplares.some((ex) =>
       emprestimos.some((e) => e.idExemplar === ex.idExemplar && e.status === "ativo")
     );
-    if (hasActive) { addToast("Não é possível excluir obra com empréstimos ativos", "error"); return; }
+
+    if (hasActive) {
+      addToast("Não é possível excluir obra com empréstimos ativos", "error");
+      return;
+    }
+
     setConfirmDialog({
       title: "Excluir Obra",
       message: `Tem certeza que deseja excluir "${obra?.titulo}"? Todos os ${obraExemplares.length} exemplar(es) serão removidos.`,
-      onConfirm: () => {
-        setObras((prev) => prev.filter((o) => o.idObra !== idObra));
-        setExemplares((prev) => prev.filter((e) => e.idObra !== idObra));
-        addToast(`Obra "${obra?.titulo}" removida do acervo`);
-        setConfirmDialog(null);
+      onConfirm: async () => {
+        try {
+          await apiFetch(`/obra/delete/${idObra}`, { method: "DELETE" }, token);
+
+          setObras((prev) => prev.filter((o) => o.idObra !== idObra && o.id !== idObra));
+          setObrasApi((prev) => (prev ? prev.filter((o) => o.idObra !== idObra && o.id !== idObra) : prev));
+          setExemplares((prev) => prev.filter((e) => e.idObra !== idObra));
+
+          addToast(`Obra "${obra?.titulo}" removida do acervo`);
+        } catch (error) {
+          console.error("Erro ao excluir obra:", error);
+          addToast(error.message || "Erro ao excluir obra no banco", "error");
+        } finally {
+          setConfirmDialog(null);
+        }
       },
     });
-  }, [obras, exemplares, emprestimos, addToast]);
+  }, [obras, exemplares, emprestimos, token, addToast]);
 
-  //metodo para adicionar um exemplar
-  const handleAddExemplar = useCallback((idObra) => {
+  // Método para adicionar um exemplar avulso no banco
+  const handleAddExemplar = useCallback(async (idObra) => {
+    try {
+      const numeroInventario = `${Date.now().toString().slice(-6)}`;
+      const response = await apiFetch(
+        "/exemplar/create",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            id_obra: Number(idObra),
+            numeroInventario,
+            disponivel: true,
+          }),
+        },
+        token
+      );
 
-    const maxInv = Math.max(0, ...exemplares.map((e) => parseInt(e.numeroInventario.replace("INV-", ""))));
-    const newExemplar = {
-      idExemplar: Date.now(), idObra,
-      numeroInventario: `INV-${String(maxInv + 1).padStart(4, "0")}`,
-      disponivel: true,
-    };
-    setExemplares((prev) => [...prev, newExemplar]);
-    const obra = obras.find((o) => o.idObra === idObra);
-    addToast(`Novo exemplar adicionado a "${obra?.titulo}"`);
-  }, [exemplares, obras, addToast]);
+      const criado = response.data;
+      const newExemplar = {
+        ...criado,
+        idExemplar: criado?.id ?? Date.now(),
+        idObra: criado?.id_obra ?? idObra,
+        numeroInventario: criado?.numeroInventario ?? numeroInventario,
+        disponivel: criado?.disponivel ?? true,
+      };
 
-  //metodo para deletar um exemplar
-  const handleDeleteExemplar = useCallback((idExemplar) => {
-    const ex = exemplares.find((e) => e.idExemplar === idExemplar);
-    if (!ex?.disponivel) { addToast("Não é possível excluir exemplar emprestado", "error"); return; }
-    setExemplares((prev) => prev.filter((e) => e.idExemplar !== idExemplar));
-    addToast("Exemplar removido");
-  }, [exemplares, addToast]);
+      setExemplares((prev) => [...prev, newExemplar]);
+      const obra = obras.find((o) => o.idObra === idObra || o.id === idObra);
+      addToast(`Novo exemplar adicionado a "${obra?.titulo}"`);
+    } catch (error) {
+      console.error("Erro ao criar exemplar:", error);
+      addToast(error.message || "Erro ao adicionar exemplar", "error");
+    }
+  }, [obras, token, addToast]);
+
+  // Método para deletar um exemplar avulso no banco
+  const handleDeleteExemplar = useCallback(async (idExemplar) => {
+    const ex = exemplares.find((e) => e.idExemplar === idExemplar || e.id === idExemplar);
+    if (!ex?.disponivel) {
+      addToast("Não é possível excluir exemplar emprestado", "error");
+      return;
+    }
+
+    try {
+      await apiFetch(`/exemplar/delete/${idExemplar}`, { method: "DELETE" }, token);
+      setExemplares((prev) => prev.filter((e) => e.idExemplar !== idExemplar && e.id !== idExemplar));
+      addToast("Exemplar removido");
+    } catch (error) {
+      console.error("Erro ao excluir exemplar:", error);
+      addToast(error.message || "Erro ao remover exemplar", "error");
+    }
+  }, [exemplares, token, addToast]);
 
   // ============ LEITOR CRUD ============
 
@@ -300,7 +363,7 @@ function AppContent() {
           <DashboardPage
             exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
             onOpenLoan={() => setLoanDrawerOpen(true)} onOpenReturn={() => setReturnDrawerOpen(true)}
-            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData} isAuthenticated={isAuthenticated} 
+            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData} isAuthenticated={isAuthenticated}
           />
         );
       case "acervo":

@@ -11,11 +11,13 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
   const [isbn, setIsbn] = useState("");
   const [anoPublicacao, setAnoPublicacao] = useState(""); // NOVO
   const [localPublicacao, setLocalPublicacao] = useState(""); // NOVO
+  const [editora, setEditora] = useState("");
+  const [numeroPaginas, setNumeroPaginas] = useState("");
   const [numExemplares, setNumExemplares] = useState(1);
   const [buscandoIsbn, setBuscandoIsbn] = useState(false);
   const inputRef = useRef(null);
   const isEdit = !!editingObra;
-  
+
   useEffect(() => {
     if (isOpen) {
       if (editingObra) {
@@ -24,9 +26,12 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
         setCdd(editingObra.cdd || "");
         setCddDescricao(editingObra.cddDescricao || "");
         setResumo(editingObra.resumo || "");
-        setCapaUrl(editingObra.capaUrl || ""); 
-        setAnoPublicacao(editingObra.anoPublicacao || ""); // Agora puxa ao editar
-        setLocalPublicacao(editingObra.localPublicacao || ""); // Agora puxa ao editar
+        setCapaUrl(editingObra.capaUrl || "");
+        setIsbn(editingObra.isbn || "");
+        setAnoPublicacao(editingObra.anoPublicacao ? String(editingObra.anoPublicacao) : "");
+        setLocalPublicacao(editingObra.localPublicacao || "");
+        setEditora(editingObra.editora || "");
+        setNumeroPaginas(editingObra.numeroPaginas ? String(editingObra.numeroPaginas) : "");
       } else {
         setTitulo("");
         setAutor("");
@@ -34,8 +39,10 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
         setCddDescricao("");
         setResumo("");
         setCapaUrl("");
-        setAnoPublicacao(""); // Limpa o campo ao abrir novo
-        setLocalPublicacao(""); // Limpa o campo ao abrir novo
+        setAnoPublicacao("");
+        setLocalPublicacao("");
+        setEditora("");
+        setNumeroPaginas("");
         setNumExemplares(1);
         setIsbn("");
       }
@@ -81,7 +88,7 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
     }
   };
 
-const buscarDadosPorIsbn = async () => {
+  const buscarDadosPorIsbn = async () => {
     if (!isbn) return;
     const isbnLimpo = isbn.replace(/\D/g, '');
     if (isbnLimpo.length !== 13 && isbnLimpo.length !== 10) {
@@ -92,19 +99,19 @@ const buscarDadosPorIsbn = async () => {
     try {
       const response = await fetch(`https://brasilapi.com.br/api/isbn/v1/${isbnLimpo}`);
       if (!response.ok) throw new Error("ISBN não encontrado na base de dados.");
-      
+
       const data = await response.json();
 
-      setTitulo(data.title || '');
-      setAutor(data.authors?.length > 0 ? data.authors.join(', ') : '');
-      setResumo(data.synopsis || '');
-      setCapaUrl(data.cover_url || '');
+      setTitulo(data.title || "");
+      setAutor(data.authors?.length > 0 ? data.authors.join(", ") : "");
+      setResumo(data.synopsis || "");
+      setCapaUrl(data.cover_url || "");
+      setAnoPublicacao(data.year ? String(data.year) : "");
+      setEditora(data.publisher || "");
+      const localEditora = [data.location, data.publisher].filter(Boolean).join(" - ");
+      setLocalPublicacao(localEditora || "");
+      setNumeroPaginas(data.page_count ? String(data.page_count) : "0");
       
-      // Preenchendo os novos campos de publicação
-      setAnoPublicacao(data.year || '');
-      const localEditora = [data.location, data.publisher].filter(Boolean).join(' - ');
-      setLocalPublicacao(localEditora || '');
-
       // Lógica do CDD
       if (data.subjects && data.subjects.length > 0) {
         setCddDescricao(data.subjects[0]);
@@ -131,24 +138,27 @@ const buscarDadosPorIsbn = async () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!canSubmit) return;
-    
+
     onConfirm({
-      titulo: titulo.trim(),
-      autor: autor.trim(),
-      cdd: cdd.trim(),
-      cddDescricao: cddDescricao.trim(),
-      resumo: resumo.trim(),
-      capaUrl: capaUrl.trim(),
-      anoPublicacao: anoPublicacao.trim(),
-      localPublicacao: localPublicacao.trim(),
-      
-      // O truque: envia um emoji padrão para o banco antigo não quebrar
-      capa: "📕", 
-      
-      numExemplares: isEdit ? 0 : numExemplares,
-      ...(editingObra && { idObra: editingObra.idObra }),
+      isbn: String(isbn || "").replace(/\D/g, ""),
+      titulo: String(titulo || "").trim(),
+      autor: String(autor || "").trim(),
+      editora: String(editora || "").trim(),
+      localPublicacao: String(localPublicacao || "").trim(),
+      anoPublicacao: anoPublicacao ? Number(anoPublicacao) : null,
+      numeroPaginas: numeroPaginas ? Number(numeroPaginas) : 0,
+      cdd: String(cdd || "").trim(),
+      cddDescricao: String(cddDescricao || "").trim(),
+      resumo: String(resumo || "").trim(),
+      capaUrl: String(capaUrl || "").trim(),
+      capa: "📕",
+      numExemplares: isEdit ? 0 : Number(numExemplares),
+      ...(editingObra && {
+        id: editingObra.id || editingObra.idObra,
+        idObra: editingObra.idObra || editingObra.id,
+      }),
     });
-    
+
     onClose();
   };
 
@@ -181,7 +191,7 @@ const buscarDadosPorIsbn = async () => {
 
         <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
           <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6 scrollbar-thin">
-            
+
             {/* Visualização da Capa Real e URL */}
             <div className="flex gap-4 items-end">
               <div className="flex-shrink-0">
