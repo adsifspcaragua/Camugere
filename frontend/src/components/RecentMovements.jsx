@@ -15,9 +15,10 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
 
     async function carregarDados() {
       const emprestimosRecentes = [...emprestimos]
+        .filter((e) => e.statusDevolucao === false)
         .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
         .slice(0, 5);
-
+        
       const resultados = await Promise.all(
         emprestimosRecentes.map(async (emp) => {
           const exe = await getExemplarById(emp.id_exemplar);
@@ -37,7 +38,7 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
     return () => {
       cancelado = true;
     };
-  }, [isLoading, token])
+  }, [emprestimos, isLoading, token])
 
   return (
     <div className="rounded-2xl border border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
