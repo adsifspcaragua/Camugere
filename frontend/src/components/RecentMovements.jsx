@@ -18,8 +18,8 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
 
       const resultados = await Promise.all(
         emprestimosRecentes.map(async (emp) => {
-          const exe = await getExemplarById(emp.id_exemplar);
-          const lei = await getLeitorById(emp.id_leitor);
+          const exe = await getExemplarById(emp.idExemplar);
+          const lei = await getLeitorById(emp.idLeitor);
           const obr = await getObraById(exe.data.id_obra);
           return { emprestimo: emp, exemplar: exe.data, leitor: lei.usuario, obra: obr.data };
         })
@@ -69,11 +69,10 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
                 {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
               </p>
               <p className="text-base text-surface-400 dark:text-surface-500">
-                Até
+                Até 
                 {((item) => {
-                  const data = new Date(item.emprestimo.dataInicio)
-                  data.setDate(data.getDate() + item.emprestimo.diasLocacao)
-                  return " " + data.toLocaleDateString('pt-BR')
+                  const [ano, mes, dia] = item.emprestimo.dataDevolucaoPrevista.split('-');
+                  return ` ${dia}/${mes}/${ano}`;
                 })(item)}
               </p>
             </div>
