@@ -37,17 +37,22 @@ function AppContent() {
   const loadData = async () => {
     setIsLoadingData(true);
     try {
-      // 1. Puxa Obras
+     // 1. Puxa Obras
       const responseObras = await apiFetch("/obra/list", {}, token);
       setObrasApi(responseObras.data);
+      setObras(responseObras.data.map(o => ({ ...o, idObra: o.id }))); // Adicionando idObra
 
       // 2. Puxa Exemplares
       const responseExemplares = await apiFetch("/exemplar/list", {}, token);
-      setExemplares(responseExemplares.data);
+      setExemplares(responseExemplares.data.map(e => ({ ...e, idExemplar: e.id, idObra: e.id_obra }))); 
 
       // 3. Puxa Leitores
       const resposeLeitores = await apiFetch("/leitor/list", {}, token);
-      setLeitores(resposeLeitores.data);
+      setLeitores(resposeLeitores.data.map(l => ({ 
+          ...l, 
+          idLeitor: l.id, 
+          nome: l.usuario?.nome || l.nome || `Leitor ${l.id}` // Puxa o nome do relacionamento
+      })));
 
       // 4. Puxa Empréstimos e já traduz os dados para a tabela visual
       const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token);
@@ -130,107 +135,123 @@ function AppContent() {
 
  // ============ EMPRÉSTIMO CRUD ============
 
-  const handleNewLoan = useCallback(async (idExemplar, idLeitor) => {
-    // 1. Configura as datas
-    const today = new Date().toISOString().split("T")[0];
-    const returnDate = new Date();
-    returnDate.setDate(returnDate.getDate() + 14);
-    const dataDevolucaoPrevista = returnDate.toISOString().split("T")[0];
-
+ const handleNewLoan = useCallback(async (idExemplar, idLeitor) => {
     try {
-     // 2. Envia os dados para o back-end usando o novo serviço
+      // 1. Envia os dados para o back-end salvar no banco (POST)
       const dadosEmprestimo = {
         id_exemplar: parseInt(idExemplar),
         id_leitor: parseInt(idLeitor),
-        diasLocacao: 14
+        diasLocacao: 14 
       };
       
       await emprestimoService.criar(dadosEmprestimo, token);
-      // 3. Atualiza a tela instantaneamente para o usuário não ter que esperar
-      setExemplares((prev) => prev.map((e) => e.idExemplar === idExemplar ? { ...e, disponivel: false } : e));
       
-      const newEmprestimo = {
-        idEmprestimo: Date.now(), // Temporário até o loadData puxar o ID real do banco
-        idExemplar, 
-        idLeitor,
-        dataInicio: today, 
-        dataDevolucaoPrevista,
-        status: "ativo", 
-        dataDevolvido: null,
-      };
-      setEmprestimos((prev) => [...prev, newEmprestimo]);
-
-      // 4. Puxa a lista atualizada direto do banco de dados
-      loadData();
+      // 2. Fecha a gaveta para impedir múltiplos cliques acidentais
+      setLoanDrawerOpen(false);
       
+      // 3. Puxa as informações concretas e atualizadas direto do banco
+      await loadData();
+      
+      // 4. Mostra o alerta verde de sucesso
       addToast("Empréstimo salvo no banco com sucesso!");
 
     } catch (error) {
       console.error("Erro ao salvar no banco:", error);
       addToast("Erro ao registrar empréstimo no servidor", "error");
     }
-  }, [exemplares, addToast, token]);
+  }, [addToast, token]);
+      
+      
 
   // metodo para registrar a devolução de um exemplar
-  const handleReturn = useCallback((idExemplar) => {
-    // procura o exemplar e seta a variavel disponivel para true
-    setExemplares((prev) => prev.map((e) => e.idExemplar === idExemplar ? { ...e, disponivel: true } : e));
+const handleReturn = useCallback(async (idExemplar) => {
+    try {
+      const emprestimoAtivo = emprestimos.find((e) => e.idExemplar === idExemplar && e.status === "ativo");
+      
+      if (!emprestimoAtivo) {
+        addToast("Nenhum empréstimo ativo encontrado para este exemplar.", "error");
+        return;
+      }
 
-    // pega a data de devolução
-    const today = new Date().toISOString().split("T")[0];
-    setEmprestimos((prev) => prev.map((e) =>
-      e.idExemplar === idExemplar && e.status === "ativo"
-        ? { ...e, status: "devolvido", dataDevolvido: today } : e
-    ));
+      // Pacote Cirúrgico: Apenas números e booleanos para o Zod não reclamar
+      await apiFetch(`/emprestimo/update/${emprestimoAtivo.idEmprestimo}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          diasLocacao: Number(emprestimoAtivo.diasLocacao || 14), // Zod exige Número
+          statusDevolucao: true, // Prisma precisa disto
+          dataDevolucao: new Date().toISOString() // Prisma precisa disto
+        })
+      }, token);
 
-    const ex = exemplares.find((e) => e.idExemplar === idExemplar);
-    const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
-    addToast(`Devolução registrada: ${obra?.titulo || "Livro"} retornado ao acervo`);
-  }, [exemplares, obras, addToast]);
+      setReturnDrawerOpen(false);
+      await loadData();
+      addToast("Devolução registrada no banco com sucesso!");
+
+    } catch (error) {
+      console.error("Erro ao registrar devolução:", error);
+      addToast("Erro ao comunicar devolução ao servidor", "error");
+    }
+  }, [emprestimos, addToast, token]);
 
   //método para renovar um empréstimo
-  const handleRenewLoan = useCallback((idEmprestimo) => {
-    setEmprestimos((prev) => prev.map((e) => {
-      if (e.idEmprestimo === idEmprestimo && e.status === "ativo") {
-        const newDate = new Date();
-        newDate.setDate(newDate.getDate() + 14);
-        return { ...e, dataDevolucaoPrevista: newDate.toISOString().split("T")[0] };
-      }
-      return e;
-    }));
-    addToast("Empréstimo renovado por mais 14 dias");
-  }, [addToast]);
+ const handleRenewLoan = useCallback(async (idEmprestimo) => {
+    try {
+      const emp = emprestimos.find(e => e.idEmprestimo === idEmprestimo);
+      if (!emp) return;
 
+      // Pacote Cirúrgico para a renovação
+      await apiFetch(`/emprestimo/update/${idEmprestimo}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          diasLocacao: Number(emp.diasLocacao || 14) + 14 // Soma os dias e garante que é Número
+        })
+      }, token);
+
+      await loadData();
+      addToast("Empréstimo renovado no banco por mais 14 dias!");
+
+    } catch (error) {
+      console.error("Erro ao renovar:", error);
+      addToast("Erro ao renovar empréstimo no servidor", "error");
+    }
+  }, [emprestimos, addToast, token]);
   // ============ OBRA CRUD ============
 
   // metodo para criar ou editar uma obra
-  const handleObraSubmit = useCallback((data) => {
-    //verifica se o objeto veio com id, se sim edita a obra, se nao cria outra
-    if (data.idObra) {
-      // Edit
-      setObras((prev) => prev.map((o) => o.idObra === data.idObra
-        ? { ...o, titulo: data.titulo, autor: data.autor, cdd: data.cdd, capa: data.capa } : o
-      ));
-      addToast(`Obra "${data.titulo}" atualizada`);
-    } else {
-      // Create
-      //cria um novo id
-      const newId = Math.max(0, ...obras.map((o) => o.idObra)) + 1;
-      //cria uma obra
-      const newObra = { idObra: newId, titulo: data.titulo, autor: data.autor, cdd: data.cdd, capa: data.capa };
-      setObras((prev) => [...prev, newObra]);
-      // Generate exemplares
-      const maxInv = Math.max(0, ...exemplares.map((e) => parseInt(e.numeroInventario.replace("INV-", ""))));
-      const newExemplares = Array.from({ length: data.numExemplares }, (_, i) => ({
-        idExemplar: Date.now() + i, idObra: newId,
-        numeroInventario: `INV-${String(maxInv + 1 + i).padStart(4, "0")}`,
-        disponivel: true,
-      }));
-      setExemplares((prev) => [...prev, ...newExemplares]);
-      addToast(`Obra "${data.titulo}" cadastrada com ${data.numExemplares} exemplar(es)`);
+const handleObraSubmit = useCallback(async (data) => {
+    try {
+      if (data.idObra) {
+        // Edição (PUT)
+        await apiFetch(`/obra/update/${data.idObra}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        }, token);
+        addToast(`Obra "${data.titulo}" atualizada`);
+      } else {
+        // Criação (POST)
+        await apiFetch("/obra/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        }, token);
+        addToast(`Obra "${data.titulo}" cadastrada`);
+      }
+
+      // Fecha a gaveta e limpa o formulário
+      setObraDrawerOpen(false);
+      setEditingObra(null);
+      
+      // Puxa a obra e os exemplares reais gerados no banco
+      await loadData();
+
+    } catch (error) {
+      console.error("Erro ao salvar obra:", error);
+      addToast("Erro ao salvar obra no banco", "error");
     }
-    setEditingObra(null);
-  }, [obras, exemplares, addToast]);
+  }, [addToast, token]);
 
   //metodo para deletar a obra
   const handleDeleteObra = useCallback((idObra) => {
@@ -278,19 +299,38 @@ function AppContent() {
 
   // ============ LEITOR CRUD ============
 
-  const handleLeitorSubmit = useCallback((data) => {
-    if (data.idLeitor) {
-      setLeitores((prev) => prev.map((l) => l.idLeitor === data.idLeitor
-        ? { ...l, nome: data.nome, contato: data.contato, telefone: data.telefone } : l
-      ));
-      addToast(`Leitor "${data.nome}" atualizado`);
-    } else {
-      const newId = Math.max(0, ...leitores.map((l) => l.idLeitor)) + 1;
-      setLeitores((prev) => [...prev, { idLeitor: newId, nome: data.nome, contato: data.contato, telefone: data.telefone }]);
-      addToast(`Leitor "${data.nome}" cadastrado`);
+ const handleLeitorSubmit = useCallback(async (data) => {
+    try {
+      if (data.idLeitor) {
+        // Edição (PUT)
+        await apiFetch(`/leitor/update/${data.idLeitor}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        }, token);
+        addToast(`Leitor "${data.nome}" atualizado`);
+      } else {
+        // Criação (POST)
+        await apiFetch("/leitor/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        }, token);
+        addToast(`Leitor "${data.nome}" cadastrado`);
+      }
+
+      // Fecha a gaveta e limpa o formulário
+      setLeitorDrawerOpen(false);
+      setEditingLeitor(null);
+      
+      // Puxa o leitor com o ID real e definitivo do banco
+      await loadData();
+
+    } catch (error) {
+      console.error("Erro ao salvar leitor:", error);
+      addToast("Erro ao salvar leitor no banco", "error");
     }
-    setEditingLeitor(null);
-  }, [leitores, addToast]);
+  }, [addToast, token]);
 
   const handleDeleteLeitor = useCallback((idLeitor) => {
     const leitor = leitores.find((l) => l.idLeitor === idLeitor);

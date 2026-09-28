@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X, BookOpen, User, Calendar, Search, Hash, ChevronRight } from "lucide-react";
 import Autocomplete from "./Autocomplete";
-import { mockObras, mockLeitores } from "../data/mockData";
+// REMOVIDO: import { mockObras } ... pois agora usamos os dados REAIS
 import { listLeitores } from "../../services/leitorService.js";
 import { listExemplaresDisponiveis } from "../../services/exemplarService.js";
 import { getUsuarioById } from "../../services/usuarioService.js";
 
-export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares, onConfirm }) {
+// Adicionada a prop 'obras' para receber a lista verdadeira do banco
+export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares, obras = [], onConfirm }) {
   const [selectedLeitor, setSelectedLeitor] = useState(null);
   const [selectedExemplar, setSelectedExemplar] = useState(null);
   const [dataDevolucao, setDataDevolucao] = useState("");
   const [exemplaresDisponiveis, setExemplares] = useState([]);
   const [leitores, setLeitores] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Trava contra múltiplos cliques
   const drawerRef = useRef(null);
 
   useEffect(() => {
@@ -21,26 +23,33 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
       setDataDevolucao(date.toISOString().split("T")[0]);
       setSelectedLeitor(null);
       setSelectedExemplar(null);
+      setIsSubmitting(false); // Destrava o botão ao abrir a gaveta
     }
   }, [isOpen]);
 
   useEffect(() => {
     const loadData = async () => {
-      const lei = await listLeitores();
-      const dataLeitores = await Promise.all(
-        lei.data.map(async (l) => {
-          const usu = await getUsuarioById(l.id_usuario);
-          return { usuario: usu.data, leitor: l };
-        })
-      );
-      setLeitores(dataLeitores);
+      try {
+        const lei = await listLeitores();
+        const dataLeitores = await Promise.all(
+          lei.data.map(async (l) => {
+            const usu = await getUsuarioById(l.id_usuario);
+            return { usuario: usu.data, leitor: l };
+          })
+        );
+        setLeitores(dataLeitores);
 
-      const exe = await listExemplaresDisponiveis();
-      setExemplares(exe.data);
+        const exe = await listExemplaresDisponiveis();
+        setExemplares(exe.data);
+      } catch (error) {
+        console.error("Erro ao carregar dados locais:", error);
+      }
     };
 
-    loadData();
-  }, []);
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     const handleEsc = (e) => {
@@ -52,20 +61,20 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
     }
   }, [isOpen, onClose]);
 
-  // All available exemplares enriched with obra info
+  // CRUZAMENTO REAL: Junta os exemplares disponíveis com as obras do Banco de Dados
   const availableExemplares = useMemo(() => {
     return exemplares
       .filter((e) => e.disponivel)
       .map((e) => {
-        const obra = mockObras.find((o) => o.idObra === e.idObra);
+        const obra = obras.find((o) => o.idObra === e.idObra);
         return {
           ...e,
-          titulo: obra?.titulo || "—",
+          titulo: obra?.titulo || "Obra Desconhecida",
           autor: obra?.autor || "—",
           capa: obra?.capa || "📕",
         };
       });
-  }, [exemplares]);
+  }, [exemplares, obras]);
 
   const filterLeitores = useCallback((items, query) => {
     if (!query.trim()) return items;
@@ -88,7 +97,6 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
     );
   }, []);
 
-  // Day of week for return date
   const returnDayLabel = useMemo(() => {
     if (!dataDevolucao) return "";
     const d = new Date(dataDevolucao + "T12:00:00");
@@ -97,11 +105,19 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
 
   const canSubmit = selectedLeitor && selectedExemplar && dataDevolucao;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!canSubmit) return;
-    onConfirm(selectedExemplar.id, selectedLeitor.leitor.id);
-    onClose();
+    if (!canSubmit || isSubmitting) return;
+
+    setIsSubmitting(true);
+    
+    try {
+      // Passa o ID real do exemplar e do leitor para o App.jsx salvar no banco
+      await onConfirm(selectedExemplar.idExemplar || selectedExemplar.id, selectedLeitor.leitor.id);
+      // Retiramos o onClose() daqui. O App.jsx agora é o responsável por fechar a gaveta quando dá Sucesso!
+    } catch (error) {
+      setIsSubmitting(false); // Liberta o botão se o servidor rejeitar
+    }
   };
 
   return (
@@ -217,7 +233,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
               />
             </div>
 
-            {/* Data de Devolução (Mantida com seleção de Ano, Mês e Dia) */}
+            {/* Data de Devolução */}
             <div>
               <label
                 htmlFor="data-devolucao"
@@ -285,10 +301,10 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
           <div className="border-t border-surface-200 px-6 py-5 dark:border-surface-800">
             <button
               type="submit"
-              disabled={!canSubmit}
+              disabled={!canSubmit || isSubmitting}
               className="w-full rounded-2xl bg-brand-600 py-4 text-base font-semibold text-white shadow-lg shadow-brand-600/25 transition-all duration-200 hover:bg-brand-700 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed dark:focus-visible:ring-offset-surface-900"
             >
-              Confirmar Empréstimo
+              {isSubmitting ? "Registrando..." : "Confirmar Empréstimo"}
             </button>
           </div>
         </form>

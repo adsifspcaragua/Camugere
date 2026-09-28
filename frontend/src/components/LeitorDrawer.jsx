@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { X, UserPlus, User, Mail, Phone } from "lucide-react";
+import { X, UserPlus, User, Mail, Phone, IdCard } from "lucide-react";
 
 export default function LeitorDrawer({ isOpen, onClose, onConfirm, editingLeitor = null }) {
   const [nome, setNome] = useState("");
+  const [cpf, setCpf] = useState("");
   const [contato, setContato] = useState("");
   const [telefone, setTelefone] = useState("");
   const inputRef = useRef(null);
@@ -12,10 +13,12 @@ export default function LeitorDrawer({ isOpen, onClose, onConfirm, editingLeitor
     if (isOpen) {
       if (editingLeitor) {
         setNome(editingLeitor.nome);
+        setCpf(editingLeitor.cpf || "");
         setContato(editingLeitor.contato);
         setTelefone(editingLeitor.telefone || "");
       } else {
         setNome("");
+        setCpf("");
         setContato("");
         setTelefone("");
       }
@@ -31,17 +34,27 @@ export default function LeitorDrawer({ isOpen, onClose, onConfirm, editingLeitor
     }
   }, [isOpen, onClose]);
 
-  const canSubmit = nome.trim() && contato.trim();
+  // Agora o botão só é ativado se o CPF também estiver preenchido
+  const canSubmit = nome.trim() && cpf.trim() && contato.trim();
 
-  const handleSubmit = (e) => {
+const handleSubmit = (e) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onConfirm({
+
+    // Monta o pacote base apenas com os dados obrigatórios
+    const payload = {
       nome: nome.trim(),
+      cpf: cpf.trim(),
       contato: contato.trim(),
-      telefone: telefone.trim(),
       ...(editingLeitor && { idLeitor: editingLeitor.idLeitor }),
-    });
+    };
+
+    // Só adiciona o telefone ao pacote se o utilizador tiver digitado algo
+    if (telefone.trim().length > 0) {
+      payload.telefone = telefone.trim();
+    }
+
+    onConfirm(payload);
     onClose();
   };
 
@@ -96,6 +109,18 @@ export default function LeitorDrawer({ isOpen, onClose, onConfirm, editingLeitor
               />
             </div>
 
+            {/* CPF */}
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                <IdCard size={18} className="text-surface-400" /> CPF
+              </label>
+              <input
+                type="text" value={cpf} onChange={(e) => setCpf(e.target.value)}
+                placeholder="Ex: 000.000.000-00" required
+                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
+              />
+            </div>
+
             {/* Email */}
             <div>
               <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
@@ -130,7 +155,7 @@ export default function LeitorDrawer({ isOpen, onClose, onConfirm, editingLeitor
                   </div>
                   <div>
                     <p className="text-base font-semibold text-surface-900 dark:text-white">{nome}</p>
-                    <p className="text-base text-surface-500 dark:text-surface-400">{contato}</p>
+                    <p className="text-base text-surface-500 dark:text-surface-400">{cpf} • {contato}</p>
                     {telefone && <p className="text-sm text-surface-400 dark:text-surface-500">{telefone}</p>}
                   </div>
                 </div>
