@@ -60,7 +60,10 @@ export async function listEmprestimo() {
             id_exemplar: true,
             statusDevolucao: true,
             dataDevolucao: true
-        }
+        },
+        orderBy: {
+      dataDevolucao: 'desc'
+    }
     })
 
     return result
@@ -86,7 +89,6 @@ export async function listEmprestimosAtrasados() {
         dataDevolicao.setDate(dataDevolicao.getDate() + e.diasLocacao)
         return dataDevolicao.getTime() < dataAtual.getTime()
     })
-
     return result
 }
 
