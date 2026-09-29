@@ -1,32 +1,95 @@
-import { apiFetch } from "../src/utils/api.js";
+const API_BASE_URL = import.meta.env.VITE_API_URL + '/emprestimo/';
 
-export const emprestimoService = {
-  criar: async (dados, token) => {
-    return await apiFetch("/emprestimo/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dados),
-    }, token);
-  },
+function getHeaders() {
+    const token = localStorage.getItem("biblioteca-auth-token");
+    return { "Content-Type": "application/json", "jwt_token": token };
+}
 
-  listar: async (token) => {
-    return await apiFetch("/emprestimo/list", {}, token);
-  },
+export async function createEmprestimo(emprestimo) {
+    const headers = getHeaders();
+    const response = await fetch(`${API_BASE_URL}create`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(emprestimo)
+    });
 
-  atualizar: async (id, dados, token) => {
-    return await apiFetch(`/emprestimo/update/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dados),
-    }, token);
-  },
-  apagar: async (id, token) => {
-    return await apiFetch(`/emprestimo/delete/${id}`, {
-      method: "DELETE",
-    }, token);
-  }
-};
+    if (!response.ok) {
+        const errorJson = await response.json().catch(() => null);
+        console.error('Erro ao criar empréstimo:', errorJson);
+        return { ok: false, message: errorJson?.message || 'Erro desconhecido' };
+    }
+
+    const data = await response.json();
+    return { ok: true, data };
+}
+
+export async function getEmprestimoByIdExemplar(id) {
+    const headers = getHeaders();
+    const response = await fetch(`${API_BASE_URL}getbyexemplar/${id}`, { headers });
+
+    if (!response.ok) {
+        const errorJson = await response.json().catch(() => null);
+        console.error('Erro ao buscar empréstimo:', errorJson);
+        return;
+    }
+    return await response.json();
+}
+
+export async function listEmprestimos() {
+    const headers = getHeaders();
+    const response = await fetch(`${API_BASE_URL}list`, { headers });
+
+    if (!response.ok) {
+        const errorJson = await response.json().catch(() => null);
+        console.error('Erro ao buscar empréstimo:', errorJson);
+        return;
+    }
+    return await response.json();
+}
+
+export async function listEmprestimosAtivos() {
+    const headers = getHeaders();
+    const response = await fetch(`${API_BASE_URL}list/ativos`, { headers });
+
+    if (!response.ok) {
+        const errorJson = await response.json().catch(() => null);
+        console.error('Erro ao buscar empréstimo:', errorJson);
+        return;
+    }
+    return await response.json();
+}
+
+export async function changeStatusDevolucaoEmprestimo(id, status) {
+    const headers = getHeaders();
+    const body = { statusDevolucao: status };
+    const response = await fetch(`${API_BASE_URL}change-status-devolucao/${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(body)
+    });
+
+    if (!response.ok) {
+        const errorJson = await response.json().catch(() => null);
+        console.error('Erro ao atualizar status:', errorJson);
+        return { ok: false, message: errorJson?.message || 'Erro desconhecido' };
+    }
+    return await response.json();
+}
+
+// A SUA FUNÇÃO DE APAGAR ADAPTADA AO NOVO PADRÃO
+export async function deleteEmprestimo(id) {
+    const headers = getHeaders();
+    const response = await fetch(`${API_BASE_URL}delete/${id}`, {
+        method: 'DELETE',
+        headers
+    });
+
+    if (!response.ok) {
+        const errorJson = await response.json().catch(() => null);
+        console.error('Erro ao apagar empréstimo:', errorJson);
+        return { ok: false, message: errorJson?.message || 'Erro desconhecido' };
+    }
+    
+    const data = await response.json();
+    return { ok: true, data };
+}

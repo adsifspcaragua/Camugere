@@ -3,10 +3,12 @@ import { ArrowUpRight } from "lucide-react";
 import { getExemplarById } from "../../services/exemplarService.js";
 import { getObraById } from "../../services/obraService.js";
 import { getLeitorById } from "../../services/leitorService.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function RecentMovements({ emprestimos, onNavigate }) {
 
   const [data, setData] = useState([])
+  const { isLoading, token } = useAuth();
 
   useEffect(() => {
     let cancelado = false;
@@ -20,8 +22,15 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
         emprestimosRecentes.map(async (emp) => {
           const exe = await getExemplarById(emp.idExemplar);
           const lei = await getLeitorById(emp.idLeitor);
-          const obr = await getObraById(exe.data.id_obra);
-          return { emprestimo: emp, exemplar: exe.data, leitor: lei.usuario, obra: obr.data };
+          // Adicionamos ?. para proteger caso exe.data venha vazio
+          const obr = await getObraById(exe?.data?.id_obra);
+          
+          return { 
+            emprestimo: emp, 
+            exemplar: exe?.data, 
+            leitor: lei?.usuario, 
+            obra: obr?.data 
+          };
         })
       );
 
@@ -35,7 +44,7 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
     return () => {
       cancelado = true;
     };
-  }, [])
+  }, [isLoading, token, emprestimos])
 
   return (
     <div className="rounded-2xl border border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
@@ -48,8 +57,9 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
         </span>
       </div>
       <div className="divide-y divide-surface-100 dark:divide-surface-800">
-        {data.map((item) => (
+        {data.map((item, index) => (
           <button
+            key={index} // Adicionado para resolver o aviso do React
             onClick={() => onNavigate && onNavigate("emprestimos")}
             className="w-full flex items-center gap-3 px-5 py-3.5 transition-colors hover:bg-surface-50 focus:bg-surface-50 focus:outline-none dark:hover:bg-surface-800/50 dark:focus:bg-surface-800/50 text-left cursor-pointer"
           >
@@ -58,19 +68,21 @@ export default function RecentMovements({ emprestimos, onNavigate }) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">
-                {item.obra.titulo}
+                {/* Proteção ?. e fallback caso o livro tenha sido apagado */}
+                {item.obra?.titulo || "Obra Desconhecida"}
               </p>
               <p className="truncate text-base text-surface-400 dark:text-surface-500">
-                {item.leitor.nome || ''} · Inventário -  {item.exemplar?.numeroInventario}
+                {item.leitor?.nome || 'Leitor'} · Inventário -  {item.exemplar?.numeroInventario || 'N/A'}
               </p>
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-base font-medium text-surface-600 dark:text-surface-300">
-                {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
+                Feito em {new Date(item.emprestimo.dataInicio).toLocaleDateString('pt-BR')}
               </p>
               <p className="text-base text-surface-400 dark:text-surface-500">
                 Até 
                 {((item) => {
+                  if (!item.emprestimo?.dataDevolucaoPrevista) return '';
                   const [ano, mes, dia] = item.emprestimo.dataDevolucaoPrevista.split('-');
                   return ` ${dia}/${mes}/${ano}`;
                 })(item)}

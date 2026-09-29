@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, Sun, Moon, Bell, X } from "lucide-react";
+import { Search, Sun, Moon, Bell, X, LogOut } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 
 export default function Header({ onNavigate, searchQuery, onSearchChange, obras }) {
   const { dark, toggle } = useTheme();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const { logout } = useAuth();
   const ref = useRef(null);
 
   // Sync external searchQuery with internal query when navigating away from acervo
@@ -112,6 +114,13 @@ export default function Header({ onNavigate, searchQuery, onSearchChange, obras 
           <Bell size={20} />
           <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white dark:ring-surface-900" />
         </button>
+        
+        <button
+          className="relative rounded-2xl p-3 text-surface-500 transition-colors duration-200 hover:bg-surface-100 hover:text-surface-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-surface-400 dark:hover:bg-surface-800 dark:hover:text-surface-200"
+          aria-label="Logout" onClick={() => logout()}
+        >
+          <LogOut size={20} />
+        </button>
 
         <button
           id="dark-mode-toggle"
@@ -125,6 +134,8 @@ export default function Header({ onNavigate, searchQuery, onSearchChange, obras 
             <Moon size={20} />
           )}
         </button>
+
+
 
         {/* <div className="mx-1 h-8 w-px bg-surface-200 dark:bg-surface-700" />
 

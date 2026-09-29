@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { X, BookOpen, User, Calendar, Search, Hash, ChevronRight } from "lucide-react";
 import Autocomplete from "./Autocomplete";
-// REMOVIDO: import { mockObras } ... pois agora usamos os dados REAIS
 import { listLeitores } from "../../services/leitorService.js";
 import { listExemplaresDisponiveis } from "../../services/exemplarService.js";
 import { getUsuarioById } from "../../services/usuarioService.js";
@@ -11,11 +10,12 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
   const [selectedLeitor, setSelectedLeitor] = useState(null);
   const [selectedExemplar, setSelectedExemplar] = useState(null);
   const [dataDevolucao, setDataDevolucao] = useState("");
-  const [exemplaresDisponiveis, setExemplares] = useState([]);
+  const [exemplaresDisponiveis, setExemplaresDisponiveis] = useState([]);
   const [leitores, setLeitores] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); // Trava contra múltiplos cliques
   const drawerRef = useRef(null);
 
+  // Inicializa a data para daqui a 14 dias sempre que a gaveta abre
   useEffect(() => {
     if (isOpen) {
       const date = new Date();
@@ -30,6 +30,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Leitores: usamos a lógica do colega para buscar os dados de usuário do leitor
         const lei = await listLeitores();
         const dataLeitores = await Promise.all(
           lei.data.map(async (l) => {
@@ -39,8 +40,9 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
         );
         setLeitores(dataLeitores);
 
+        // Exemplares: apenas baixamos os disponíveis para fazer o cruzamento rápido abaixo
         const exe = await listExemplaresDisponiveis();
-        setExemplares(exe.data);
+        setExemplaresDisponiveis(exe.data);
       } catch (error) {
         console.error("Erro ao carregar dados locais:", error);
       }
@@ -61,12 +63,13 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
     }
   }, [isOpen, onClose]);
 
-  // CRUZAMENTO REAL: Junta os exemplares disponíveis com as obras do Banco de Dados
+  // CRUZAMENTO REAL: Junta os exemplares disponíveis com as obras do Banco de Dados (Ultra Rápido)
   const availableExemplares = useMemo(() => {
-    return exemplares
+    return exemplaresDisponiveis
       .filter((e) => e.disponivel)
       .map((e) => {
-        const obra = obras.find((o) => o.idObra === e.idObra);
+        const idObraCruzar = e.idObra || e.id_obra;
+        const obra = obras.find((o) => o.idObra === idObraCruzar || o.id === idObraCruzar);
         return {
           ...e,
           titulo: obra?.titulo || "Obra Desconhecida",
@@ -74,7 +77,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
           capa: obra?.capa || "📕",
         };
       });
-  }, [exemplares, obras]);
+  }, [exemplaresDisponiveis, obras]);
 
   const filterLeitores = useCallback((items, query) => {
     if (!query.trim()) return items;
@@ -112,11 +115,15 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
     setIsSubmitting(true);
     
     try {
-      // Passa o ID real do exemplar e do leitor para o App.jsx salvar no banco
-      await onConfirm(selectedExemplar.idExemplar || selectedExemplar.id, selectedLeitor.leitor.id);
-      // Retiramos o onClose() daqui. O App.jsx agora é o responsável por fechar a gaveta quando dá Sucesso!
+      // O banco de dados pede a quantidade de dias. Aqui fazemos o cálculo automático!
+      const dataEscolhida = new Date(dataDevolucao + "T12:00:00");
+      const hoje = new Date();
+      const diasCalculados = Math.ceil((dataEscolhida - hoje) / (1000 * 60 * 60 * 24));
+
+      // Passa os dias calculados para o App.jsx
+      await onConfirm(selectedExemplar.id || selectedExemplar.idExemplar, selectedLeitor.leitor.id, diasCalculados);
     } catch (error) {
-      setIsSubmitting(false); // Liberta o botão se o servidor rejeitar
+      setIsSubmitting(false); 
     }
   };
 
@@ -234,25 +241,24 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
             </div>
 
             {/* Data de Devolução */}
+           {/* Data de Devolução */}
             <div>
               <label
                 htmlFor="data-devolucao"
                 className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300"
               >
                 <Calendar size={18} className="text-surface-400" />
-                Data de Devolução
+                Data de Devolução Prevista
               </label>
               <input
                 id="data-devolucao"
                 type="date"
                 value={dataDevolucao}
                 onChange={(e) => setDataDevolucao(e.target.value)}
+                min={new Date().toISOString().split("T")[0]} // Impede escolher datas no passado
                 className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:focus:border-brand-500"
                 required
               />
-              <p className="mt-2 text-base text-surface-400 dark:text-surface-500">
-                Prazo padrão: 14 dias{returnDayLabel && ` · ${returnDayLabel}`}
-              </p>
             </div>
 
             {/* Summary Card */}
