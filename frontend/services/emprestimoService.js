@@ -24,4 +24,9 @@ export const emprestimoService = {
       body: JSON.stringify(dados),
     }, token);
   },
+  apagar: async (id, token) => {
+    return await apiFetch(`/emprestimo/delete/${id}`, {
+      method: "DELETE",
+    }, token);
+  }
 };

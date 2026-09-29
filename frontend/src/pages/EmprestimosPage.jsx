@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
-import { Hash, CornerDownLeft, Clock, CheckCircle2, AlertTriangle, RefreshCcw } from "lucide-react";
-
+import { Hash, CornerDownLeft, Clock, CheckCircle2, AlertTriangle, RefreshCcw, Trash2 } from "lucide-react";
+import { emprestimoService } from '../../services/emprestimoService';
 const TABS = [
   { id: "ativos", label: "Ativos", icon: Clock },
   { id: "atrasados", label: "Atrasados", icon: AlertTriangle },
@@ -47,6 +47,22 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
   const handleInlineRenew = useCallback((idEmprestimo) => {
     if (onRenew) onRenew(idEmprestimo);
   }, [onRenew]);
+
+  // Função nova para apagar o registo
+  const handleApagar = useCallback(async (idEmprestimo) => {
+    if (window.confirm("Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.")) {
+      try {
+        const token = localStorage.getItem('biblioteca-auth-token');
+        await emprestimoService.apagar(idEmprestimo, token);
+        alert("Registo apagado com sucesso!");
+        // Como os dados vêm do componente pai, recarregamos a página para atualizar a lista
+        window.location.reload(); 
+      } catch (error) {
+        console.error("Erro ao apagar:", error);
+        alert("Erro ao apagar o registo. Verifique a consola para mais detalhes.");
+      }
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -107,9 +123,7 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                 <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
                   {activeTab === "devolvidos" ? "Devolvido em" : "Devolução Prevista"}
                 </th>
-                {activeTab !== "devolvidos" && (
-                  <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">Ações</th>
-                )}
+                <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-50 dark:divide-surface-800/50">
@@ -154,28 +168,39 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                       : new Date(mov.dataDevolucaoPrevista).toLocaleDateString("pt-BR")
                     }
                   </td>
-                  {activeTab !== "devolvidos" && (
-                    <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
-                      <div className="flex justify-end gap-2">
+                  <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
+                    <div className="flex justify-end gap-2">
+                      {activeTab !== "devolvidos" ? (
+                        <>
+                          <button
+                            onClick={() => handleInlineRenew(mov.idEmprestimo)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm font-semibold text-surface-700 transition-all hover:bg-surface-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                            title="Renovar empréstimo (+14 dias)"
+                          >
+                            <RefreshCcw size={14} />
+                            Renovar
+                          </button>
+                          <button
+                            onClick={() => handleInlineReturn(mov.idExemplar)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
+                            title="Registrar devolução"
+                          >
+                            <CornerDownLeft size={14} />
+                            Devolver
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => handleInlineRenew(mov.idEmprestimo)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm font-semibold text-surface-700 transition-all hover:bg-surface-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                          title="Renovar empréstimo (+14 dias)"
+                          onClick={() => handleApagar(mov.idEmprestimo)}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-all hover:bg-red-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                          title="Apagar registo definitivamente"
                         >
-                          <RefreshCcw size={14} />
-                          Renovar
+                          <Trash2 size={14} />
+                          Apagar
                         </button>
-                        <button
-                          onClick={() => handleInlineReturn(mov.idExemplar)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
-                          title="Registrar devolução"
-                        >
-                          <CornerDownLeft size={14} />
-                          Devolver
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
