@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ToastProvider, useToast } from "./context/ToastContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { emprestimoService } from "../services/emprestimoService.js";
+import { createEmprestimo } from "../services/emprestimoService.js";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
 import NewLoanDrawer from "./components/NewLoanDrawer";
@@ -37,27 +37,37 @@ function AppContent() {
   const loadData = async () => {
     setIsLoadingData(true);
     try {
-     // 1. Puxa Obras
-      const responseObras = await apiFetch("/obra/list", {}, token);
-      setObrasApi(responseObras.data);
-      setObras(responseObras.data.map(o => ({ ...o, idObra: o.id }))); // Adicionando idObra
+      // 1. Usa o Promise.all do colega para baixar tudo rápido
+      const [responseObras, responseExemplares, responseEmprestimo, responseLeitores] =
+        await Promise.all([
+          apiFetch("/obra/list", {}, token),
+          apiFetch("/exemplar/list", {}, token),
+          apiFetch("/emprestimo/list", {}, token),
+          apiFetch("/leitor/list", {}, token),
+        ]);
 
-      // 2. Puxa Exemplares
-      const responseExemplares = await apiFetch("/exemplar/list", {}, token);
-      setExemplares(responseExemplares.data.map(e => ({ ...e, idExemplar: e.id, idObra: e.id_obra }))); 
+      // 2. Obras (mantendo a sua lógica de id)
+      const listaObras = responseObras.data || [];
+      setObrasApi(listaObras);
+      setObras(listaObras.map(o => ({ ...o, idObra: o.id })));
 
-      // 3. Puxa Leitores
-      const resposeLeitores = await apiFetch("/leitor/list", {}, token);
-      setLeitores(resposeLeitores.data.map(l => ({ 
+      // 3. Exemplares (lógica de normalização do colega)
+      const listaExemplares = (responseExemplares.data || []).map((ex) => ({
+        ...ex,
+        idExemplar: ex.idExemplar ?? ex.id,
+        idObra: ex.idObra ?? ex.id_obra,
+      }));
+      setExemplares(listaExemplares);
+
+      // 4. Leitores (a sua lógica essencial para puxar o nome correto)
+      setLeitores((responseLeitores.data || []).map(l => ({ 
           ...l, 
           idLeitor: l.id, 
-          nome: l.usuario?.nome || l.nome || `Leitor ${l.id}` // Puxa o nome do relacionamento
+          nome: l.usuario?.nome || l.nome || `Leitor ${l.id}`
       })));
 
-      // 4. Puxa Empréstimos e já traduz os dados para a tabela visual
-      const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token);
-      
-      const emprestimosFormatados = responseEmprestimo.data.map(emp => {
+      // 5. Empréstimos (a sua formatação para a tabela)
+      const emprestimosFormatados = (responseEmprestimo.data || []).map(emp => {
         const dataIn = new Date(emp.dataInicio);
         const dataPrev = new Date(dataIn);
         dataPrev.setDate(dataPrev.getDate() + emp.diasLocacao); 
@@ -72,11 +82,11 @@ function AppContent() {
           dataDevolvido: emp.dataDevolucao ? new Date(emp.dataDevolucao).toISOString().split("T")[0] : null
         };
       });
-      
       setEmprestimos(emprestimosFormatados);
 
     } catch (error) {
-      console.error("Erro ao carregar os dados:", error);
+      console.error("Erro ao carregar dados:", error);
+      addToast(error.message || "Erro ao carregar dados do servidor", "error");
     } finally {
       setIsLoadingData(false);
     }
@@ -98,16 +108,14 @@ function AppContent() {
   const [editingLeitor, setEditingLeitor] = useState(null);
   const [confirmDialog, setConfirmDialog] = useState(null);
 
-  // Body scroll lock when any drawer is open
-  // Trava o scroll da página caso um drawer esteja aberto
+  
   useEffect(() => {
     const anyOpen = loanDrawerOpen || returnDrawerOpen || obraDrawerOpen || leitorDrawerOpen || confirmDialog;
     document.body.style.overflow = anyOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [loanDrawerOpen, returnDrawerOpen, obraDrawerOpen, leitorDrawerOpen, confirmDialog]);
 
-  // Global keyboard shortcuts
-  // Seta atalhos: e -> emprestimo; d -> devolução;
+  
   useEffect(() => {
     const handler = (e) => {
       const tag = document.activeElement?.tagName;
@@ -119,8 +127,7 @@ function AppContent() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
-  // Ctrl+K / slash to focus search]
-  // Seta atalhos: Ctrl + k ou / -> foca no input de busca;
+ 
   useEffect(() => {
     const handler = (e) => {
       if ((e.ctrlKey && e.key === "k") || (e.key === "/" && document.activeElement?.tagName !== "INPUT")) {
@@ -132,39 +139,36 @@ function AppContent() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  // ============ EMPRÉSTIMO CRUD ============
 
- // ============ EMPRÉSTIMO CRUD ============
-
- const handleNewLoan = useCallback(async (idExemplar, idLeitor) => {
+  // Sua função de empréstimo (que funciona com a API) foi mantida
+  const handleNewLoan = useCallback(async (idExemplar, idLeitor, diasLocacao = 14) => {
     try {
-      // 1. Envia os dados para o back-end salvar no banco (POST)
+      const hoje = new Date();
+      const dataDevolv = new Date(hoje.setDate(hoje.getDate() + diasLocacao)).toISOString();
+
       const dadosEmprestimo = {
         id_exemplar: parseInt(idExemplar),
         id_leitor: parseInt(idLeitor),
-        diasLocacao: 14 
+        diasLocacao: diasLocacao,
+        dataDevolucao: dataDevolv // Adicionado para manter a compatibilidade total
       };
       
-      await emprestimoService.criar(dadosEmprestimo, token);
-      
-      // 2. Fecha a gaveta para impedir múltiplos cliques acidentais
+      const result = await createEmprestimo(dadosEmprestimo);
+      if (!result.ok) throw new Error(result.message);
+
       setLoanDrawerOpen(false);
-      
-      // 3. Puxa as informações concretas e atualizadas direto do banco
       await loadData();
-      
-      // 4. Mostra o alerta verde de sucesso
       addToast("Empréstimo salvo no banco com sucesso!");
 
     } catch (error) {
       console.error("Erro ao salvar no banco:", error);
       addToast("Erro ao registrar empréstimo no servidor", "error");
     }
-  }, [addToast, token]);
-      
-      
+  }, [addToast]);
 
   // metodo para registrar a devolução de um exemplar
-const handleReturn = useCallback(async (idExemplar) => {
+  const handleReturn = useCallback(async (idExemplar) => {
     try {
       const emprestimoAtivo = emprestimos.find((e) => e.idExemplar === idExemplar && e.status === "ativo");
       
@@ -195,7 +199,7 @@ const handleReturn = useCallback(async (idExemplar) => {
   }, [emprestimos, addToast, token]);
 
   //método para renovar um empréstimo
- const handleRenewLoan = useCallback(async (idEmprestimo) => {
+  const handleRenewLoan = useCallback(async (idEmprestimo) => {
     try {
       const emp = emprestimos.find(e => e.idEmprestimo === idEmprestimo);
       if (!emp) return;
@@ -217,89 +221,154 @@ const handleReturn = useCallback(async (idExemplar) => {
       addToast("Erro ao renovar empréstimo no servidor", "error");
     }
   }, [emprestimos, addToast, token]);
+
   // ============ OBRA CRUD ============
 
-  // metodo para criar ou editar uma obra
-const handleObraSubmit = useCallback(async (data) => {
+  // Método do colega (otimizado para atualizar a tela sem recarregar tudo)
+  const handleObraSubmit = useCallback(async (data) => {
+    const idEdicao = data.id || data.idObra;
+
     try {
-      if (data.idObra) {
-        // Edição (PUT)
-        await apiFetch(`/obra/update/${data.idObra}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        }, token);
-        addToast(`Obra "${data.titulo}" atualizada`);
+      if (idEdicao) {
+        // EDIÇÃO: PUT /obra/update/:id
+        const response = await apiFetch(
+          `/obra/update/${idEdicao}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(data),
+          },
+          token
+        );
+        const obraAtualizada = response.data;
+
+        setObras((prev) =>
+          prev.map((o) => (o.idObra === idEdicao || o.id === idEdicao ? obraAtualizada : o))
+        );
+        setObrasApi((prev) =>
+          prev ? prev.map((o) => (o.idObra === idEdicao || o.id === idEdicao ? obraAtualizada : o)) : prev
+        );
+        addToast(`Obra "${obraAtualizada.titulo}" atualizada com sucesso!`);
       } else {
-        // Criação (POST)
-        await apiFetch("/obra/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        }, token);
-        addToast(`Obra "${data.titulo}" cadastrada`);
+        // CRIAÇÃO: POST /obra/create (já cria Obra, CDD, Autores e Exemplares no Prisma)
+        const response = await apiFetch(
+          "/obra/create",
+          {
+            method: "POST",
+            body: JSON.stringify(data),
+          },
+          token
+        );
+        const novaObra = response.data;
+
+        setObras((prev) => [novaObra, ...prev]);
+        setObrasApi((prev) => (prev ? [novaObra, ...prev] : [novaObra]));
+
+        // Adiciona os exemplares recém-criados pelo Prisma diretamente na tabela
+        if (novaObra.exemplaresFormatados?.length > 0) {
+          setExemplares((prev) => [...novaObra.exemplaresFormatados, ...prev]);
+        }
+
+        addToast(`Obra "${novaObra.titulo}" cadastrada com ${data.numExemplares} exemplar(es)`);
       }
-
-      // Fecha a gaveta e limpa o formulário
-      setObraDrawerOpen(false);
       setEditingObra(null);
-      
-      // Puxa a obra e os exemplares reais gerados no banco
-      await loadData();
-
+      setObraDrawerOpen(false);
     } catch (error) {
       console.error("Erro ao salvar obra:", error);
-      addToast("Erro ao salvar obra no banco", "error");
+      addToast(error.message || "Erro ao salvar obra no banco", "error");
     }
-  }, [addToast, token]);
+  }, [token, addToast]);
 
-  //metodo para deletar a obra
+  // Método para deletar a obra no banco de dados
   const handleDeleteObra = useCallback((idObra) => {
-    //acha a obra com id passado
-    const obra = obras.find((o) => o.idObra === idObra);
-    //acha os exemplares da obra
+    const obra = obras.find((o) => o.idObra === idObra || o.id === idObra);
     const obraExemplares = exemplares.filter((e) => e.idObra === idObra);
     const hasActive = obraExemplares.some((ex) =>
       emprestimos.some((e) => e.idExemplar === ex.idExemplar && e.status === "ativo")
     );
-    if (hasActive) { addToast("Não é possível excluir obra com empréstimos ativos", "error"); return; }
+
+    if (hasActive) {
+      addToast("Não é possível excluir obra com empréstimos ativos", "error");
+      return;
+    }
+
     setConfirmDialog({
       title: "Excluir Obra",
       message: `Tem certeza que deseja excluir "${obra?.titulo}"? Todos os ${obraExemplares.length} exemplar(es) serão removidos.`,
-      onConfirm: () => {
-        setObras((prev) => prev.filter((o) => o.idObra !== idObra));
-        setExemplares((prev) => prev.filter((e) => e.idObra !== idObra));
-        addToast(`Obra "${obra?.titulo}" removida do acervo`);
-        setConfirmDialog(null);
+      onConfirm: async () => {
+        try {
+          await apiFetch(`/obra/delete/${idObra}`, { method: "DELETE" }, token);
+
+          setObras((prev) => prev.filter((o) => o.idObra !== idObra && o.id !== idObra));
+          setObrasApi((prev) => (prev ? prev.filter((o) => o.idObra !== idObra && o.id !== idObra) : prev));
+          setExemplares((prev) => prev.filter((e) => e.idObra !== idObra));
+
+          addToast(`Obra "${obra?.titulo}" removida do acervo`);
+        } catch (error) {
+          console.error("Erro ao excluir obra:", error);
+          addToast(error.message || "Erro ao excluir obra no banco", "error");
+        } finally {
+          setConfirmDialog(null);
+        }
       },
     });
-  }, [obras, exemplares, emprestimos, addToast]);
+  }, [obras, exemplares, emprestimos, token, addToast]);
 
-  //metodo para adicionar um exemplar
-  const handleAddExemplar = useCallback((idObra) => {
+  // Método para adicionar um exemplar avulso no banco
+  const handleAddExemplar = useCallback(async (idObra) => {
+    try {
+      const numeroInventario = `${Date.now().toString().slice(-6)}`;
+      const response = await apiFetch(
+        "/exemplar/create",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            id_obra: Number(idObra),
+            numeroInventario,
+            disponivel: true,
+          }),
+        },
+        token
+      );
 
-    const maxInv = Math.max(0, ...exemplares.map((e) => parseInt(e.numeroInventario.replace("INV-", ""))));
-    const newExemplar = {
-      idExemplar: Date.now(), idObra,
-      numeroInventario: `INV-${String(maxInv + 1).padStart(4, "0")}`,
-      disponivel: true,
-    };
-    setExemplares((prev) => [...prev, newExemplar]);
-    const obra = obras.find((o) => o.idObra === idObra);
-    addToast(`Novo exemplar adicionado a "${obra?.titulo}"`);
-  }, [exemplares, obras, addToast]);
+      const criado = response.data;
+      const newExemplar = {
+        ...criado,
+        idExemplar: criado?.id ?? Date.now(),
+        idObra: criado?.id_obra ?? idObra,
+        numeroInventario: criado?.numeroInventario ?? numeroInventario,
+        disponivel: criado?.disponivel ?? true,
+      };
 
-  //metodo para deletar um exemplar
-  const handleDeleteExemplar = useCallback((idExemplar) => {
-    const ex = exemplares.find((e) => e.idExemplar === idExemplar);
-    if (!ex?.disponivel) { addToast("Não é possível excluir exemplar emprestado", "error"); return; }
-    setExemplares((prev) => prev.filter((e) => e.idExemplar !== idExemplar));
-    addToast("Exemplar removido");
-  }, [exemplares, addToast]);
+      setExemplares((prev) => [...prev, newExemplar]);
+      const obra = obras.find((o) => o.idObra === idObra || o.id === idObra);
+      addToast(`Novo exemplar adicionado a "${obra?.titulo}"`);
+    } catch (error) {
+      console.error("Erro ao criar exemplar:", error);
+      addToast(error.message || "Erro ao adicionar exemplar", "error");
+    }
+  }, [obras, token, addToast]);
+
+  // Método para deletar um exemplar avulso no banco
+  const handleDeleteExemplar = useCallback(async (idExemplar) => {
+    const ex = exemplares.find((e) => e.idExemplar === idExemplar || e.id === idExemplar);
+    if (!ex?.disponivel) {
+      addToast("Não é possível excluir exemplar emprestado", "error");
+      return;
+    }
+
+    try {
+      await apiFetch(`/exemplar/delete/${idExemplar}`, { method: "DELETE" }, token);
+      setExemplares((prev) => prev.filter((e) => e.idExemplar !== idExemplar && e.id !== idExemplar));
+      addToast("Exemplar removido");
+    } catch (error) {
+      console.error("Erro ao excluir exemplar:", error);
+      addToast(error.message || "Erro ao remover exemplar", "error");
+    }
+  }, [exemplares, token, addToast]);
 
   // ============ LEITOR CRUD ============
 
- const handleLeitorSubmit = useCallback(async (data) => {
+  const handleLeitorSubmit = useCallback(async (data) => {
     try {
       if (data.idLeitor) {
         // Edição (PUT)
@@ -384,7 +453,7 @@ const handleObraSubmit = useCallback(async (data) => {
           <DashboardPage
             exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
             onOpenLoan={() => setLoanDrawerOpen(true)} onOpenReturn={() => setReturnDrawerOpen(true)}
-            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData} isAuthenticated={isAuthenticated} 
+            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData} isAuthenticated={isAuthenticated}
           />
         );
       case "acervo":
@@ -448,9 +517,7 @@ const handleObraSubmit = useCallback(async (data) => {
       <NewLoanDrawer isOpen={loanDrawerOpen} onClose={() => setLoanDrawerOpen(false)}
         exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
         onConfirm={handleNewLoan} />
-      <ReturnDrawer isOpen={returnDrawerOpen} onClose={() => setReturnDrawerOpen(false)}
-        exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
-        onConfirm={handleReturn} />
+      <ReturnDrawer isOpen={returnDrawerOpen} onClose={() => setReturnDrawerOpen(false)} obras={obras} leitores={leitores} />
       <ObraDrawer isOpen={obraDrawerOpen} onClose={() => { setObraDrawerOpen(false); setEditingObra(null); }}
         onConfirm={handleObraSubmit} editingObra={editingObra} />
       <LeitorDrawer isOpen={leitorDrawerOpen} onClose={() => { setLeitorDrawerOpen(false); setEditingLeitor(null); }}

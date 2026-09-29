@@ -5,7 +5,9 @@ import getEmprestimoByIdController from '../Controller/Emprestimo/getEmprestimoB
 import deleteEmprestimoController from '../Controller/Emprestimo/deleteEmprestimoController.js';
 import updateEmprestimoController from '../Controller/Emprestimo/updateEmprestimoController.js';
 import listEmprestimoAtrasadoController from '../Controller/Emprestimo/listEmprestimoAtrasadoController.js';
-
+import listEmprestimoAtivoController from '../Controller/Emprestimo/listEmprestimoAtivoController.js';
+import getEmprestimoByIdExemplarController from '../Controller/Emprestimo/getEmprestimoByIdExemplarController.js';
+import changeStatusDevolucaoEmprestimoController from '../Controller/Emprestimo/changeStatusDevolucaoEmprestimoController.js';
 
 const router = express.Router();
 
@@ -15,5 +17,8 @@ router.get('/list/atrasados', listEmprestimoAtrasadoController)
 router.get('/get/:id', getEmprestimoByIdController)
 router.delete('/delete/:id', deleteEmprestimoController)
 router.put('/update/:id', updateEmprestimoController)
+router.get('/getbyexemplar/:id', getEmprestimoByIdExemplarController)
+router.get('/list/ativos', listEmprestimoAtivoController)
+router.patch('/change-status-devolucao/:id', changeStatusDevolucaoEmprestimoController)
 
 export default router

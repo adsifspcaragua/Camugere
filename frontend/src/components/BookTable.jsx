@@ -21,7 +21,10 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
-        (o) => o.titulo.toLowerCase().includes(q) || o.autor.toLowerCase().includes(q) || o.cdd.toLowerCase().includes(q)
+        (o) =>
+          (o.titulo || "").toLowerCase().includes(q) ||
+          (o.autor || "").toLowerCase().includes(q) ||
+          (o.cdd || "").toLowerCase().includes(q)
       );
     }
     return result;
@@ -112,9 +115,17 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
 
                 {/* Obra */}
                 <div className="flex items-center gap-3 py-4 pr-4">
-                  <span className="flex h-10 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
-                    {obra.capa}
-                  </span>
+                  {obra.capaUrl ? (
+                    <img
+                      src={obra.capaUrl}
+                      alt={obra.titulo}
+                      className="h-10 w-8 flex-shrink-0 rounded-lg object-cover shadow-sm"
+                    />
+                  ) : (
+                    <span className="flex h-10 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
+                      {obra.capa || "📕"}
+                    </span>
+                  )}
                   <span className="text-base font-medium text-surface-800 dark:text-surface-200 line-clamp-2">
                     {obra.titulo}
                   </span>

@@ -1,7 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { Hash, CornerDownLeft, Clock, CheckCircle2, AlertTriangle, RefreshCcw, Trash2 } from "lucide-react";
-import { emprestimoService } from '../../services/emprestimoService';
-const TABS = [
+import { deleteEmprestimo } from '../../services/emprestimoService';const TABS = [
   { id: "ativos", label: "Ativos", icon: Clock },
   { id: "atrasados", label: "Atrasados", icon: AlertTriangle },
   { id: "devolvidos", label: "Devolvidos", icon: CheckCircle2 },
@@ -52,10 +51,10 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
   const handleApagar = useCallback(async (idEmprestimo) => {
     if (window.confirm("Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.")) {
       try {
-        const token = localStorage.getItem('biblioteca-auth-token');
-        await emprestimoService.apagar(idEmprestimo, token);
+        const result = await deleteEmprestimo(idEmprestimo);
+        if (!result.ok) throw new Error(result.message);
+
         alert("Registo apagado com sucesso!");
-        // Como os dados vêm do componente pai, recarregamos a página para atualizar a lista
         window.location.reload(); 
       } catch (error) {
         console.error("Erro ao apagar:", error);
