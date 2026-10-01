@@ -34,7 +34,28 @@ function AppContent() {
   const [obrasApi, setObrasApi] = useState(null);
 
   const loadData = async () => {
-    setIsLoadingData(true);
+    setIsLoadingData(true)
+
+    switch (activePage) {
+      case 'dashboard':
+        try {
+          const responseObras = await apiFetch("/obra/list", {}, token)
+          setObrasApi(responseObras.data)
+
+          const responseExemplares = await apiFetch("/exemplar/list", {}, token)
+          setExemplares(responseExemplares.data)
+          
+          const responseEmprestimo = await apiFetch("/emprestimo/list", {}, token)
+          setEmprestimos(responseEmprestimo.data)
+
+          const resposeLeitores = await apiFetch("/leitor/list", {}, token)
+          setLeitores(resposeLeitores.data)
+
+        } finally {
+          setIsLoadingData(false)
+        }
+    }
+
     try {
       const [responseObras, responseExemplares, responseEmprestimo, responseLeitores] =
         await Promise.all([
