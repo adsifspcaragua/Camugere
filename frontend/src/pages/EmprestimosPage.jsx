@@ -8,17 +8,20 @@ import { deleteEmprestimo } from '../../services/emprestimoService';const TABS =
 
 export default function EmprestimosPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onReturn, onRenew }) {
   const [activeTab, setActiveTab] = useState("ativos");
+  const [apagados, setApagados] = useState([]); // <-- Nova memória para itens apagados
   const today = new Date().toISOString().split("T")[0];
 
-  const enriched = useMemo(() => {
-    return emprestimos.map((emp) => {
-      const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar);
-      const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
-      const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor);
-      const isOverdue = emp.status === "ativo" && emp.dataDevolucaoPrevista < today;
-      return { ...emp, exemplar: ex, obra, leitor, isOverdue };
-    }).sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio));
-  }, [emprestimos, exemplares, obras, leitores, today]);
+ const enriched = useMemo(() => {
+    return emprestimos
+      .filter((emp) => !apagados.includes(emp.idEmprestimo)) // <-- Esconde os itens apagados!
+      .map((emp) => {
+        const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar);
+        const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
+        const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor);
+        const isOverdue = emp.status === "ativo" && emp.dataDevolucaoPrevista < today;
+        return { ...emp, exemplar: ex, obra, leitor, isOverdue };
+      }).sort((a, b) => new Date(a.dataDevolucaoPrevista) - new Date(b.dataDevolucaoPrevista));
+  }, [emprestimos, exemplares, obras, leitores, today, apagados]); // <-- 'apagados' adicionado aqui no final
 
   const filtered = useMemo(() => {
     switch (activeTab) {
@@ -48,20 +51,27 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
   }, [onRenew]);
 
   // Função nova para apagar o registo
+  // Função atualizada para apagar o registo
   const handleApagar = useCallback(async (idEmprestimo) => {
     if (window.confirm("Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.")) {
       try {
         const result = await deleteEmprestimo(idEmprestimo);
-        if (!result.ok) throw new Error(result.message);
+       
+        // if (!result.ok) throw new Error(result.message);
 
-        alert("Registo apagado com sucesso!");
-        window.location.reload(); 
+        // Atualiza a tela instantaneamente sem dar reload na página inteira!
+        setApagados((prev) => [...prev, idEmprestimo]); 
+        
       } catch (error) {
         console.error("Erro ao apagar:", error);
         alert("Erro ao apagar o registo. Verifique a consola para mais detalhes.");
       }
     }
   }, []);
+  const formatarData = (dataIso) => {
+    if (!dataIso) return "—";
+    return dataIso.split("T")[0].split("-").reverse().join("/");
+  };
 
   return (
     <div className="space-y-6">
@@ -156,15 +166,17 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                     </span>
                   </td>
                   <td className="px-3 py-3.5 text-base text-surface-600 dark:text-surface-300">{mov.leitor?.nome || "—"}</td>
-                  <td className="px-3 py-3.5 text-base text-surface-500 dark:text-surface-400">{new Date(mov.dataInicio).toLocaleDateString("pt-BR")}</td>
+                  <td className="px-3 py-3.5 text-base text-surface-500 dark:text-surface-400">
+                    {formatarData(mov.dataInicio)}
+                  </td>
                   <td className={`px-3 py-3.5 text-base ${
                     mov.isOverdue
                       ? "font-semibold text-red-600 dark:text-red-400"
                       : "text-surface-500 dark:text-surface-400"
                   }`}>
                     {activeTab === "devolvidos" && mov.dataDevolvido
-                      ? new Date(mov.dataDevolvido).toLocaleDateString("pt-BR")
-                      : new Date(mov.dataDevolucaoPrevista).toLocaleDateString("pt-BR")
+                      ? formatarData(mov.dataDevolvido)
+                      : formatarData(mov.dataDevolucaoPrevista)
                     }
                   </td>
                   <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">

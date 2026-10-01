@@ -14,6 +14,7 @@ export default function ReturnDrawer({ isOpen, onClose }) {
   const searchRef = useRef(null);
   const listRef = useRef(null);
   const [exemplaresData, setExemplaresData] = useState([]);
+  const [sucesso, setSucesso] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -21,6 +22,7 @@ export default function ReturnDrawer({ isOpen, onClose }) {
       setSelectedExemplar(null);
       setDropdownOpen(false);
       setHighlightIndex(-1);
+      setSucesso(false);
     }
   }, [isOpen]);
 
@@ -46,27 +48,49 @@ export default function ReturnDrawer({ isOpen, onClose }) {
 
       const resultados = await Promise.all(
         emprestimos.data.map(async (e) => {
-          const exemplar = await getExemplarById(e.id_exemplar);
-          const obra = await getObraById(exemplar.data.id_obra);
-          const leitor = await getLeitorById(e.id_leitor);
+          // Proteções extra nas chamadas à API
+          const exemplar = await getExemplarById(e.id_exemplar || e.idExemplar);
+          
+          const idDaObra = exemplar?.data?.id_obra || exemplar?.data?.idObra || exemplar?.data?.id;
+          let obra = { data: null };
+          if (idDaObra) {
+            obra = await getObraById(idDaObra);
+          }
+          
+          const leitor = await getLeitorById(e.id_leitor || e.idLeitor);
+          
           const dataFim = new Date(e.dataInicio)
           dataFim.setDate(dataFim.getDate() + e.diasLocacao);
           const isOverdue = dataFim < new Date();
-          return { exemplar: exemplar.data, obra: obra.data, emprestimo: e, leitor: leitor.leitor, usuario: leitor.usuario, isOverdue, dataFim};
+          
+          return { 
+            exemplar: exemplar?.data, 
+            obra: obra?.data, 
+            emprestimo: e, 
+            leitor: leitor?.leitor, 
+            usuario: leitor?.usuario, 
+            isOverdue, 
+            dataFim
+          };
         })
       );
 
       setExemplaresData(resultados);
     }
 
-    carregar();
-  }, []);
+    if (isOpen) {
+      carregar();
+    }
+  }, [isOpen]); // Adicionei o isOpen aqui para carregar sempre que a gaveta abre
 
   const filtered = useMemo(() => {
     if (!query.trim()) return exemplaresData
     const q = query.toLowerCase();
     return exemplaresData.filter(
-      (e) => e.exemplar.numeroInventario.toLowerCase().includes(q) || e.obra.titulo.toLowerCase().includes(q) || (e.leitor?.nome || "").toLowerCase().includes(q)
+      (e) => 
+        (e.exemplar?.numeroInventario || "").toLowerCase().includes(q) || 
+        (e.obra?.titulo || "").toLowerCase().includes(q) || 
+        (e.usuario?.nome || "").toLowerCase().includes(q)
     );
   }, [exemplaresData, query]);
 
@@ -121,10 +145,18 @@ export default function ReturnDrawer({ isOpen, onClose }) {
   const handleSubmit = async () => {
     if (!selectedExemplar) return;
     
-    const emprestimo = changeStatusDevolucaoEmprestimo(selectedExemplar.emprestimo.id, true);
-    console.log(emprestimo)
-
-    onClose();
+    try {
+      await changeStatusDevolucaoEmprestimo(selectedExemplar.emprestimo.id || selectedExemplar.emprestimo.idEmprestimo, true);
+      setSucesso(true); // Mostra a mensagem
+      
+      // Espera 1.5 segundos e fecha a gaveta
+      setTimeout(() => {
+        onClose();
+      }, 1500);
+    } catch (error) {
+      console.error("Erro ao devolver:", error);
+      alert("Erro ao registrar devolução. Verifique a consola.");
+    }
   };
 
   return (
@@ -185,7 +217,7 @@ export default function ReturnDrawer({ isOpen, onClose }) {
                     <div ref={listRef} role="listbox" className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 scrollbar-thin">
                       {filtered.map((e, i) => (
                         <button
-                          key={e.exemplar.id}
+                          key={e.exemplar?.id || i}
                           type="button"
                           role="option"
                           aria-selected={i === highlightIndex}
@@ -197,8 +229,8 @@ export default function ReturnDrawer({ isOpen, onClose }) {
                             }`}
                         >
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">{e.obra.titulo}</p>
-                            <p className="text-base text-surface-400 dark:text-surface-500">{e.exemplar.numeroInventario} · {e.usuario.nome }</p>
+                            <p className="truncate text-base font-medium text-surface-800 dark:text-surface-200">{e.obra?.titulo || "Obra desconhecida"}</p>
+                            <p className="text-base text-surface-400 dark:text-surface-500">{e.exemplar?.numeroInventario || "S/N"} · {e.usuario?.nome || "Desconhecido"}</p>
                           </div>
                           {e.isOverdue && (
                             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
@@ -237,17 +269,17 @@ export default function ReturnDrawer({ isOpen, onClose }) {
                 <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 dark:border-surface-700 dark:bg-surface-800">
                   <div className="flex items-start gap-4">
                     <div className="min-w-0 flex-1 space-y-2">
-                      <p className="text-lg font-semibold text-surface-900 dark:text-white">{selectedExemplar.obra.titulo}</p>
-                      <p className="text-base text-surface-500 dark:text-surface-400">{selectedExemplar.autor}</p>
+                      <p className="text-lg font-semibold text-surface-900 dark:text-white">{selectedExemplar.obra?.titulo || "Obra desconhecida"}</p>
+                      <p className="text-base text-surface-500 dark:text-surface-400">{selectedExemplar.obra?.autor || "Autor desconhecido"}</p>
                       <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 dark:bg-surface-700">
                         <Hash size={16} className="text-brand-500" />
-                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">Número do inventário: {selectedExemplar.exemplar.numeroInventario}</span>
+                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">Número do inventário: {selectedExemplar.exemplar?.numeroInventario || "N/A"}</span>
                       </div>
                     </div>
                   </div>
                   <div className="mt-4 rounded-xl border border-surface-200 bg-white p-4 dark:border-surface-600 dark:bg-surface-700">
                     <p className="text-base text-surface-400 dark:text-surface-500">Emprestado para:</p>
-                    <p className="mt-1 text-base font-semibold text-surface-800 dark:text-surface-200">{selectedExemplar.usuario.nome}</p>
+                    <p className="mt-1 text-base font-semibold text-surface-800 dark:text-surface-200">{selectedExemplar.usuario?.nome || "Desconhecido"}</p>
                     {selectedExemplar.emprestimo && (
                       <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
                         Desde {new Date(selectedExemplar.emprestimo.dataInicio).toLocaleDateString("pt-BR")} · Previsto {selectedExemplar.dataFim.toLocaleDateString("pt-BR")}
@@ -264,15 +296,21 @@ export default function ReturnDrawer({ isOpen, onClose }) {
             )}
           </div>
 
-          {selectedExemplar && (
+         {selectedExemplar && (
             <div className="border-t border-surface-200 px-6 py-5 dark:border-surface-800">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-emerald-700 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 active:scale-[0.98] dark:focus-visible:ring-offset-surface-900"
-              >
-                Confirmar Devolução
-              </button>
+              {sucesso ? (
+                <div className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-50 py-4 text-base font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
+                  <span>✅ Devolução registrada com sucesso!</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="w-full rounded-2xl bg-emerald-600 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-emerald-700 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 active:scale-[0.98] dark:focus-visible:ring-offset-surface-900"
+                >
+                  Confirmar Devolução
+                </button>
+              )}
             </div>
           )}
         </div>

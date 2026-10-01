@@ -250,13 +250,13 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                 <Calendar size={18} className="text-surface-400" />
                 Data de Devolução Prevista
               </label>
-              <input
+          <input
                 id="data-devolucao"
                 type="date"
                 value={dataDevolucao}
                 onChange={(e) => setDataDevolucao(e.target.value)}
-                min={new Date().toISOString().split("T")[0]} // Impede escolher datas no passado
-                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:focus:border-brand-500"
+                min={new Date().toISOString().split("T")[0]} 
+                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:focus:bg-surface-800 dark:focus:border-brand-500 cursor-text"
                 required
               />
             </div>
