@@ -226,9 +226,6 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
     onClose();
   };
 
-    onClose()
-  }
-
   return (
     <>
       <div
