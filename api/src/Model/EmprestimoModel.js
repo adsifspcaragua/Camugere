@@ -60,7 +60,10 @@ export async function listEmprestimo() {
             id_exemplar: true,
             statusDevolucao: true,
             dataDevolucao: true
-        }
+        },
+        orderBy: {
+      dataDevolucao: 'desc'
+    }
     })
 
     return result
@@ -105,7 +108,6 @@ export async function listEmprestimosAtrasados() {
         dataDevolicao.setDate(dataDevolicao.getDate() + e.diasLocacao)
         return dataDevolicao.getTime() < dataAtual.getTime()
     })
-
     return result
 }
 
@@ -149,7 +151,8 @@ export async function deleteEmprestimo(id) {
     const result = await prisma.Emprestimo.delete({
         where: {
             id: id
-        }, select: {
+        }, 
+        select: {
             id: true,
             dataInicio: true,
             diasLocacao: true,
@@ -164,7 +167,7 @@ export async function deleteEmprestimo(id) {
 }
 
 export async function updateEmprestimo(id, emprestimo) {
-    const result = await prisma.Emprestimo.delete({
+    const result = await prisma.Emprestimo.update({
         where: {
             id: id
         },

@@ -1,43 +1,27 @@
-import { useMemo, useState, useCallback } from "react"
-import {
-  Hash,
-  CornerDownLeft,
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  RefreshCcw,
-} from "lucide-react"
-
-const TABS = [
+import { useMemo, useState, useCallback } from "react";
+import { Hash, CornerDownLeft, Clock, CheckCircle2, AlertTriangle, RefreshCcw, Trash2 } from "lucide-react";
+import { deleteEmprestimo } from '../../services/emprestimoService';const TABS = [
   { id: "ativos", label: "Ativos", icon: Clock },
   { id: "atrasados", label: "Atrasados", icon: AlertTriangle },
   { id: "devolvidos", label: "Devolvidos", icon: CheckCircle2 },
 ]
 
-export default function EmprestimosPage({
-  exemplares,
-  emprestimos,
-  obras,
-  leitores,
-  onOpenLoan,
-  onReturn,
-  onRenew,
-}) {
-  const [activeTab, setActiveTab] = useState("ativos")
-  const today = new Date().toISOString().split("T")[0]
+export default function EmprestimosPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onReturn, onRenew }) {
+  const [activeTab, setActiveTab] = useState("ativos");
+  const [apagados, setApagados] = useState([]); // <-- Nova memória para itens apagados
+  const today = new Date().toISOString().split("T")[0];
 
-  const enriched = useMemo(() => {
+ const enriched = useMemo(() => {
     return emprestimos
+      .filter((emp) => !apagados.includes(emp.idEmprestimo)) // <-- Esconde os itens apagados!
       .map((emp) => {
-        const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar)
-        const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null
-        const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor)
-        const isOverdue =
-          emp.status === "ativo" && emp.dataDevolucaoPrevista < today
-        return { ...emp, exemplar: ex, obra, leitor, isOverdue }
-      })
-      .sort((a, b) => new Date(b.dataInicio) - new Date(a.dataInicio))
-  }, [emprestimos, exemplares, obras, leitores, today])
+        const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar);
+        const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
+        const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor);
+        const isOverdue = emp.status === "ativo" && emp.dataDevolucaoPrevista < today;
+        return { ...emp, exemplar: ex, obra, leitor, isOverdue };
+      }).sort((a, b) => new Date(a.dataDevolucaoPrevista) - new Date(b.dataDevolucaoPrevista));
+  }, [emprestimos, exemplares, obras, leitores, today, apagados]); // <-- 'apagados' adicionado aqui no final
 
   const filtered = useMemo(() => {
     switch (activeTab) {
@@ -75,6 +59,29 @@ export default function EmprestimosPage({
     },
     [onRenew],
   )
+
+  // Função nova para apagar o registo
+  // Função atualizada para apagar o registo
+  const handleApagar = useCallback(async (idEmprestimo) => {
+    if (window.confirm("Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.")) {
+      try {
+        const result = await deleteEmprestimo(idEmprestimo);
+       
+        // if (!result.ok) throw new Error(result.message);
+
+        // Atualiza a tela instantaneamente sem dar reload na página inteira!
+        setApagados((prev) => [...prev, idEmprestimo]); 
+        
+      } catch (error) {
+        console.error("Erro ao apagar:", error);
+        alert("Erro ao apagar o registo. Verifique a consola para mais detalhes.");
+      }
+    }
+  }, []);
+  const formatarData = (dataIso) => {
+    if (!dataIso) return "—";
+    return dataIso.split("T")[0].split("-").reverse().join("/");
+  };
 
   return (
     <div className="space-y-6">
@@ -153,22 +160,7 @@ export default function EmprestimosPage({
                 <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
                   Inventário
                 </th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
-                  Leitor
-                </th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
-                  Início
-                </th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
-                  {activeTab === "devolvidos"
-                    ? "Devolvido em"
-                    : "Devolução Prevista"}
-                </th>
-                {activeTab !== "devolvidos" && (
-                  <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">
-                    Ações
-                  </th>
-                )}
+                <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-50 dark:divide-surface-800/50">
@@ -205,47 +197,53 @@ export default function EmprestimosPage({
                       {mov.exemplar?.numeroInventario || "—"}
                     </span>
                   </td>
-                  <td className="px-3 py-3.5 text-base text-surface-600 dark:text-surface-300">
-                    {mov.leitor?.nome || "—"}
-                  </td>
+                  <td className="px-3 py-3.5 text-base text-surface-600 dark:text-surface-300">{mov.leitor?.nome || "—"}</td>
                   <td className="px-3 py-3.5 text-base text-surface-500 dark:text-surface-400">
-                    {new Date(mov.dataInicio).toLocaleDateString("pt-BR")}
+                    {formatarData(mov.dataInicio)}
                   </td>
-                  <td
-                    className={`px-3 py-3.5 text-base ${
-                      mov.isOverdue
-                        ? "font-semibold text-red-600 dark:text-red-400"
-                        : "text-surface-500 dark:text-surface-400"
-                    }`}
-                  >
+                  <td className={`px-3 py-3.5 text-base ${
+                    mov.isOverdue
+                      ? "font-semibold text-red-600 dark:text-red-400"
+                      : "text-surface-500 dark:text-surface-400"
+                  }`}>
                     {activeTab === "devolvidos" && mov.dataDevolvido
-                      ? new Date(mov.dataDevolvido).toLocaleDateString("pt-BR")
-                      : new Date(mov.dataDevolucaoPrevista).toLocaleDateString(
-                          "pt-BR",
-                        )}
+                      ? formatarData(mov.dataDevolvido)
+                      : formatarData(mov.dataDevolucaoPrevista)
+                    }
                   </td>
-                  {activeTab !== "devolvidos" && (
-                    <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
-                      <div className="flex justify-end gap-2">
+                  <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
+                    <div className="flex justify-end gap-2">
+                      {activeTab !== "devolvidos" ? (
+                        <>
+                          <button
+                            onClick={() => handleInlineRenew(mov.idEmprestimo)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm font-semibold text-surface-700 transition-all hover:bg-surface-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+                            title="Renovar empréstimo (+14 dias)"
+                          >
+                            <RefreshCcw size={14} />
+                            Renovar
+                          </button>
+                          <button
+                            onClick={() => handleInlineReturn(mov.idExemplar)}
+                            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
+                            title="Registrar devolução"
+                          >
+                            <CornerDownLeft size={14} />
+                            Devolver
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => handleInlineRenew(mov.idEmprestimo)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm font-semibold text-surface-700 transition-all hover:bg-surface-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                          title="Renovar empréstimo (+14 dias)"
+                          onClick={() => handleApagar(mov.idEmprestimo)}
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-all hover:bg-red-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
+                          title="Apagar registo definitivamente"
                         >
-                          <RefreshCcw size={14} />
-                          Renovar
+                          <Trash2 size={14} />
+                          Apagar
                         </button>
-                        <button
-                          onClick={() => handleInlineReturn(mov.idExemplar)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
-                          title="Registrar devolução"
-                        >
-                          <CornerDownLeft size={14} />
-                          Devolver
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
