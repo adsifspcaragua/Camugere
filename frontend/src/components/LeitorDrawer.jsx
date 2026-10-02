@@ -1,26 +1,31 @@
-import { useState, useEffect, useRef } from "react";
-import { X, UserPlus, User, Mail, Phone, IdCard } from "lucide-react";
+import { useState, useEffect, useRef } from "react"
+import { X, UserPlus, User, Mail, Phone, IdCard } from "lucide-react"
 
-export default function LeitorDrawer({ isOpen, onClose, onConfirm, editingLeitor = null }) {
-  const [nome, setNome] = useState("");
-  const [cpf, setCpf] = useState("");
-  const [contato, setContato] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const inputRef = useRef(null);
-  const isEdit = !!editingLeitor;
+export default function LeitorDrawer({
+  isOpen,
+  onClose,
+  onConfirm,
+  editingLeitor = null,
+}) {
+  const [nome, setNome] = useState("")
+  const [cpf, setCpf] = useState("")
+  const [contato, setContato] = useState("")
+  const [telefone, setTelefone] = useState("")
+  const inputRef = useRef(null)
+  const isEdit = !!editingLeitor
 
   useEffect(() => {
     if (isOpen) {
       if (editingLeitor) {
-        setNome(editingLeitor.nome);
-        setCpf(editingLeitor.cpf || "");
-        setContato(editingLeitor.contato);
-        setTelefone(editingLeitor.telefone || "");
+        setNome(editingLeitor.nome || "")
+        setCpf(editingLeitor.cpf || "")
+        setContato(editingLeitor.contato || "")
+        setTelefone(editingLeitor.telefone || "")
       } else {
-        setNome("");
-        setCpf("");
-        setContato("");
-        setTelefone("");
+        setNome("")
+        setCpf("")
+        setContato("")
+        setTelefone("")
       }
       setTimeout(() => inputRef.current?.focus(), 200)
     }
@@ -37,28 +42,27 @@ export default function LeitorDrawer({ isOpen, onClose, onConfirm, editingLeitor
   }, [isOpen, onClose])
 
   // Agora o botão só é ativado se o CPF também estiver preenchido
-  const canSubmit = nome.trim() && cpf.trim() && contato.trim();
+  const canSubmit = Boolean(nome.trim() && cpf.trim() && contato.trim())
 
-const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!canSubmit) return;
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (!canSubmit) return
 
     // Monta o pacote base apenas com os dados obrigatórios
     const payload = {
       nome: nome.trim(),
-      cpf: cpf.trim(),
+      cpf: cpf.replace(/\D/g, ""),
       contato: contato.trim(),
       ...(editingLeitor && { idLeitor: editingLeitor.idLeitor }),
-    };
+    }
 
     // Só adiciona o telefone ao pacote se o utilizador tiver digitado algo
     if (telefone.trim().length > 0) {
-      payload.telefone = telefone.trim();
+      payload.telefone = telefone.replace(/\D/g, "")
     }
 
-    onConfirm(payload);
-    onClose();
-  };
+    onConfirm(payload)
+  }
 
   const initials = nome.trim()
     ? nome
@@ -138,8 +142,11 @@ const handleSubmit = (e) => {
                 <IdCard size={18} className="text-surface-400" /> CPF
               </label>
               <input
-                type="text" value={cpf} onChange={(e) => setCpf(e.target.value)}
-                placeholder="Ex: 000.000.000-00" required
+                type="text"
+                value={cpf}
+                onChange={(e) => setCpf(e.target.value)}
+                placeholder="Ex: 000.000.000-00"
+                required
                 className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
               />
             </div>
@@ -185,9 +192,17 @@ const handleSubmit = (e) => {
                     {initials}
                   </div>
                   <div>
-                    <p className="text-base font-semibold text-surface-900 dark:text-white">{nome}</p>
-                    <p className="text-base text-surface-500 dark:text-surface-400">{cpf} • {contato}</p>
-                    {telefone && <p className="text-sm text-surface-400 dark:text-surface-500">{telefone}</p>}
+                    <p className="text-base font-semibold text-surface-900 dark:text-white">
+                      {nome}
+                    </p>
+                    <p className="text-base text-surface-500 dark:text-surface-400">
+                      {cpf} • {contato}
+                    </p>
+                    {telefone && (
+                      <p className="text-sm text-surface-400 dark:text-surface-500">
+                        {telefone}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
