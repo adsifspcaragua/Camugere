@@ -31,16 +31,24 @@ CREATE TABLE `Bibliotecario` (
 -- CreateTable
 CREATE TABLE `Obra` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `isbn` VARCHAR(20) NULL,
     `titulo` VARCHAR(200) NOT NULL,
     `subtitulo` VARCHAR(200) NULL,
     `editora` VARCHAR(100) NULL,
+    `localPublicacao` VARCHAR(100) NULL,
+    `anoPublicacao` INTEGER NULL,
     `edicao` VARCHAR(20) NULL,
-    `numeroPaginas` INTEGER NOT NULL,
-    `capa` VARCHAR(191) NULL,
+    `numeroPaginas` INTEGER NOT NULL DEFAULT 0,
+    `resumo` TEXT NULL,
+    `capa` VARCHAR(20) NULL,
+    `capaUrl` VARCHAR(500) NULL,
     `ativa` BOOLEAN NOT NULL DEFAULT true,
     `notaMedia` DOUBLE NULL,
-    `id_cdd` VARCHAR(6) NOT NULL,
+    `id_cdd` VARCHAR(6) NULL,
 
+    UNIQUE INDEX `Obra_isbn_key`(`isbn`),
+    INDEX `Obra_titulo_idx`(`titulo`),
+    INDEX `Obra_isbn_idx`(`isbn`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -55,16 +63,17 @@ CREATE TABLE `ObraAutor` (
 -- CreateTable
 CREATE TABLE `Autor` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `nome` VARCHAR(40) NOT NULL,
-    `sobrenome` VARCHAR(40) NOT NULL,
+    `nome` VARCHAR(80) NOT NULL,
+    `sobrenome` VARCHAR(80) NOT NULL,
 
+    UNIQUE INDEX `Autor_nome_sobrenome_key`(`nome`, `sobrenome`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Cdd` (
-    `id` VARCHAR(6) NOT NULL,
-    `descricao` VARCHAR(100) NOT NULL,
+    `id` VARCHAR(15) NOT NULL,
+    `descricao` VARCHAR(150) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -92,9 +101,11 @@ CREATE TABLE `LeitorClube` (
 CREATE TABLE `Exemplar` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `id_obra` INTEGER NOT NULL,
-    `numeroInventario` VARCHAR(6) NOT NULL,
+    `numeroInventario` VARCHAR(20) NOT NULL,
     `disponivel` BOOLEAN NOT NULL DEFAULT true,
 
+    UNIQUE INDEX `Exemplar_numeroInventario_key`(`numeroInventario`),
+    INDEX `Exemplar_id_obra_disponivel_idx`(`id_obra`, `disponivel`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -142,7 +153,7 @@ ALTER TABLE `Leitor` ADD CONSTRAINT `Leitor_id_usuario_fkey` FOREIGN KEY (`id_us
 ALTER TABLE `Bibliotecario` ADD CONSTRAINT `Bibliotecario_id_usuario_fkey` FOREIGN KEY (`id_usuario`) REFERENCES `Usuario`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Obra` ADD CONSTRAINT `Obra_id_cdd_fkey` FOREIGN KEY (`id_cdd`) REFERENCES `Cdd`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `Obra` ADD CONSTRAINT `Obra_id_cdd_fkey` FOREIGN KEY (`id_cdd`) REFERENCES `Cdd`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ObraAutor` ADD CONSTRAINT `ObraAutor_id_obra_fkey` FOREIGN KEY (`id_obra`) REFERENCES `Obra`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

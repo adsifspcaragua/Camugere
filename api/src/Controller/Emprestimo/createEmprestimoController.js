@@ -20,13 +20,11 @@ export default async function createEmprestimoController(req, res) {
         }
 
         if(!exemplar.disponivel){
-            throw new Error("O exemplar não está disponível " + exemplar)
+            throw new Error("O exemplar não está disponível")
         }
 
-        const novoExemplar = exemplar
-        novoExemplar.disponivel = false
-        
-        const changeExemplar = await updateExemplar(exemplar.id, novoExemplar)
+       
+        const changeExemplar = await updateExemplar(exemplar.id, { disponivel: false })
 
         if(!changeExemplar){
             throw new Error("Não foi possível concluir a ação!")
@@ -42,7 +40,8 @@ export default async function createEmprestimoController(req, res) {
             message: "Empréstimo criado com sucesso!",
             data: {
                 emprestimo: result, 
-                exemplar: changeExemplar}
+                exemplar: changeExemplar
+            }
         })
     } catch (error) {
         return res.status(500).json({

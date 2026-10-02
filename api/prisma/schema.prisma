@@ -42,24 +42,32 @@ model Bibliotecario{
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
 }
 
-model Obra{
-  id    Int   @id @default(autoincrement())
-  titulo    String    @db.VarChar(200)
-  subtitulo    String?    @db.VarChar(200)
-  editora   String?    @db.VarChar(100)
-  edicao    String?    @db.VarChar(20)
-  numeroPaginas   Int
-  capa      String?
-  ativa     Boolean   @default(true)
-  notaMedia   Float?
+model Obra {
+  id              Int       @id @default(autoincrement())
+  isbn            String?   @unique @db.VarChar(20) // NOVO: evita cadastrar o mesmo livro 2x
+  titulo          String    @db.VarChar(200)
+  subtitulo       String?   @db.VarChar(200)
+  editora         String?   @db.VarChar(100)
+  localPublicacao String?   @db.VarChar(100)        // NOVO: vindo do ObraDrawer / Brasil API
+  anoPublicacao   Int?                              // NOVO: vindo do ObraDrawer / Brasil API
+  edicao          String?   @db.VarChar(20)
+  numeroPaginas   Int       @default(0)             // Default evita erro caso a API não informe
+  resumo          String?   @db.Text                // NOVO: @db.Text suporta sinopses longas
+  capa            String?   @db.VarChar(20)         // Mantém o emoji padrão "📕"
+  capaUrl         String?   @db.VarChar(500)        // NOVO: URL da imagem da capa sem truncar
+  ativa           Boolean   @default(true)
+  notaMedia       Float?
 
-  id_cdd    String    @db.VarChar(6)     
-  cdd   Cdd   @relation(fields: [id_cdd], references: [id], onDelete: Cascade)
+  id_cdd          String?   @db.VarChar(6)         // Tornado opcional e ampliado para CDDs maiores
+  cdd             Cdd?      @relation(fields: [id_cdd], references: [id], onUpdate: Cascade, onDelete: SetNull)
 
-  exemplares Exemplar[]
-  reservas Reserva[]
-  comentarios Comentario[]
-  autores ObraAutor[]
+  exemplares      Exemplar[]
+  reservas        Reserva[]
+  comentarios     Comentario[]
+  autores         ObraAutor[]
+
+  @@index([titulo])
+  @@index([isbn])
 }
 
 model ObraAutor{
@@ -71,19 +79,22 @@ model ObraAutor{
   @@id([id_obra, id_autor])
 }
 
-model Autor{
-  id    Int   @id @default(autoincrement())
-  nome    String    @db.VarChar(40)
-  sobrenome    String    @db.VarChar(40)
+model Autor {
+  id        Int         @id @default(autoincrement())
+  nome      String      @db.VarChar(80)
+  sobrenome String      @db.VarChar(80)
 
-  obras ObraAutor[]
+  obras     ObraAutor[]
+
+  
+  @@unique([nome, sobrenome], name: "nome_sobrenome")
 }
 
-model Cdd{
-  id    String    @db.VarChar(6)   @id
-  descricao   String  @db.VarChar(100)
+model Cdd {
+  id        String   @id @db.VarChar(15)
+  descricao String   @db.VarChar(150)
 
-  obras Obra[]
+  obras     Obra[]
 }
 
 model Clube{
@@ -105,14 +116,16 @@ model LeitorClube{
   @@id([id_leitor, id_clube])
 }
 
-model Exemplar{
-  id    Int   @id @default(autoincrement())
-  id_obra   Int
-  obra    Obra    @relation(fields: [id_obra], references: [id], onDelete: Cascade)
-  numeroInventario     String     @db.VarChar(6)
-  disponivel      Boolean     @default(true)
+model Exemplar {
+  id               Int          @id @default(autoincrement())
+  id_obra          Int
+  obra             Obra         @relation(fields: [id_obra], references: [id], onDelete: Cascade)
+  numeroInventario String       @unique @db.VarChar(20) // Ampliado para códigos de tombo únicos
+  disponivel       Boolean      @default(true)
 
-  emprestimos Emprestimo[]
+  emprestimos      Emprestimo[]
+
+  @@index([id_obra, disponivel])
 }
 
 model Emprestimo{
