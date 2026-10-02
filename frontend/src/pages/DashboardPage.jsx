@@ -33,6 +33,8 @@ export default function DashboardPage({
       dataFim.setDate(dataFim.getDate() + e.diasLocacao)
       return dataFim <= new Date()
     }).length
+    return { totalObras, totalExemplares, emprestimosAtivos, atrasos }
+  }, [isLoading, obrasApi, exemplares, emprestimos])
 
   if (isLoading) {
     return <div>Carregando...</div>

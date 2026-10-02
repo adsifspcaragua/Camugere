@@ -43,9 +43,12 @@ export default function LeitoresPage({
   const filtered = useMemo(() => {
     if (!search.trim()) return leitoresEnriched
     const q = search.toLowerCase()
-    return leitoresEnriched.filter(
-      (l) =>
-        l.nome.toLowerCase().includes(q) || l.contato.toLowerCase().includes(q),
+    return leitoresEnriched.filter((l) =>
+      [l.nome, l.contato, l.telefone].some((value) =>
+        String(value || "")
+          .toLowerCase()
+          .includes(q),
+      ),
     )
   }, [leitoresEnriched, search])
 
@@ -91,7 +94,11 @@ export default function LeitoresPage({
           >
             <div className="flex items-start gap-3">
               <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-400 to-brand-600 text-base font-bold text-white">
-                {/* {leitor.nome.split(" ").map((n) => n[0]).slice(0, 2).join("")} */}
+                {leitor.nome
+                  ?.split(" ")
+                  .map((n) => n[0])
+                  .slice(0, 2)
+                  .join("")}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-base font-semibold text-surface-800 dark:text-surface-200">
