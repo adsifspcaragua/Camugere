@@ -518,12 +518,10 @@ function AppContent() {
         // Fecha a gaveta e limpa o formulário
         setLeitorDrawerOpen(false)
         setEditingLeitor(null)
-
-        // Puxa o leitor com o ID real e definitivo do banco
         await loadData()
       } catch (error) {
         console.error("Erro ao salvar leitor:", error)
-        addToast("Erro ao salvar leitor no banco", "error")
+        addToast(error.message || "Erro ao salvar leitor no banco", "error")
       }
     },
     [addToast, token],
@@ -545,14 +543,28 @@ function AppContent() {
       setConfirmDialog({
         title: "Excluir Leitor",
         message: `Tem certeza que deseja excluir "${leitor?.nome}"? Esta ação não pode ser desfeita.`,
-        onConfirm: () => {
-          setLeitores((prev) => prev.filter((l) => l.idLeitor !== idLeitor))
-          addToast(`Leitor "${leitor?.nome}" removido`)
-          setConfirmDialog(null)
+        onConfirm: async () => {
+          try {
+            await apiFetch(
+              `/leitor/delete/${idLeitor}`,
+              { method: "DELETE" },
+              token,
+            )
+            setLeitores((prev) => prev.filter((l) => l.idLeitor !== idLeitor))
+            addToast(`Leitor "${leitor?.nome}" removido`)
+          } catch (error) {
+            console.error("Erro ao excluir leitor:", error)
+            addToast(
+              error.message || "Erro ao excluir leitor no banco",
+              "error",
+            )
+          } finally {
+            setConfirmDialog(null)
+          }
         },
       })
     },
-    [leitores, emprestimos, addToast],
+    [leitores, emprestimos, token, addToast],
   )
 
   // ============ EXPORT CSV ============

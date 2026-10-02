@@ -45,6 +45,12 @@
   body.dark {
     @apply bg-surface-950 text-surface-100;
   }
+
+  .dark input:not(.bg-transparent):focus,
+  .dark textarea:not(.bg-transparent):focus,
+  .dark select:not(.bg-transparent):focus {
+    color: var(--color-surface-900) !important;
+  }
 }
 
 @layer utilities {
