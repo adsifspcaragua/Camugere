@@ -1,4 +1,5 @@
 import { createObra, obraValidator } from "../../Model/ObraModel.js";
+import { internalizarCapa } from "../../Services/capaService.js";
 
 export default async function createObraController(req, res) {
     try {
@@ -13,10 +14,14 @@ export default async function createObraController(req, res) {
             });
         }
 
+        const { capaUrl, aviso } = await internalizarCapa(data.capaUrl, req);
+        data.capaUrl = capaUrl ?? null;
+
         const result = await createObra(data);
 
         return res.status(201).json({
             message: "Obra criada com sucesso!",
+            ...(aviso && { aviso }),
             data: result
         });
     } catch (error) {

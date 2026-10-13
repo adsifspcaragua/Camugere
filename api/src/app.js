@@ -12,11 +12,13 @@ import ExemplarRouter from "./Router/ExemplarRouter.js"
 import EmprestimoRouter from "./Router/EmprestimoRouter.js"
 import ObraAutorRouter from "./Router/ObraAutorRouter.js"
 import authMiddleware from "./Middlewares/authMiddleware.js";
+import UploadRouter, { UPLOADS_DIR } from "./Router/UploadRouter.js";
 
 const app = express()
 
 app.use(express.json())
 app.use(cors())
+app.use("/uploads", express.static(UPLOADS_DIR))
 
 app.get('/', (req, res) => {
     return res.json({
@@ -34,6 +36,7 @@ app.use("/leitor", LeitorRouter)
 app.use("/bibliotecario", BibliotecarioRouter)
 app.use("/cdd", CddRouter)
 app.use("/obra", ObraRouter)
+app.use("/upload", UploadRouter)
 app.use("/autor", AutorRouter)
 app.use("/exemplar", ExemplarRouter)
 app.use("/emprestimo", EmprestimoRouter)
