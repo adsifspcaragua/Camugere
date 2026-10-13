@@ -269,6 +269,7 @@ function AppContent() {
           prev ? prev.map((o) => (o.idObra === idEdicao || o.id === idEdicao ? obraAtualizada : o)) : prev
         );
         addToast(`Obra "${obraAtualizada.titulo}" atualizada com sucesso!`);
+        if (response.aviso) addToast(response.aviso, "error");
       } else {
         // CRIAÇÃO: POST /obra/create (já cria Obra, CDD, Autores e Exemplares no Prisma)
         const response = await apiFetch(
@@ -290,6 +291,7 @@ function AppContent() {
         }
 
         addToast(`Obra "${novaObra.titulo}" cadastrada com ${data.numExemplares} exemplar(es)`);
+        if (response.aviso) addToast(response.aviso, "error");
       }
       setEditingObra(null);
       setObraDrawerOpen(false);
@@ -540,7 +542,7 @@ function AppContent() {
         onConfirm={handleNewLoan} />
       <ReturnDrawer isOpen={returnDrawerOpen} onClose={() => setReturnDrawerOpen(false)} obras={obras} leitores={leitores} />
       <ObraDrawer isOpen={obraDrawerOpen} onClose={() => { setObraDrawerOpen(false); setEditingObra(null); }}
-        onConfirm={handleObraSubmit} editingObra={editingObra} />
+        onConfirm={handleObraSubmit} editingObra={editingObra} token={token} />
       <LeitorDrawer isOpen={leitorDrawerOpen} onClose={() => { setLeitorDrawerOpen(false); setEditingLeitor(null); }}
         onConfirm={handleLeitorSubmit} editingLeitor={editingLeitor} />
       <ConfirmDialog
