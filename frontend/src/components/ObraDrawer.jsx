@@ -1,7 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { X, BookOpen, UserRound, Hash, Layers, Plus } from "lucide-react";
+import { X, BookOpen, UserRound, Hash, Layers, Upload, Trash2 } from "lucide-react";
 
-export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = null }) {
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = null, token }) {
+  const [uploadingCapa, setUploadingCapa] = useState(false);
+  const fileInputRef = useRef(null);
   const [titulo, setTitulo] = useState("");
   const [autor, setAutor] = useState("");
   const [cdd, setCdd] = useState("");
@@ -105,7 +109,7 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
       setTitulo(data.title || "");
       setAutor(data.authors?.length > 0 ? data.authors.join(", ") : "");
       setResumo(data.synopsis || "");
-      setCapaUrl(data.cover_url || "");
+      setCapaUrl(data.cover_url || `https://covers.openlibrary.org/b/isbn/${isbnLimpo}-L.jpg?default=false`);
       setAnoPublicacao(data.year ? String(data.year) : "");
       setEditora(data.publisher || "");
       const localEditora = [data.location, data.publisher].filter(Boolean).join(" - ");
@@ -129,6 +133,33 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
       alert(error.message);
     } finally {
       setBuscandoIsbn(false);
+    }
+  };
+
+  const handleCapaUpload = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { alert("Selecione um arquivo de imagem."); return; }
+    if (file.size > 5 * 1024 * 1024) { alert("A imagem deve ter no máximo 5MB."); return; }
+
+    setUploadingCapa(true);
+    try {
+      const formData = new FormData();
+      formData.append("capa", file);
+      const response = await fetch(`${API_BASE_URL}/upload/capa`, {
+        method: "POST",
+        headers: token ? { jwt_token: token } : {},
+        body: formData,
+      });
+      const body = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(body?.message || "Falha ao enviar imagem");
+      setCapaUrl(`${API_BASE_URL}${body.path}`);
+    } catch (error) {
+      console.error("Erro no upload da capa:", error);
+      alert(error.message);
+    } finally {
+      setUploadingCapa(false);
     }
   };
 
@@ -212,6 +243,25 @@ export default function ObraDrawer({ isOpen, onClose, onConfirm, editingObra = n
                   placeholder="Link da imagem (opcional)"
                   className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:placeholder-surface-500 dark:focus:border-brand-500"
                 />
+                <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleCapaUpload} className="hidden" aria-label="Enviar imagem de capa" />
+                <div className="mt-2 flex gap-2">
+                  <button
+                    type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadingCapa}
+                    className="flex items-center gap-2 rounded-xl bg-brand-100 px-4 py-2 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-200 disabled:opacity-50 dark:bg-brand-500/20 dark:text-brand-400 dark:hover:bg-brand-500/30"
+                  >
+                    <Upload size={16} /> {uploadingCapa ? "Enviando..." : "Enviar imagem"}
+                  </button>
+                  {capaUrl && (
+                    <button
+                      type="button" onClick={() => setCapaUrl("")}
+                      className="flex items-center gap-2 rounded-xl border border-surface-200 px-3 py-2 text-sm text-surface-600 hover:bg-surface-100 dark:border-surface-700 dark:text-surface-300 dark:hover:bg-surface-800"
+                      aria-label="Remover capa"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+                </div>
+
               </div>
             </div>
 
