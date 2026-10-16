@@ -2,6 +2,7 @@ import { createEmprestimo } from "../../Model/EmprestimoModel.js"
 import { emprestimoValidator } from "../../Model/EmprestimoModel.js"
 import { getExemplarById } from "../../Model/ExemplarModel.js"
 import { updateExemplar } from "../../Model/ExemplarModel.js"
+import { enviarEmailEmprestimo } from "../../Services/emailService.js"
 
 export default async function createEmprestimoController(req, res) {
     try {
@@ -36,11 +37,32 @@ export default async function createEmprestimoController(req, res) {
             throw new Error("Não foi possível criar o empréstimo!")
         }
 
+        // Envia notificação por e-mail apenas se o bibliotecário optou por enviar
+        let emailInfo = null
+        if (emprestimo.enviarNotificacao !== false) {
+            try {
+                emailInfo = await enviarEmailEmprestimo(result)
+            } catch (emailErr) {
+                console.error("Aviso: falha ao enviar e-mail de notificação do empréstimo:", emailErr.message)
+                emailInfo = {
+                    enviado: false,
+                    emailDestino: result?.leitor?.usuario?.email || null,
+                    erro: emailErr.message
+                }
+            }
+        } else {
+            emailInfo = {
+                enviado: false,
+                desativadoPeloBibliotecario: true
+            }
+        }
+
         return res.status(200).json({
             message: "Empréstimo criado com sucesso!",
             data: {
                 emprestimo: result, 
-                exemplar: changeExemplar
+                exemplar: changeExemplar,
+                emailNotification: emailInfo
             }
         })
     } catch (error) {

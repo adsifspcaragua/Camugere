@@ -26,6 +26,46 @@ export const emprestimoValidator = (emprestimo, partial = null) => {
     return emprestimoSchema.safeParse(emprestimo)
 }
 
+const emprestimoSelect = {
+    id: true,
+    dataInicio: true,
+    diasLocacao: true,
+    id_leitor: true,
+    id_exemplar: true,
+    statusDevolucao: true,
+    dataDevolucao: true,
+    leitor: {
+        select: {
+            id: true,
+            id_usuario: true,
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
+        }
+    },
+    exemplar: {
+        select: {
+            id: true,
+            id_obra: true,
+            numeroInventario: true,
+            disponivel: true,
+            obra: {
+                select: {
+                    id: true,
+                    titulo: true,
+                    capa: true,
+                    capaUrl: true
+                }
+            }
+        }
+    }
+}
+
 export async function createEmprestimo(emprestimo) {
     const { diasLocacao, id_leitor, id_exemplar, dataInicio } = emprestimo
 
@@ -36,15 +76,7 @@ export async function createEmprestimo(emprestimo) {
             id_exemplar,
             dataInicio: dataInicio ? new Date(dataInicio) : new Date()
         },
-        select: {
-            id: true,
-            dataInicio: true,
-            diasLocacao: true,
-            id_leitor: true,
-            id_exemplar: true,
-            statusDevolucao: true,
-            dataDevolucao: true
-        }
+        select: emprestimoSelect
     })
 
     return result
@@ -52,18 +84,10 @@ export async function createEmprestimo(emprestimo) {
 
 export async function listEmprestimo() {
     const result = await prisma.Emprestimo.findMany({
-        select: {
-            id: true,
-            dataInicio: true,
-            diasLocacao: true,
-            id_leitor: true,
-            id_exemplar: true,
-            statusDevolucao: true,
-            dataDevolucao: true
-        },
+        select: emprestimoSelect,
         orderBy: {
-      dataDevolucao: 'desc'
-    }
+            dataDevolucao: 'desc'
+        }
     })
 
     return result
@@ -74,15 +98,7 @@ export async function listEmprestimosAtivos() {
         where: {
             statusDevolucao: false
         },
-        select: {
-            id: true,
-            dataInicio: true,
-            diasLocacao: true,
-            id_leitor: true,
-            id_exemplar: true,
-            statusDevolucao: true,
-            dataDevolucao: true
-        }
+        select: emprestimoSelect
     })
 
     return result
@@ -92,15 +108,7 @@ export async function listEmprestimosAtrasados() {
     const dataAtual = new Date()
 
     const emprestimos = await prisma.Emprestimo.findMany({
-        select: {
-            id: true,
-            dataInicio: true,
-            diasLocacao: true,
-            id_leitor: true,
-            id_exemplar: true,
-            statusDevolucao: true,
-            dataDevolucao: true
-        }
+        select: emprestimoSelect
     })
 
     const result = emprestimos.filter(e => {

@@ -1,18 +1,29 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { ChevronDown, ChevronRight, Search, Pencil, Trash2, Plus } from "lucide-react";
 
-export default function BookTable({ exemplares, searchQuery = "", emprestimos = [], obras = [], leitores = [], onEditObra, onDeleteObra, onAddExemplar, onDeleteExemplar }) {
+export default function BookTable({ exemplares = [], searchQuery = "", emprestimos = [], obras = [], leitores = [], onEditObra, onDeleteObra, onAddExemplar, onDeleteExemplar }) {
   const [expandedObra, setExpandedObra] = useState(null);
   const [filter, setFilter] = useState("todos");
 
+  const isExemplarDisponivel = useCallback((ex) => {
+    const idEx = ex.idExemplar ?? ex.id;
+    const temEmprestimoAtivo = emprestimos.some((emp) => {
+      const empExId = emp.idExemplar ?? emp.id_exemplar;
+      const isAtivo = emp.status === "ativo" || emp.statusDevolucao === false;
+      return empExId === idEx && isAtivo;
+    });
+    return !temEmprestimoAtivo && ex.disponivel !== false;
+  }, [emprestimos]);
+
   const obrasComExemplares = useMemo(() => {
     return obras.map((obra) => {
-      const exs = exemplares.filter((e) => e.idObra === obra.idObra);
+      const idO = obra.idObra ?? obra.id;
+      const exs = exemplares.filter((e) => (e.idObra ?? e.id_obra) === idO);
       const total = exs.length;
-      const disponiveis = exs.filter((e) => e.disponivel).length;
-      return { ...obra, totalExemplares: total, exemplaresDisponiveis: disponiveis, exemplares: exs };
+      const disponiveis = exs.filter((e) => isExemplarDisponivel(e)).length;
+      return { ...obra, idObra: idO, totalExemplares: total, exemplaresDisponiveis: disponiveis, exemplares: exs };
     });
-  }, [exemplares, obras]);
+  }, [exemplares, obras, isExemplarDisponivel]);
 
   const filtered = useMemo(() => {
     let result = obrasComExemplares;
@@ -30,11 +41,16 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
     return result;
   }, [obrasComExemplares, searchQuery, filter]);
 
-  const getReaderForExemplar = (idExemplar) => {
-    const emp = emprestimos.find((e) => e.idExemplar === idExemplar && e.status === "ativo");
+  const getReaderForExemplar = useCallback((idExemplar) => {
+    const emp = emprestimos.find((e) => {
+      const empExId = e.idExemplar ?? e.id_exemplar;
+      const isAtivo = e.status === "ativo" || e.statusDevolucao === false;
+      return empExId === idExemplar && isAtivo;
+    });
     if (!emp) return null;
-    return leitores.find((l) => l.idLeitor === emp.idLeitor);
-  };
+    const empLeitorId = emp.idLeitor ?? emp.id_leitor;
+    return leitores.find((l) => (l.idLeitor ?? l.id) === empLeitorId);
+  }, [emprestimos, leitores]);
 
   const toggleExpand = (idObra) => {
     setExpandedObra((prev) => (prev === idObra ? null : idObra));
@@ -86,14 +102,15 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
       {/* Rows */}
       <div className="divide-y divide-surface-50 dark:divide-surface-800/50">
         {filtered.map((obra) => {
-          const isExpanded = expandedObra === obra.idObra;
+          const obraId = obra.idObra ?? obra.id;
+          const isExpanded = expandedObra === obraId;
           const hasExemplares = obra.totalExemplares > 0;
 
           return (
-            <div key={obra.idObra}>
+            <div key={obraId}>
               {/* Main Row */}
               <div
-                onClick={() => hasExemplares && toggleExpand(obra.idObra)}
+                onClick={() => hasExemplares && toggleExpand(obraId)}
                 className={`grid grid-cols-[32px_1fr_180px_80px_90px_110px_80px] items-center gap-0 px-5 transition-colors ${
                   hasExemplares ? "cursor-pointer" : "cursor-default"
                 } ${
@@ -173,7 +190,7 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
                     <Pencil size={15} />
                   </button>
                   <button
-                    onClick={() => onDeleteObra && onDeleteObra(obra.idObra)}
+                    onClick={() => onDeleteObra && onDeleteObra(obraId)}
                     className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                     title="Excluir obra"
                   >
@@ -190,7 +207,7 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
                       Exemplares
                     </p>
                     <button
-                      onClick={() => onAddExemplar && onAddExemplar(obra.idObra)}
+                      onClick={() => onAddExemplar && onAddExemplar(obraId)}
                       className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700 transition-all hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400 dark:hover:bg-brand-500/20"
                     >
                       <Plus size={12} /> Exemplar
@@ -198,17 +215,19 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
                   </div>
                   <div className="space-y-2">
                     {obra.exemplares.map((ex) => {
-                      const reader = !ex.disponivel ? getReaderForExemplar(ex.idExemplar) : null;
+                      const exId = ex.idExemplar ?? ex.id;
+                      const isDisp = isExemplarDisponivel(ex);
+                      const reader = !isDisp ? getReaderForExemplar(exId) : null;
                       return (
                         <div
-                          key={ex.idExemplar}
+                          key={exId}
                           className="flex items-center gap-4 rounded-xl bg-white px-4 py-2.5 shadow-sm dark:bg-surface-900"
                         >
                           <span className="font-mono text-sm font-semibold text-surface-600 dark:text-surface-400">
                             {ex.numeroInventario}
                           </span>
                           <div className="flex-1" />
-                          {ex.disponivel ? (
+                          {isDisp ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
                               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Disponível
                             </span>
@@ -218,9 +237,9 @@ export default function BookTable({ exemplares, searchQuery = "", emprestimos = 
                               {reader ? `Emprestado · ${reader.nome}` : "Emprestado"}
                             </span>
                           )}
-                          {ex.disponivel && (
+                          {isDisp && (
                             <button
-                              onClick={() => onDeleteExemplar && onDeleteExemplar(ex.idExemplar)}
+                              onClick={() => onDeleteExemplar && onDeleteExemplar(exId)}
                               className="rounded-lg p-1.5 text-surface-300 transition-colors hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400"
                               title="Remover exemplar"
                             >

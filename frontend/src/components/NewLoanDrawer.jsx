@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { X, BookOpen, User, Calendar, Search, Hash, ChevronRight } from "lucide-react";
+import { X, BookOpen, User, Calendar, Search, Hash, ChevronRight, Mail } from "lucide-react";
 import Autocomplete from "./Autocomplete";
 import { listLeitores } from "../../services/leitorService.js";
 import { listExemplaresDisponiveis } from "../../services/exemplarService.js";
@@ -10,6 +10,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
   const [selectedLeitor, setSelectedLeitor] = useState(null);
   const [selectedExemplar, setSelectedExemplar] = useState(null);
   const [dataDevolucao, setDataDevolucao] = useState("");
+  const [enviarNotificacao, setEnviarNotificacao] = useState(true);
   const [exemplaresDisponiveis, setExemplaresDisponiveis] = useState([]);
   const [leitores, setLeitores] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false); // Trava contra múltiplos cliques
@@ -23,6 +24,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
       setDataDevolucao(date.toISOString().split("T")[0]);
       setSelectedLeitor(null);
       setSelectedExemplar(null);
+      setEnviarNotificacao(true);
       setIsSubmitting(false); // Destrava o botão ao abrir a gaveta
     }
   }, [isOpen]);
@@ -65,19 +67,53 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
 
   // CRUZAMENTO REAL: Junta os exemplares disponíveis com as obras do Banco de Dados (Ultra Rápido)
   const availableExemplares = useMemo(() => {
-    return exemplaresDisponiveis
-      .filter((e) => e.disponivel)
-      .map((e) => {
-        const idObraCruzar = e.idObra || e.id_obra;
-        const obra = obras.find((o) => o.idObra === idObraCruzar || o.id === idObraCruzar);
-        return {
-          ...e,
-          titulo: obra?.titulo || "Obra Desconhecida",
-          autor: obra?.autor || "—",
-          capa: obra?.capa || "📕",
-        };
+    const apiList = exemplaresDisponiveis || [];
+    const propList = exemplares || [];
+
+    // Combinar ambos sem duplicatas por idExemplar/id
+    const map = new Map();
+
+    // 1. Adicionar exemplares disponíveis da API
+    apiList.forEach((e) => {
+      const id = e.idExemplar ?? e.id;
+      if (id && e.disponivel !== false) {
+        map.set(id, { ...e, idExemplar: id });
+      }
+    });
+
+    // 2. Adicionar/fundir com exemplares de props (garante que obras recém-cadastradas apareçam imediatamente)
+    propList.forEach((e) => {
+      const id = e.idExemplar ?? e.id;
+      if (id && e.disponivel !== false && !map.has(id)) {
+        map.set(id, { ...e, idExemplar: id });
+      }
+    });
+
+    // 3. Filtrar qualquer exemplar que possua empréstimo ativo em 'emprestimos'
+    const listaFinal = Array.from(map.values()).filter((e) => {
+      const idEx = e.idExemplar ?? e.id;
+      const temEmprestimoAtivo = (emprestimos || []).some((emp) => {
+        const empExId = emp.idExemplar ?? emp.id_exemplar;
+        const isAtivo = emp.status === "ativo" || emp.statusDevolucao === false;
+        return empExId === idEx && isAtivo;
       });
-  }, [exemplaresDisponiveis, obras]);
+      return !temEmprestimoAtivo && e.disponivel !== false;
+    });
+
+    return listaFinal.map((e) => {
+      const idObraCruzar = e.idObra ?? e.id_obra;
+      const obra = obras.find((o) => (o.idObra ?? o.id) === idObraCruzar || o.id === idObraCruzar);
+      return {
+        ...e,
+        idExemplar: e.idExemplar ?? e.id,
+        idObra: idObraCruzar,
+        titulo: obra?.titulo || e.titulo || "Obra Desconhecida",
+        autor: obra?.autor || e.autor || "—",
+        capa: obra?.capa || e.capa || "📕",
+        capaUrl: obra?.capaUrl || e.capaUrl,
+      };
+    });
+  }, [exemplaresDisponiveis, exemplares, obras, emprestimos]);
 
   const filterLeitores = useCallback((items, query) => {
     if (!query.trim()) return items;
@@ -120,8 +156,13 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
       const hoje = new Date();
       const diasCalculados = Math.ceil((dataEscolhida - hoje) / (1000 * 60 * 60 * 24));
 
-      // Passa os dias calculados para o App.jsx
-      await onConfirm(selectedExemplar.id || selectedExemplar.idExemplar, selectedLeitor.leitor.id, diasCalculados);
+      // Passa os dias calculados e a escolha de notificação por e-mail para o App.jsx
+      await onConfirm(
+        selectedExemplar.id || selectedExemplar.idExemplar,
+        selectedLeitor.leitor.id,
+        diasCalculados,
+        enviarNotificacao
+      );
     } catch (error) {
       setIsSubmitting(false); 
     }
@@ -228,7 +269,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                   </div>
                 )}
                 onSelect={(e) => setSelectedExemplar(e)}
-                placeholder="Buscar por título ou nº inventário..."
+                placeholder="Buscar por título ou exemplar..."
                 selected={selectedExemplar}
                 selectedLabel={
                   selectedExemplar
@@ -241,7 +282,6 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
             </div>
 
             {/* Data de Devolução */}
-           {/* Data de Devolução */}
             <div>
               <label
                 htmlFor="data-devolucao"
@@ -250,7 +290,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                 <Calendar size={18} className="text-surface-400" />
                 Data de Devolução Prevista
               </label>
-          <input
+              <input
                 id="data-devolucao"
                 type="date"
                 value={dataDevolucao}
@@ -259,6 +299,45 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                 className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:focus:bg-surface-800 dark:focus:border-brand-500 cursor-text"
                 required
               />
+            </div>
+
+            {/* Opção de Notificação por E-mail */}
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+                <Mail size={18} className="text-surface-400" />
+                Notificação por E-mail
+              </label>
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-surface-200 bg-surface-100 p-1.5 dark:border-surface-700 dark:bg-surface-800">
+                <button
+                  type="button"
+                  onClick={() => setEnviarNotificacao(true)}
+                  className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+                    enviarNotificacao
+                      ? "bg-white text-brand-600 shadow-sm dark:bg-surface-900 dark:text-brand-400"
+                      : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+                  }`}
+                >
+                  Enviar aviso por e-mail
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEnviarNotificacao(false)}
+                  className={`rounded-xl px-3 py-2.5 text-sm font-semibold transition-all ${
+                    !enviarNotificacao
+                      ? "bg-white text-surface-900 shadow-sm dark:bg-surface-900 dark:text-white"
+                      : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-200"
+                  }`}
+                >
+                  Não enviar aviso
+                </button>
+              </div>
+              {selectedLeitor?.usuario?.email && (
+                <p className="mt-1.5 text-xs text-surface-400 dark:text-surface-500">
+                  {enviarNotificacao
+                    ? `O comprovante será enviado para ${selectedLeitor.usuario.email}`
+                    : "Nenhum e-mail será enviado para o leitor neste empréstimo."}
+                </p>
+              )}
             </div>
 
             {/* Summary Card */}
@@ -285,6 +364,17 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                     <ChevronRight size={16} className="text-brand-500" />
                     <span>
                       Para: <strong>{selectedLeitor.usuario.nome}</strong>
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-base text-surface-600 dark:text-surface-300">
+                    <ChevronRight size={16} className="text-brand-500" />
+                    <span>
+                      Aviso por e-mail:{" "}
+                      <strong>
+                        {enviarNotificacao
+                          ? selectedLeitor.usuario?.email || "Sim"
+                          : "Não enviar"}
+                      </strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-base text-surface-600 dark:text-surface-300">

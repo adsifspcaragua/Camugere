@@ -5,7 +5,7 @@ import { getObraById } from "../../services/obraService.js";
 import { listEmprestimosAtivos, changeStatusDevolucaoEmprestimo } from "../../services/emprestimoService.js";
 import { getLeitorById } from "../../services/leitorService.js";
 
-export default function ReturnDrawer({ isOpen, onClose }) {
+export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
   const [query, setQuery] = useState("");
   const [selectedExemplar, setSelectedExemplar] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -148,7 +148,9 @@ export default function ReturnDrawer({ isOpen, onClose }) {
     try {
       await changeStatusDevolucaoEmprestimo(selectedExemplar.emprestimo.id || selectedExemplar.emprestimo.idEmprestimo, true);
       setSucesso(true); // Mostra a mensagem
-      
+      if (onReturnSuccess) {
+        onReturnSuccess(selectedExemplar.exemplar?.id || selectedExemplar.exemplar?.idExemplar);
+      }
       // Espera 1.5 segundos e fecha a gaveta
       setTimeout(() => {
         onClose();
@@ -273,7 +275,7 @@ export default function ReturnDrawer({ isOpen, onClose }) {
                       <p className="text-base text-surface-500 dark:text-surface-400">{selectedExemplar.obra?.autor || "Autor desconhecido"}</p>
                       <div className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 dark:bg-surface-700">
                         <Hash size={16} className="text-brand-500" />
-                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">Número do inventário: {selectedExemplar.exemplar?.numeroInventario || "N/A"}</span>
+                        <span className="font-mono text-base font-medium text-surface-700 dark:text-surface-300">Exemplar: {selectedExemplar.exemplar?.numeroInventario || "N/A"}</span>
                       </div>
                     </div>
                   </div>
