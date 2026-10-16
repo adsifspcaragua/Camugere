@@ -49,7 +49,14 @@ export async function createLeitor(leitor) {
             id: true,
             id_usuario: true,
             cpf: false,
-            telefone: true
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
         }
     })
 
@@ -62,7 +69,14 @@ export async function listLeitor() {
             id: true,
             id_usuario: true,
             cpf: false,
-            telefone: true
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
         }
     })
 
@@ -77,7 +91,14 @@ export async function getLeitorById(id) {
             id: true,
             id_usuario: true,
             cpf: false,
-            telefone: true
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
         }
     })
 
@@ -92,7 +113,14 @@ export async function deleteLeitor(id) {
             id: true,
             id_usuario: true,
             cpf: false,
-            telefone: true
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
         }
     })
 
@@ -109,7 +137,14 @@ export async function updateLeitor(leitor, id) {
             id: true,
             id_usuario: true,
             cpf: false,
-            telefone: true
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
         }
     })
 

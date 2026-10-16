@@ -1,5 +1,6 @@
 import { changeStatusDevolucaoEmprestimo } from "../../Model/EmprestimoModel.js";
 import { emprestimoValidator } from "../../Model/EmprestimoModel.js";
+import { updateExemplar } from "../../Model/ExemplarModel.js";
 
 export default async function changeStatusDevolucaoEmprestimoController(req, res) {
     try {
@@ -10,6 +11,10 @@ export default async function changeStatusDevolucaoEmprestimoController(req, res
 
         if (!result) {
             throw new Error("Não foi possível atualizar o empréstimo!")
+        }
+
+        if (result.id_exemplar && (emprestimo.statusDevolucao === true || result.statusDevolucao === true)) {
+            await updateExemplar(result.id_exemplar, { disponivel: true });
         }
 
         return res.status(200).json({
