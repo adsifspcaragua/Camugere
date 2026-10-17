@@ -76,3 +76,32 @@
     transform: translateY(0);
   }
 }
+
+/* Dark mode: keep typed text legible in every form control
+   (focus:bg-white combined with dark:text-white made typed text invisible). */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.dark textarea,
+.dark select {
+  background-color: var(--color-surface-800) !important;
+  color: #fff !important;
+  color-scheme: dark;
+}
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  background-color: var(--color-surface-900) !important;
+  color: #fff !important;
+}
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--color-surface-400) !important;
+}
+.dark input:-webkit-autofill,
+.dark textarea:-webkit-autofill {
+  -webkit-text-fill-color: #fff;
+  box-shadow: 0 0 0 1000px var(--color-surface-800) inset;
+}
+.dark select option {
+  background-color: var(--color-surface-800);
+  color: #fff;
+}

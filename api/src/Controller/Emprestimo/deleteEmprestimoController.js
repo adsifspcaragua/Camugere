@@ -1,13 +1,18 @@
 import { deleteEmprestimo } from "../../Model/EmprestimoModel.js";
+import { updateExemplar } from "../../Model/ExemplarModel.js";
 
-export default function deleteEmprestimoController(req, res) {
+export default async function deleteEmprestimoController(req, res) {
     try {
         const { id } = req.params
 
-        const result = deleteEmprestimo(+id)
+        const result = await deleteEmprestimo(+id)
 
         if (!result) {
             throw new Error("Não foi possível deletar o empréstimo!")
+        }
+
+        if (result.id_exemplar && !result.statusDevolucao) {
+            await updateExemplar(result.id_exemplar, { disponivel: true });
         }
 
         return res.status(200).json({
