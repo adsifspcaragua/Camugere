@@ -35,4 +35,29 @@ test("renders BookTable with correct data", () => {
   expect(screen.getByText("React for Beginners")).toBeInTheDocument()
   expect(screen.getByText("John Doe")).toBeInTheDocument()
   expect(screen.getByText("005.133")).toBeInTheDocument()
+  expect(screen.getAllByText("1").length).toBe(2) // Total and Disponíveis
+})
+
+test("decreases available copies when a loan is active for that copy", () => {
+  const activeLoans = [
+    {
+      idEmprestimo: 101,
+      idExemplar: 1,
+      idLeitor: 1,
+      status: "ativo",
+      statusDevolucao: false,
+    }
+  ]
+  const { rerender } = render(
+    <BookTable obras={mockObras} exemplares={mockExemplares} emprestimos={[]} leitores={[]} searchQuery="" />
+  )
+  expect(screen.getAllByText("1").length).toBe(2)
+
+  // When loan is registered:
+  rerender(
+    <BookTable obras={mockObras} exemplares={mockExemplares} emprestimos={activeLoans} leitores={[]} searchQuery="" />
+  )
+  // Total is still 1, but Disponíveis is 0
+  expect(screen.getAllByText("1").length).toBe(1)
+  expect(screen.getByText("0")).toBeInTheDocument()
 })

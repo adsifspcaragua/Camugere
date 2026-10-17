@@ -1,23 +1,42 @@
 import { useMemo, useState, useCallback } from "react";
 import { Hash, CornerDownLeft, Clock, CheckCircle2, AlertTriangle, RefreshCcw, Trash2 } from "lucide-react";
-import { deleteEmprestimo } from '../../services/emprestimoService';const TABS = [
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useToast } from "../context/ToastContext";
+import { deleteEmprestimo } from "../../services/emprestimoService";
+
+const TABS = [
   { id: "ativos", label: "Ativos", icon: Clock },
   { id: "atrasados", label: "Atrasados", icon: AlertTriangle },
   { id: "devolvidos", label: "Devolvidos", icon: CheckCircle2 },
 ]
 
-export default function EmprestimosPage({ exemplares, emprestimos, obras, leitores, onOpenLoan, onReturn, onRenew }) {
+export default function EmprestimosPage({
+  exemplares,
+  emprestimos,
+  obras,
+  leitores,
+  onOpenLoan,
+  onReturn,
+  onRenew,
+  onDeleteEmprestimo,
+  onDelete,
+}) {
   const [activeTab, setActiveTab] = useState("ativos");
-  const [apagados, setApagados] = useState([]); // <-- Nova memória para itens apagados
+  const [apagados, setApagados] = useState([]); // <-- Memória para itens apagados
+  const [confirmDialog, setConfirmDialog] = useState(null);
+  const { addToast } = useToast();
   const today = new Date().toISOString().split("T")[0];
 
  const enriched = useMemo(() => {
     return emprestimos
       .filter((emp) => !apagados.includes(emp.idEmprestimo)) // <-- Esconde os itens apagados!
       .map((emp) => {
-        const ex = exemplares.find((e) => e.idExemplar === emp.idExemplar);
-        const obra = ex ? obras.find((o) => o.idObra === ex.idObra) : null;
-        const leitor = leitores.find((l) => l.idLeitor === emp.idLeitor);
+        const idEx = Number(emp.idExemplar ?? emp.id_exemplar);
+        const idLei = Number(emp.idLeitor ?? emp.id_leitor);
+        const ex = exemplares.find((e) => Number(e.idExemplar ?? e.id) === idEx) || emp.exemplar || null;
+        const idOb = Number(ex?.idObra ?? ex?.id_obra ?? emp.exemplar?.id_obra);
+        const obra = (idOb ? obras.find((o) => Number(o.idObra ?? o.id) === idOb) : null) || ex?.obra || emp.exemplar?.obra || null;
+        const leitor = leitores.find((l) => Number(l.idLeitor ?? l.id) === idLei) || (emp.leitor?.usuario ? { ...emp.leitor, nome: emp.leitor.usuario.nome } : emp.leitor) || null;
         const isOverdue = emp.status === "ativo" && emp.dataDevolucaoPrevista < today;
         return { ...emp, exemplar: ex, obra, leitor, isOverdue };
       }).sort((a, b) => new Date(a.dataDevolucaoPrevista) - new Date(b.dataDevolucaoPrevista));
@@ -60,24 +79,39 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
     [onRenew],
   )
 
-  // Função nova para apagar o registo
-  // Função atualizada para apagar o registo
-  const handleApagar = useCallback(async (idEmprestimo) => {
-    if (window.confirm("Tem a certeza que deseja apagar este registo? Esta ação não pode ser desfeita.")) {
-      try {
-        const result = await deleteEmprestimo(idEmprestimo);
-       
-        // if (!result.ok) throw new Error(result.message);
+  // Função para apagar o registro com o mesmo padrão de confirmação de exclusão de obra
+  const handleApagar = useCallback((mov) => {
+    const idEmprestimo = typeof mov === "object" ? mov.idEmprestimo : mov;
+    const deleteFn = onDeleteEmprestimo || onDelete;
 
-        // Atualiza a tela instantaneamente sem dar reload na página inteira!
-        setApagados((prev) => [...prev, idEmprestimo]); 
-        
-      } catch (error) {
-        console.error("Erro ao apagar:", error);
-        alert("Erro ao apagar o registo. Verifique a consola para mais detalhes.");
-      }
+    if (deleteFn) {
+      deleteFn(idEmprestimo);
+      return;
     }
-  }, []);
+
+    const item = typeof mov === "object" ? mov : enriched.find((e) => e.idEmprestimo === idEmprestimo);
+    const obraTitulo = item?.obra?.titulo;
+
+    setConfirmDialog({
+      title: "Excluir Registro de Devolução",
+      message: `Tem certeza que deseja excluir este registro de devolução${obraTitulo ? ` de "${obraTitulo}"` : ""}? Esta ação não pode ser desfeita.`,
+      onConfirm: async () => {
+        try {
+          const result = await deleteEmprestimo(idEmprestimo);
+          if (result && !result.ok) throw new Error(result.message);
+
+          setApagados((prev) => [...prev, idEmprestimo]);
+          addToast("Registro de devolução removido com sucesso");
+        } catch (error) {
+          console.error("Erro ao apagar:", error);
+          addToast(error.message || "Erro ao apagar o registro", "error");
+        } finally {
+          setConfirmDialog(null);
+        }
+      },
+    });
+  }, [onDeleteEmprestimo, onDelete, enriched, addToast]);
+
   const formatarData = (dataIso) => {
     if (!dataIso) return "—";
     return dataIso.split("T")[0].split("-").reverse().join("/");
@@ -91,14 +125,7 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
             Empréstimos & Devoluções
           </h2>
           <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
-            {enriched.filter((e) => e.status === "ativo").length} ativo
-            {enriched.filter((e) => e.status === "ativo").length !== 1 &&
-              "s"} ·{" "}
-            {tabCounts.atrasados > 0 && (
-              <span className="text-red-500 font-semibold">
-                {tabCounts.atrasados} atrasado{tabCounts.atrasados !== 1 && "s"}
-              </span>
-            )}
+            {tabCounts.ativos} ativo{tabCounts.ativos !== 1 && "s"} · {tabCounts.atrasados > 0 && <span className="text-red-500 font-semibold">{tabCounts.atrasados} atrasado{tabCounts.atrasados !== 1 && "s"}</span>}
           </p>
         </div>
         <button
@@ -154,9 +181,10 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-surface-100 dark:border-surface-800">
-                <th className="py-3.5 pl-5 pr-3 text-base font-semibold text-surface-500 dark:text-surface-400">
-                  Obra
-                </th>
+                <th className="py-3.5 pl-5 pr-3 text-base font-semibold text-surface-500 dark:text-surface-400">Obra</th>
+                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Exemplar</th>
+                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Leitor</th>
+                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Início</th>
                 <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
                   Inventário
                 </th>
@@ -234,9 +262,9 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
                         </>
                       ) : (
                         <button
-                          onClick={() => handleApagar(mov.idEmprestimo)}
+                          onClick={() => handleApagar(mov)}
                           className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-all hover:bg-red-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                          title="Apagar registo definitivamente"
+                          title="Excluir registro de devolução"
                         >
                           <Trash2 size={14} />
                           Apagar
@@ -292,6 +320,14 @@ export default function EmprestimosPage({ exemplares, emprestimos, obras, leitor
           </table>
         </div>
       </div>
+
+      <ConfirmDialog
+        isOpen={!!confirmDialog}
+        title={confirmDialog?.title || ""}
+        message={confirmDialog?.message || ""}
+        onConfirm={confirmDialog?.onConfirm}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
   )
 }

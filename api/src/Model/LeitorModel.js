@@ -76,12 +76,19 @@ export async function createLeitor(leitor) {
       telefone: true,
       usuario: {
         select: {
-          nome: true,
-          email: true,
-        },
-      },
-    },
-  })
+            id: true,
+            id_usuario: true,
+            cpf: false,
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
+        }
+    })
 
   return result
 }
@@ -95,55 +102,86 @@ export async function listLeitor() {
       telefone: true,
       usuario: {
         select: {
-          nome: true,
-          email: true,
-        },
-      },
-    },
-  })
+            id: true,
+            id_usuario: true,
+            cpf: false,
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
+        }
+    })
 
   return result
 }
 
 export async function getLeitorById(id) {
-  const result = await prisma.Leitor.findUnique({
-    where: {
-      id: id,
-    },
-    select: {
-      id: true,
-      id_usuario: true,
-      cpf: true,
-      telefone: true,
-    },
-  })
+    const result = await prisma.Leitor.findUnique({
+        where: {
+            id: id
+        }, select: {
+            id: true,
+            id_usuario: true,
+            cpf: false,
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
+        }
+    })
 
   return result
 }
 
 export async function deleteLeitor(id) {
-  const result = await prisma.Leitor.delete({
-    where: {
-      id: id,
-    },
-    select: {
-      id: true,
-      id_usuario: true,
-      cpf: false,
-      telefone: true,
-    },
-  })
+    const result = await prisma.Leitor.delete({
+        where: {
+            id: id
+        }, select: {
+            id: true,
+            id_usuario: true,
+            cpf: false,
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
+        }
+    })
 
   return result
 }
 
 export async function updateLeitor(leitor, id) {
-  const { idLeitor, nome, contato, ...dadosLeitor } = leitor
-
-  return prisma.$transaction(async (transaction) => {
-    const atualizacao = await transaction.Leitor.update({
-      where: { id },
-      data: dadosLeitor,
+    const result = await prisma.Leitor.update({
+        where: {
+            id: id
+        }, data: {
+            leitor
+        }, select: {
+            id: true,
+            id_usuario: true,
+            cpf: false,
+            telefone: true,
+            usuario: {
+                select: {
+                    id: true,
+                    nome: true,
+                    email: true
+                }
+            }
+        }
     })
 
     if (nome || contato) {

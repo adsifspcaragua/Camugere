@@ -25,16 +25,39 @@ export default function DashboardPage({
   const stats = useMemo(() => {
     if (isLoading) return { totalObras: 0, totalExemplares: 0, emprestimosAtivos: 0, atrasos: 0 };
 
-    const totalObras = obrasApi.length
-    const totalExemplares = exemplares.length;
-    const emprestimosAtivos = emprestimos.filter((e) => e.statusDevolucao == false).length;
-    const atrasos = emprestimos.filter((e) => {
-      const dataFim = new Date(e.dataInicio)
-      dataFim.setDate(dataFim.getDate() + e.diasLocacao)
-      return dataFim <= new Date()
-    }).length
-    return { totalObras, totalExemplares, emprestimosAtivos, atrasos }
-  }, [isLoading, obrasApi, exemplares, emprestimos])
+    const listaObras = obrasApi || obras || [];
+    const totalObras = listaObras.length;
+    const totalExemplares = (exemplares || []).length;
+    const listaEmprestimos = emprestimos || [];
+    const today = new Date().toISOString().split("T")[0];
+
+    // Auxiliar para verificar se o empréstimo está atrasado (mesma regra da aba Empréstimos)
+    const isOverdue = (e) => {
+      const isAtivo = e.status ? e.status === "ativo" : e.statusDevolucao === false;
+      if (!isAtivo) return false;
+
+      if (e.dataDevolucaoPrevista) {
+        return e.dataDevolucaoPrevista < today;
+      }
+      if (e.dataInicio && e.diasLocacao) {
+        const dataFim = new Date(e.dataInicio);
+        dataFim.setDate(dataFim.getDate() + Number(e.diasLocacao));
+        return dataFim.toISOString().split("T")[0] < today;
+      }
+      return false;
+    };
+
+    // Empréstimos ativos em dia (sincronizado com a aba "Ativos" de Empréstimos)
+    const emprestimosAtivos = listaEmprestimos.filter((e) => {
+      const isAtivo = e.status ? e.status === "ativo" : e.statusDevolucao === false;
+      return isAtivo && !isOverdue(e);
+    }).length;
+
+    // Empréstimos atrasados (sincronizado com a aba "Atrasados" de Empréstimos)
+    const atrasos = listaEmprestimos.filter((e) => isOverdue(e)).length;
+
+    return { totalObras, totalExemplares, emprestimosAtivos, atrasos };
+  }, [obrasApi, obras, exemplares, emprestimos, isLoading]);
 
   if (isLoading) {
     return <div>Carregando...</div>
