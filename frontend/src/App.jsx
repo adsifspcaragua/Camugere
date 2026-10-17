@@ -1,38 +1,38 @@
-import { useState, useEffect, useCallback } from "react";
-import { ThemeProvider } from "./context/ThemeContext";
-import { ToastProvider, useToast } from "./context/ToastContext";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { createEmprestimo } from "../services/emprestimoService.js";
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
-import NewLoanDrawer from "./components/NewLoanDrawer";
-import ReturnDrawer from "./components/ReturnDrawer";
-import ObraDrawer from "./components/ObraDrawer";
-import LeitorDrawer from "./components/LeitorDrawer";
-import ConfirmDialog from "./components/ConfirmDialog";
-import DashboardPage from "./pages/DashboardPage";
-import AcervoPage from "./pages/AcervoPage";
-import LeitoresPage from "./pages/LeitoresPage";
-import EmprestimosPage from "./pages/EmprestimosPage";
-import RelatoriosPage from "./pages/RelatoriosPage";
-import ConfiguracoesPage from "./pages/ConfiguracoesPage";
-import LoginPage from "./pages/LoginPage";
-import { apiFetch } from "./utils/api.js";
+import { useState, useEffect, useCallback } from "react"
+import { ThemeProvider } from "./context/ThemeContext"
+import { ToastProvider, useToast } from "./context/ToastContext"
+import { AuthProvider, useAuth } from "./context/AuthContext"
+import { createEmprestimo } from "../services/emprestimoService.js"
+import Sidebar from "./components/Sidebar"
+import Header from "./components/Header"
+import NewLoanDrawer from "./components/NewLoanDrawer"
+import ReturnDrawer from "./components/ReturnDrawer"
+import ObraDrawer from "./components/ObraDrawer"
+import LeitorDrawer from "./components/LeitorDrawer"
+import ConfirmDialog from "./components/ConfirmDialog"
+import DashboardPage from "./pages/DashboardPage"
+import AcervoPage from "./pages/AcervoPage"
+import LeitoresPage from "./pages/LeitoresPage"
+import EmprestimosPage from "./pages/EmprestimosPage"
+import RelatoriosPage from "./pages/RelatoriosPage"
+import ConfiguracoesPage from "./pages/ConfiguracoesPage"
+import LoginPage from "./pages/LoginPage"
+import { apiFetch } from "./utils/api.js"
 
 function AppContent() {
-  const [activePage, setActivePage] = useState("dashboard");
-  const [searchQuery, setSearchQuery] = useState("");
-  const { addToast } = useToast();
-  const { isAuthenticated, isLoading, token } = useAuth();
+  const [activePage, setActivePage] = useState("dashboard")
+  const [searchQuery, setSearchQuery] = useState("")
+  const { addToast } = useToast()
+  const { isAuthenticated, isLoading, token } = useAuth()
 
   // === DATA STATE ===
-  const [obras, setObras] = useState([]);
-  const [leitores, setLeitores] = useState([]);
-  const [exemplares, setExemplares] = useState([]);
-  const [emprestimos, setEmprestimos] = useState([]);
+  const [obras, setObras] = useState([])
+  const [leitores, setLeitores] = useState([])
+  const [exemplares, setExemplares] = useState([])
+  const [emprestimos, setEmprestimos] = useState([])
 
   const [isLoadingData, setIsLoadingData] = useState(true)
-  const [obrasApi, setObrasApi] = useState(null);
+  const [obrasApi, setObrasApi] = useState(null)
 
   const loadData = useCallback(async () => {
     setIsLoadingData(true);
@@ -57,8 +57,8 @@ function AppContent() {
         ...ex,
         idExemplar: ex.idExemplar ?? ex.id,
         idObra: ex.idObra ?? ex.id_obra,
-      }));
-      setExemplares(listaExemplares);
+      }))
+      setExemplares(listaExemplares)
 
       // 4. Leitores
       setLeitores((responseLeitores.data || []).map((l) => ({ 
@@ -94,14 +94,14 @@ function AppContent() {
       setEmprestimos(emprestimosFormatados);
 
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-      addToast(error.message || "Erro ao carregar dados do servidor", "error");
+      console.error("Erro ao carregar dados:", error)
+      addToast(error.message || "Erro ao carregar dados do servidor", "error")
     } finally {
-      setIsLoadingData(false);
+      setIsLoadingData(false)
     }
   }, [token, addToast]);
 
-  // Toda vez que o site carrega uma pagina nova, ou o usuário faz autenticação, faz a requisição na api 
+  // Toda vez que o site carrega uma pagina nova, ou o usuário faz autenticação, faz a requisição na api
   useEffect(() => {
     if (isAuthenticated) {
       loadData();
@@ -109,44 +109,63 @@ function AppContent() {
   }, [isAuthenticated, activePage, loadData]);
 
   // === DRAWER STATE ===
-  const [loanDrawerOpen, setLoanDrawerOpen] = useState(false);
-  const [returnDrawerOpen, setReturnDrawerOpen] = useState(false);
-  const [obraDrawerOpen, setObraDrawerOpen] = useState(false);
-  const [editingObra, setEditingObra] = useState(null);
-  const [leitorDrawerOpen, setLeitorDrawerOpen] = useState(false);
-  const [editingLeitor, setEditingLeitor] = useState(null);
-  const [confirmDialog, setConfirmDialog] = useState(null);
+  const [loanDrawerOpen, setLoanDrawerOpen] = useState(false)
+  const [returnDrawerOpen, setReturnDrawerOpen] = useState(false)
+  const [obraDrawerOpen, setObraDrawerOpen] = useState(false)
+  const [editingObra, setEditingObra] = useState(null)
+  const [leitorDrawerOpen, setLeitorDrawerOpen] = useState(false)
+  const [editingLeitor, setEditingLeitor] = useState(null)
+  const [confirmDialog, setConfirmDialog] = useState(null)
 
-  
   useEffect(() => {
-    const anyOpen = loanDrawerOpen || returnDrawerOpen || obraDrawerOpen || leitorDrawerOpen || confirmDialog;
-    document.body.style.overflow = anyOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [loanDrawerOpen, returnDrawerOpen, obraDrawerOpen, leitorDrawerOpen, confirmDialog]);
+    const anyOpen =
+      loanDrawerOpen ||
+      returnDrawerOpen ||
+      obraDrawerOpen ||
+      leitorDrawerOpen ||
+      confirmDialog
+    document.body.style.overflow = anyOpen ? "hidden" : ""
+    return () => {
+      document.body.style.overflow = ""
+    }
+  }, [
+    loanDrawerOpen,
+    returnDrawerOpen,
+    obraDrawerOpen,
+    leitorDrawerOpen,
+    confirmDialog,
+  ])
 
-  
   useEffect(() => {
     const handler = (e) => {
-      const tag = document.activeElement?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      if (e.key === "n" || e.key === "N") { e.preventDefault(); setLoanDrawerOpen(true); }
-      if (e.key === "d" || e.key === "D") { e.preventDefault(); setReturnDrawerOpen(true); }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
-
- 
-  useEffect(() => {
-    const handler = (e) => {
-      if ((e.ctrlKey && e.key === "k") || (e.key === "/" && document.activeElement?.tagName !== "INPUT")) {
-        e.preventDefault();
-        document.getElementById("global-search")?.focus();
+      const tag = document.activeElement?.tagName
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return
+      if (e.key === "n" || e.key === "N") {
+        e.preventDefault()
+        setLoanDrawerOpen(true)
       }
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, []);
+      if (e.key === "d" || e.key === "D") {
+        e.preventDefault()
+        setReturnDrawerOpen(true)
+      }
+    }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
+  }, [])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (
+        (e.ctrlKey && e.key === "k") ||
+        (e.key === "/" && document.activeElement?.tagName !== "INPUT")
+      ) {
+        e.preventDefault()
+        document.getElementById("global-search")?.focus()
+      }
+    }
+    document.addEventListener("keydown", handler)
+    return () => document.removeEventListener("keydown", handler)
+  }, [])
 
   // ============ EMPRÉSTIMO CRUD ============
 
@@ -263,9 +282,20 @@ function AppContent() {
         })
       }, token);
 
-      setReturnDrawerOpen(false);
-      await loadData();
-      addToast("Devolução registrada no banco com sucesso!");
+        // Pacote Cirúrgico: Apenas números e booleanos para o Zod não reclamar
+        await apiFetch(
+          `/emprestimo/update/${emprestimoAtivo.idEmprestimo}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              diasLocacao: Number(emprestimoAtivo.diasLocacao || 14), // Zod exige Número
+              statusDevolucao: true, // Prisma precisa disto
+              dataDevolucao: new Date().toISOString(), // Prisma precisa disto
+            }),
+          },
+          token,
+        )
 
     } catch (error) {
       console.error("Erro ao registrar devolução:", error);
@@ -280,17 +310,28 @@ function AppContent() {
       const emp = emprestimos.find(e => (e.idEmprestimo === idEmprestimo || e.id === idEmprestimo));
       if (!emp) return;
 
-      // Pacote Cirúrgico para a renovação
-      await apiFetch(`/emprestimo/update/${idEmprestimo}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          diasLocacao: Number(emp.diasLocacao || 14) + 14 // Soma os dias e garante que é Número
-        })
-      }, token);
+        // Pacote Cirúrgico para a renovação
+        await apiFetch(
+          `/emprestimo/update/${idEmprestimo}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              diasLocacao: Number(emp.diasLocacao || 14) + 14, // Soma os dias e garante que é Número
+            }),
+          },
+          token,
+        )
 
-      await loadData();
-      addToast("Empréstimo renovado no banco por mais 14 dias!");
+        await loadData()
+        addToast("Empréstimo renovado no banco por mais 14 dias!")
+      } catch (error) {
+        console.error("Erro ao renovar:", error)
+        addToast("Erro ao renovar empréstimo no servidor", "error")
+      }
+    },
+    [emprestimos, addToast, token],
+  )
 
     } catch (error) {
       console.error("Erro ao renovar:", error);
@@ -332,21 +373,22 @@ function AppContent() {
   // ============ OBRA CRUD ============
 
   // Método do colega (otimizado para atualizar a tela sem recarregar tudo)
-  const handleObraSubmit = useCallback(async (data) => {
-    const idEdicao = data.id || data.idObra;
+  const handleObraSubmit = useCallback(
+    async (data) => {
+      const idEdicao = data.id || data.idObra
 
-    try {
-      if (idEdicao) {
-        // EDIÇÃO: PUT /obra/update/:id
-        const response = await apiFetch(
-          `/obra/update/${idEdicao}`,
-          {
-            method: "PUT",
-            body: JSON.stringify(data),
-          },
-          token
-        );
-        const obraAtualizada = response.data;
+      try {
+        if (idEdicao) {
+          // EDIÇÃO: PUT /obra/update/:id
+          const response = await apiFetch(
+            `/obra/update/${idEdicao}`,
+            {
+              method: "PUT",
+              body: JSON.stringify(data),
+            },
+            token,
+          )
+          const obraAtualizada = response.data
 
         setObras((prev) =>
           prev.map((o) => (o.idObra === idEdicao || o.id === idEdicao ? obraAtualizada : o))
@@ -401,28 +443,41 @@ function AppContent() {
   }, [token, addToast, loadData]);
 
   // Método para deletar a obra no banco de dados
-  const handleDeleteObra = useCallback((idObra) => {
-    const obra = obras.find((o) => o.idObra === idObra || o.id === idObra);
-    const obraExemplares = exemplares.filter((e) => e.idObra === idObra);
-    const hasActive = obraExemplares.some((ex) =>
-      emprestimos.some((e) => e.idExemplar === ex.idExemplar && e.status === "ativo")
-    );
+  const handleDeleteObra = useCallback(
+    (idObra) => {
+      const obra = obras.find((o) => o.idObra === idObra || o.id === idObra)
+      const obraExemplares = exemplares.filter((e) => e.idObra === idObra)
+      const hasActive = obraExemplares.some((ex) =>
+        emprestimos.some(
+          (e) => e.idExemplar === ex.idExemplar && e.status === "ativo",
+        ),
+      )
 
-    if (hasActive) {
-      addToast("Não é possível excluir obra com empréstimos ativos", "error");
-      return;
-    }
+      if (hasActive) {
+        addToast("Não é possível excluir obra com empréstimos ativos", "error")
+        return
+      }
 
-    setConfirmDialog({
-      title: "Excluir Obra",
-      message: `Tem certeza que deseja excluir "${obra?.titulo}"? Todos os ${obraExemplares.length} exemplar(es) serão removidos.`,
-      onConfirm: async () => {
-        try {
-          await apiFetch(`/obra/delete/${idObra}`, { method: "DELETE" }, token);
+      setConfirmDialog({
+        title: "Excluir Obra",
+        message: `Tem certeza que deseja excluir "${obra?.titulo}"? Todos os ${obraExemplares.length} exemplar(es) serão removidos.`,
+        onConfirm: async () => {
+          try {
+            await apiFetch(
+              `/obra/delete/${idObra}`,
+              { method: "DELETE" },
+              token,
+            )
 
-          setObras((prev) => prev.filter((o) => o.idObra !== idObra && o.id !== idObra));
-          setObrasApi((prev) => (prev ? prev.filter((o) => o.idObra !== idObra && o.id !== idObra) : prev));
-          setExemplares((prev) => prev.filter((e) => e.idObra !== idObra));
+            setObras((prev) =>
+              prev.filter((o) => o.idObra !== idObra && o.id !== idObra),
+            )
+            setObrasApi((prev) =>
+              prev
+                ? prev.filter((o) => o.idObra !== idObra && o.id !== idObra)
+                : prev,
+            )
+            setExemplares((prev) => prev.filter((e) => e.idObra !== idObra))
 
           await loadData();
           addToast(`Obra "${obra?.titulo}" removida do acervo`);
@@ -437,30 +492,31 @@ function AppContent() {
   }, [obras, exemplares, emprestimos, token, addToast, loadData]);
 
   // Método para adicionar um exemplar avulso no banco
-  const handleAddExemplar = useCallback(async (idObra) => {
-    try {
-      const numeroInventario = `${Date.now().toString().slice(-6)}`;
-      const response = await apiFetch(
-        "/exemplar/create",
-        {
-          method: "POST",
-          body: JSON.stringify({
-            id_obra: Number(idObra),
-            numeroInventario,
-            disponivel: true,
-          }),
-        },
-        token
-      );
+  const handleAddExemplar = useCallback(
+    async (idObra) => {
+      try {
+        const numeroInventario = `${Date.now().toString().slice(-6)}`
+        const response = await apiFetch(
+          "/exemplar/create",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              id_obra: Number(idObra),
+              numeroInventario,
+              disponivel: true,
+            }),
+          },
+          token,
+        )
 
-      const criado = response.data;
-      const newExemplar = {
-        ...criado,
-        idExemplar: criado?.id ?? Date.now(),
-        idObra: criado?.id_obra ?? idObra,
-        numeroInventario: criado?.numeroInventario ?? numeroInventario,
-        disponivel: criado?.disponivel ?? true,
-      };
+        const criado = response.data
+        const newExemplar = {
+          ...criado,
+          idExemplar: criado?.id ?? Date.now(),
+          idObra: criado?.id_obra ?? idObra,
+          numeroInventario: criado?.numeroInventario ?? numeroInventario,
+          disponivel: criado?.disponivel ?? true,
+        }
 
       setExemplares((prev) => [...prev, newExemplar]);
       await loadData();
@@ -473,12 +529,15 @@ function AppContent() {
   }, [obras, token, addToast, loadData]);
 
   // Método para deletar um exemplar avulso no banco
-  const handleDeleteExemplar = useCallback(async (idExemplar) => {
-    const ex = exemplares.find((e) => e.idExemplar === idExemplar || e.id === idExemplar);
-    if (!ex?.disponivel) {
-      addToast("Não é possível excluir exemplar emprestado", "error");
-      return;
-    }
+  const handleDeleteExemplar = useCallback(
+    async (idExemplar) => {
+      const ex = exemplares.find(
+        (e) => e.idExemplar === idExemplar || e.id === idExemplar,
+      )
+      if (!ex?.disponivel) {
+        addToast("Não é possível excluir exemplar emprestado", "error")
+        return
+      }
 
     try {
       await apiFetch(`/exemplar/delete/${idExemplar}`, { method: "DELETE" }, token);
@@ -493,32 +552,86 @@ function AppContent() {
 
   // ============ LEITOR CRUD ============
 
-  const handleLeitorSubmit = useCallback(async (data) => {
-    try {
-      if (data.idLeitor) {
-        // Edição (PUT)
-        await apiFetch(`/leitor/update/${data.idLeitor}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        }, token);
-        addToast(`Leitor "${data.nome}" atualizado`);
-      } else {
-        // Criação (POST)
-        await apiFetch("/leitor/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        }, token);
-        addToast(`Leitor "${data.nome}" cadastrado`);
-      }
+  const handleLeitorSubmit = useCallback(
+    async (data) => {
+      try {
+        if (data.idLeitor) {
+          // Edição (PUT)
+          await apiFetch(
+            `/leitor/update/${data.idLeitor}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            },
+            token,
+          )
+          addToast(`Leitor "${data.nome}" atualizado`)
+        } else {
+          // Criação (POST)
+          await apiFetch(
+            "/leitor/create",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
+            },
+            token,
+          )
+          addToast(`Leitor "${data.nome}" cadastrado`)
+        }
 
-      // Fecha a gaveta e limpa o formulário
-      setLeitorDrawerOpen(false);
-      setEditingLeitor(null);
-      
-      // Puxa o leitor com o ID real e definitivo do banco
-      await loadData();
+        // Fecha a gaveta e limpa o formulário
+        setLeitorDrawerOpen(false)
+        setEditingLeitor(null)
+        await loadData()
+      } catch (error) {
+        console.error("Erro ao salvar leitor:", error)
+        addToast(error.message || "Erro ao salvar leitor no banco", "error")
+      }
+    },
+    [addToast, token],
+  )
+
+  const handleDeleteLeitor = useCallback(
+    (idLeitor) => {
+      const leitor = leitores.find((l) => l.idLeitor === idLeitor)
+      const hasActive = emprestimos.some(
+        (e) => e.idLeitor === idLeitor && e.status === "ativo",
+      )
+      if (hasActive) {
+        addToast(
+          "Não é possível excluir leitor com empréstimos ativos",
+          "error",
+        )
+        return
+      }
+      setConfirmDialog({
+        title: "Excluir Leitor",
+        message: `Tem certeza que deseja excluir "${leitor?.nome}"? Esta ação não pode ser desfeita.`,
+        onConfirm: async () => {
+          try {
+            await apiFetch(
+              `/leitor/delete/${idLeitor}`,
+              { method: "DELETE" },
+              token,
+            )
+            setLeitores((prev) => prev.filter((l) => l.idLeitor !== idLeitor))
+            addToast(`Leitor "${leitor?.nome}" removido`)
+          } catch (error) {
+            console.error("Erro ao excluir leitor:", error)
+            addToast(
+              error.message || "Erro ao excluir leitor no banco",
+              "error",
+            )
+          } finally {
+            setConfirmDialog(null)
+          }
+        },
+      })
+    },
+    [leitores, emprestimos, token, addToast],
+  )
 
     } catch (error) {
       console.error("Erro ao salvar leitor:", error);
@@ -545,58 +658,89 @@ function AppContent() {
 
   const handleExportCSV = useCallback(() => {
     const obraRows = obras.map((o) => {
-      const exs = exemplares.filter((e) => e.idObra === o.idObra);
-      return `"${o.titulo}","${o.autor}","${o.cdd}",${exs.length},${exs.filter((e) => e.disponivel).length}`;
-    });
-    const csv = "Título,Autor,CDD,Total Exemplares,Disponíveis\n" + obraRows.join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = "acervo-camugere.csv"; a.click();
-    URL.revokeObjectURL(url);
-    addToast("Acervo exportado em CSV");
-  }, [obras, exemplares, addToast]);
+      const exs = exemplares.filter((e) => e.idObra === o.idObra)
+      return `"${o.titulo}","${o.autor}","${o.cdd}",${exs.length},${exs.filter((e) => e.disponivel).length}`
+    })
+    const csv =
+      "Título,Autor,CDD,Total Exemplares,Disponíveis\n" + obraRows.join("\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "acervo-camugere.csv"
+    a.click()
+    URL.revokeObjectURL(url)
+    addToast("Acervo exportado em CSV")
+  }, [obras, exemplares, addToast])
 
   // ============ COMPUTED ============
 
   const overdueCount = emprestimos.filter((e) => {
-    if (e.status !== "ativo") return false;
-    return e.dataDevolucaoPrevista < new Date().toISOString().split("T")[0];
-  }).length;
+    if (e.status !== "ativo") return false
+    return e.dataDevolucaoPrevista < new Date().toISOString().split("T")[0]
+  }).length
 
   // ============ RENDER ============
 
-  const openEditObra = (obra) => { setEditingObra(obra); setObraDrawerOpen(true); };
-  const openAddObra = () => { setEditingObra(null); setObraDrawerOpen(true); };
-  const openEditLeitor = (leitor) => { setEditingLeitor(leitor); setLeitorDrawerOpen(true); };
-  const openAddLeitor = () => { setEditingLeitor(null); setLeitorDrawerOpen(true); };
+  const openEditObra = (obra) => {
+    setEditingObra(obra)
+    setObraDrawerOpen(true)
+  }
+  const openAddObra = () => {
+    setEditingObra(null)
+    setObraDrawerOpen(true)
+  }
+  const openEditLeitor = (leitor) => {
+    setEditingLeitor(leitor)
+    setLeitorDrawerOpen(true)
+  }
+  const openAddLeitor = () => {
+    setEditingLeitor(null)
+    setLeitorDrawerOpen(true)
+  }
 
   const renderPage = () => {
     switch (activePage) {
       case "dashboard":
         return (
           <DashboardPage
-            exemplares={exemplares} emprestimos={emprestimos} obras={obras} leitores={leitores}
-            onOpenLoan={() => setLoanDrawerOpen(true)} onOpenReturn={() => setReturnDrawerOpen(true)}
-            onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData} isAuthenticated={isAuthenticated}
+            exemplares={exemplares}
+            emprestimos={emprestimos}
+            obras={obras}
+            leitores={leitores}
+            onOpenLoan={() => setLoanDrawerOpen(true)}
+            onOpenReturn={() => setReturnDrawerOpen(true)}
+            onNavigate={setActivePage}
+            obrasApi={obrasApi}
+            isLoading={isLoadingData}
+            isAuthenticated={isAuthenticated}
           />
-        );
+        )
       case "acervo":
         return (
           <AcervoPage
-            exemplares={exemplares} searchQuery={searchQuery} emprestimos={emprestimos}
-            obras={obras} leitores={leitores}
-            onAddObra={openAddObra} onEditObra={openEditObra} onDeleteObra={handleDeleteObra}
-            onAddExemplar={handleAddExemplar} onDeleteExemplar={handleDeleteExemplar}
+            exemplares={exemplares}
+            searchQuery={searchQuery}
+            emprestimos={emprestimos}
+            obras={obras}
+            leitores={leitores}
+            onAddObra={openAddObra}
+            onEditObra={openEditObra}
+            onDeleteObra={handleDeleteObra}
+            onAddExemplar={handleAddExemplar}
+            onDeleteExemplar={handleDeleteExemplar}
           />
-        );
+        )
       case "leitores":
         return (
           <LeitoresPage
-            emprestimos={emprestimos} leitores={leitores}
-            onAddLeitor={openAddLeitor} onEditLeitor={openEditLeitor} onDeleteLeitor={handleDeleteLeitor}
+            emprestimos={emprestimos}
+            leitores={leitores}
+            onAddLeitor={openAddLeitor}
+            onEditLeitor={openEditLeitor}
+            onDeleteLeitor={handleDeleteLeitor}
           />
-        );
+        )
       case "emprestimos":
         return (
           <EmprestimosPage
@@ -604,11 +748,18 @@ function AppContent() {
             onOpenLoan={() => setLoanDrawerOpen(true)} onReturn={handleReturn} onRenew={handleRenewLoan}
             onDeleteEmprestimo={handleDeleteEmprestimo}
           />
-        );
+        )
       case "relatorios":
-        return <RelatoriosPage emprestimos={emprestimos} exemplares={exemplares} obras={obras} leitores={leitores} />;
+        return (
+          <RelatoriosPage
+            emprestimos={emprestimos}
+            exemplares={exemplares}
+            obras={obras}
+            leitores={leitores}
+          />
+        )
       case "configuracoes":
-        return <ConfiguracoesPage onExportCSV={handleExportCSV} />;
+        return <ConfiguracoesPage onExportCSV={handleExportCSV} />
       default:
         return (
           <DashboardPage
@@ -616,27 +767,36 @@ function AppContent() {
             onOpenLoan={() => setLoanDrawerOpen(true)} onOpenReturn={() => setReturnDrawerOpen(true)}
             onNavigate={setActivePage} obrasApi={obrasApi} isLoading={isLoadingData} isAuthenticated={isAuthenticated}
           />
-        );
+        )
     }
-  };
+  }
 
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-50 text-surface-700 dark:bg-surface-950 dark:text-surface-200">
         <p>Carregando...</p>
       </div>
-    );
+    )
   }
 
   if (!isAuthenticated) {
-    return <LoginPage />;
+    return <LoginPage />
   }
 
   return (
     <div className="flex min-h-screen bg-surface-50 transition-colors duration-300 dark:bg-surface-950">
-      <Sidebar activePage={activePage} onNavigate={setActivePage} overdueCount={overdueCount} />
+      <Sidebar
+        activePage={activePage}
+        onNavigate={setActivePage}
+        overdueCount={overdueCount}
+      />
       <div className="flex flex-1 flex-col pl-64">
-        <Header onNavigate={setActivePage} searchQuery={searchQuery} onSearchChange={setSearchQuery} obras={obras} />
+        <Header
+          onNavigate={setActivePage}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          obras={obras}
+        />
         <main className="flex-1 p-6">{renderPage()}</main>
       </div>
 
@@ -649,10 +809,14 @@ function AppContent() {
       <LeitorDrawer isOpen={leitorDrawerOpen} onClose={() => { setLeitorDrawerOpen(false); setEditingLeitor(null); }}
         onConfirm={handleLeitorSubmit} editingLeitor={editingLeitor} />
       <ConfirmDialog
-        isOpen={!!confirmDialog} title={confirmDialog?.title || ""} message={confirmDialog?.message || ""}
-        onConfirm={confirmDialog?.onConfirm} onCancel={() => setConfirmDialog(null)} />
+        isOpen={!!confirmDialog}
+        title={confirmDialog?.title || ""}
+        message={confirmDialog?.message || ""}
+        onConfirm={confirmDialog?.onConfirm}
+        onCancel={() => setConfirmDialog(null)}
+      />
     </div>
-  );
+  )
 }
 
 function App() {
@@ -664,7 +828,7 @@ function App() {
         </AuthProvider>
       </ToastProvider>
     </ThemeProvider>
-  );
+  )
 }
 
-export default App;
+export default App

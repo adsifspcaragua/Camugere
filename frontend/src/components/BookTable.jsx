@@ -26,11 +26,15 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
   }, [exemplares, obras, isExemplarDisponivel]);
 
   const filtered = useMemo(() => {
-    let result = obrasComExemplares;
-    if (filter === "disponiveis") result = result.filter((o) => o.exemplaresDisponiveis > 0);
-    else if (filter === "emprestados") result = result.filter((o) => o.totalExemplares > 0 && o.exemplaresDisponiveis === 0);
+    let result = obrasComExemplares
+    if (filter === "disponiveis")
+      result = result.filter((o) => o.exemplaresDisponiveis > 0)
+    else if (filter === "emprestados")
+      result = result.filter(
+        (o) => o.totalExemplares > 0 && o.exemplaresDisponiveis === 0,
+      )
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+      const q = searchQuery.toLowerCase()
       result = result.filter(
         (o) =>
           (o.titulo || "").toLowerCase().includes(q) ||
@@ -38,8 +42,8 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
           (o.cdd || "").toLowerCase().includes(q)
       );
     }
-    return result;
-  }, [obrasComExemplares, searchQuery, filter]);
+    return result
+  }, [obrasComExemplares, searchQuery, filter])
 
   const getReaderForExemplar = useCallback((idExemplar) => {
     const emp = emprestimos.find((e) => {
@@ -53,17 +57,21 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
   }, [emprestimos, leitores]);
 
   const toggleExpand = (idObra) => {
-    setExpandedObra((prev) => (prev === idObra ? null : idObra));
-  };
+    setExpandedObra((prev) => (prev === idObra ? null : idObra))
+  }
 
   return (
     <div className="rounded-2xl border border-surface-200 bg-white transition-colors duration-300 dark:border-surface-800 dark:bg-surface-900">
       {/* Header */}
       <div className="flex flex-col gap-3 border-b border-surface-100 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-surface-800">
         <div>
-          <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Acervo de Obras</h2>
+          <h2 className="text-lg font-semibold text-surface-900 dark:text-white">
+            Acervo de Obras
+          </h2>
           <p className="text-base text-surface-400 dark:text-surface-500">
-            {filtered.length} obra{filtered.length !== 1 && "s"} · {exemplares.length} exemplar{exemplares.length !== 1 && "es"} no total
+            {filtered.length} obra{filtered.length !== 1 && "s"} ·{" "}
+            {exemplares.length} exemplar{exemplares.length !== 1 && "es"} no
+            total
           </p>
         </div>
         {/* Filter tabs */}
@@ -91,12 +99,24 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
       {/* Column Header */}
       <div className="grid grid-cols-[32px_1fr_180px_80px_90px_110px_80px] items-center gap-0 border-b border-surface-100 bg-surface-50/50 px-5 dark:border-surface-800 dark:bg-surface-800/20">
         <div />
-        <div className="py-3 text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">Obra</div>
-        <div className="py-3 text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">Autor(a)</div>
-        <div className="py-3 text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">CDD</div>
-        <div className="py-3 text-center text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">Total</div>
-        <div className="py-3 text-center text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">Disponíveis</div>
-        <div className="py-3 text-center text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">Ações</div>
+        <div className="py-3 text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+          Obra
+        </div>
+        <div className="py-3 text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+          Autor(a)
+        </div>
+        <div className="py-3 text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+          CDD
+        </div>
+        <div className="py-3 text-center text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+          Total
+        </div>
+        <div className="py-3 text-center text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+          Disponíveis
+        </div>
+        <div className="py-3 text-center text-sm font-semibold uppercase tracking-wide text-surface-400 dark:text-surface-500">
+          Ações
+        </div>
       </div>
 
       {/* Rows */}
@@ -125,7 +145,10 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
                     isExpanded ? (
                       <ChevronDown size={16} className="text-brand-500" />
                     ) : (
-                      <ChevronRight size={16} className="text-surface-300 dark:text-surface-600" />
+                      <ChevronRight
+                        size={16}
+                        className="text-surface-300 dark:text-surface-600"
+                      />
                     )
                   ) : null}
                 </div>
@@ -150,12 +173,16 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
 
                 {/* Autor */}
                 <div className="py-4 pr-4">
-                  <span className="text-base text-surface-500 dark:text-surface-400 line-clamp-2">{obra.autor}</span>
+                  <span className="text-base text-surface-500 dark:text-surface-400 line-clamp-2">
+                    {obra.autor}
+                  </span>
                 </div>
 
                 {/* CDD */}
                 <div className="py-4 pr-4">
-                  <span className="font-mono text-sm text-surface-400 dark:text-surface-500">{obra.cdd}</span>
+                  <span className="font-mono text-sm text-surface-400 dark:text-surface-500">
+                    {obra.cdd}
+                  </span>
                 </div>
 
                 {/* Total */}
@@ -168,20 +195,26 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
                 {/* Disponíveis */}
                 <div className="flex items-center justify-center py-4">
                   {obra.totalExemplares === 0 ? (
-                    <span className="text-sm text-surface-300 dark:text-surface-600">—</span>
+                    <span className="text-sm text-surface-300 dark:text-surface-600">
+                      —
+                    </span>
                   ) : obra.exemplaresDisponiveis === 0 ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-700 ring-1 ring-inset ring-red-200 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/30">
                       <span className="h-2 w-2 rounded-full bg-red-500" />0
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/30">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />{obra.exemplaresDisponiveis}
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      {obra.exemplaresDisponiveis}
                     </span>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center justify-center gap-1 py-4" onClick={(e) => e.stopPropagation()}>
+                <div
+                  className="flex items-center justify-center gap-1 py-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     onClick={() => onEditObra && onEditObra(obra)}
                     className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-100 hover:text-brand-600 dark:hover:bg-surface-800 dark:hover:text-brand-400"
@@ -229,12 +262,15 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
                           <div className="flex-1" />
                           {isDisp ? (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400">
-                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />Disponível
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                              Disponível
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
                               <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                              {reader ? `Emprestado · ${reader.nome}` : "Emprestado"}
+                              {reader
+                                ? `Emprestado · ${reader.nome}`
+                                : "Emprestado"}
                             </span>
                           )}
                           {isDisp && (
@@ -247,23 +283,30 @@ export default function BookTable({ exemplares = [], searchQuery = "", emprestim
                             </button>
                           )}
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 </div>
               )}
             </div>
-          );
+          )
         })}
 
         {filtered.length === 0 && (
           <div className="flex flex-col items-center gap-3 py-16">
-            <Search size={36} className="text-surface-300 dark:text-surface-600" />
-            <p className="text-base font-medium text-surface-500 dark:text-surface-400">Nenhuma obra encontrada.</p>
-            <p className="text-sm text-surface-400 dark:text-surface-500">Tente outro filtro ou termo de busca.</p>
+            <Search
+              size={36}
+              className="text-surface-300 dark:text-surface-600"
+            />
+            <p className="text-base font-medium text-surface-500 dark:text-surface-400">
+              Nenhuma obra encontrada.
+            </p>
+            <p className="text-sm text-surface-400 dark:text-surface-500">
+              Tente outro filtro ou termo de busca.
+            </p>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

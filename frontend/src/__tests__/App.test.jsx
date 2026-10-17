@@ -27,11 +27,11 @@ test("renders App component without crashing", () => {
 
 test("navigates to Acervo page and opens new obra drawer", async () => {
   render(<App />)
-  
+
   // Click on Acervo sidebar link
   const acervoLink = screen.getByRole("button", { name: /acervo/i })
   fireEvent.click(acervoLink)
-  
+
   // Verify Acervo page elements are visible
   await waitFor(() => {
     expect(screen.getByText("Obras e exemplares da Biblioteca Camugerê")).toBeInTheDocument()
@@ -40,7 +40,7 @@ test("navigates to Acervo page and opens new obra drawer", async () => {
   // Click Nova Obra button
   const addObraBtn = screen.getByRole("button", { name: /nova obra/i })
   fireEvent.click(addObraBtn)
-  
+
   await waitFor(() => {
     expect(screen.getByText("Cadastrar obra no acervo")).toBeInTheDocument()
   })

@@ -24,23 +24,26 @@ export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
       setHighlightIndex(-1);
       setSucesso(false);
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   useEffect(() => {
-    const handleEsc = (e) => { if (e.key === "Escape") onClose(); };
-    if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
-      return () => document.removeEventListener("keydown", handleEsc);
+    const handleEsc = (e) => {
+      if (e.key === "Escape") onClose()
     }
-  }, [isOpen, onClose]);
+    if (isOpen) {
+      document.addEventListener("keydown", handleEsc)
+      return () => document.removeEventListener("keydown", handleEsc)
+    }
+  }, [isOpen, onClose])
 
   useEffect(() => {
     const handler = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) setDropdownOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+      if (searchRef.current && !searchRef.current.contains(e.target))
+        setDropdownOpen(false)
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
 
   useEffect(() => {
     async function carregar() {
@@ -95,52 +98,54 @@ export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
   }, [exemplaresData, query]);
 
   // Reset highlight when filtered changes
-  useEffect(() => { setHighlightIndex(-1); }, [filtered]);
+  useEffect(() => {
+    setHighlightIndex(-1)
+  }, [filtered])
 
   // Scroll highlight into view
   useEffect(() => {
     if (highlightIndex >= 0 && listRef.current) {
-      const el = listRef.current.children[highlightIndex];
-      if (el) el.scrollIntoView({ block: "nearest" });
+      const el = listRef.current.children[highlightIndex]
+      if (el) el.scrollIntoView({ block: "nearest" })
     }
-  }, [highlightIndex]);
+  }, [highlightIndex])
 
   const handleSelect = (exemplar) => {
-    setSelectedExemplar(exemplar);
-    setDropdownOpen(false);
-    setQuery("");
-    setHighlightIndex(-1);
-  };
+    setSelectedExemplar(exemplar)
+    setDropdownOpen(false)
+    setQuery("")
+    setHighlightIndex(-1)
+  }
 
   const handleKeyDown = (e) => {
     if (!dropdownOpen || filtered.length === 0) {
       if (e.key === "ArrowDown" && filtered.length > 0) {
-        setDropdownOpen(true);
-        setHighlightIndex(0);
-        e.preventDefault();
+        setDropdownOpen(true)
+        setHighlightIndex(0)
+        e.preventDefault()
       }
-      return;
+      return
     }
     switch (e.key) {
       case "ArrowDown":
-        e.preventDefault();
-        setHighlightIndex((prev) => prev < filtered.length - 1 ? prev + 1 : 0);
-        break;
+        e.preventDefault()
+        setHighlightIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : 0))
+        break
       case "ArrowUp":
-        e.preventDefault();
-        setHighlightIndex((prev) => prev > 0 ? prev - 1 : filtered.length - 1);
-        break;
+        e.preventDefault()
+        setHighlightIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
+        break
       case "Enter":
-        e.preventDefault();
-        if (highlightIndex >= 0) handleSelect(filtered[highlightIndex]);
-        break;
+        e.preventDefault()
+        if (highlightIndex >= 0) handleSelect(filtered[highlightIndex])
+        break
       case "Escape":
-        e.preventDefault();
-        setDropdownOpen(false);
-        setHighlightIndex(-1);
-        break;
+        e.preventDefault()
+        setDropdownOpen(false)
+        setHighlightIndex(-1)
+        break
     }
-  };
+  }
 
   const handleSubmit = async () => {
     if (!selectedExemplar) return;
@@ -182,11 +187,19 @@ export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
               <CornerDownLeft size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-surface-900 dark:text-white">Registrar Devolução</h2>
-              <p className="text-base text-surface-400 dark:text-surface-500">Dar baixa em exemplar emprestado</p>
+              <h2 className="text-lg font-semibold text-surface-900 dark:text-white">
+                Registrar Devolução
+              </h2>
+              <p className="text-base text-surface-400 dark:text-surface-500">
+                Dar baixa em exemplar emprestado
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="rounded-2xl p-3 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-surface-500 dark:hover:bg-surface-800" aria-label="Fechar">
+          <button
+            onClick={onClose}
+            className="rounded-2xl p-3 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:text-surface-500 dark:hover:bg-surface-800"
+            aria-label="Fechar"
+          >
             <X size={22} />
           </button>
         </div>
@@ -201,11 +214,17 @@ export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
                   Buscar Exemplar Emprestado
                 </label>
                 <div ref={searchRef} className="relative">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" />
+                  <Search
+                    size={18}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400"
+                  />
                   <input
                     type="text"
                     value={query}
-                    onChange={(e) => { setQuery(e.target.value); setDropdownOpen(true); }}
+                    onChange={(e) => {
+                      setQuery(e.target.value)
+                      setDropdownOpen(true)
+                    }}
                     onFocus={() => setDropdownOpen(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="INV-XXXX, título ou nome do leitor..."
@@ -216,7 +235,11 @@ export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
                     aria-haspopup="listbox"
                   />
                   {dropdownOpen && filtered.length > 0 && (
-                    <div ref={listRef} role="listbox" className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 scrollbar-thin">
+                    <div
+                      ref={listRef}
+                      role="listbox"
+                      className="absolute z-50 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-surface-200 bg-white shadow-xl dark:border-surface-700 dark:bg-surface-900 scrollbar-thin"
+                    >
                       {filtered.map((e, i) => (
                         <button
                           key={e.exemplar?.id || i}
@@ -259,7 +282,9 @@ export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
             {selectedExemplar && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-base font-medium text-surface-700 dark:text-surface-300">Confirmar devolução:</p>
+                  <p className="text-base font-medium text-surface-700 dark:text-surface-300">
+                    Confirmar devolução:
+                  </p>
                   <button
                     type="button"
                     onClick={() => setSelectedExemplar(null)}
@@ -318,5 +343,5 @@ export default function ReturnDrawer({ isOpen, onClose, onReturnSuccess }) {
         </div>
       </div>
     </>
-  );
+  )
 }

@@ -8,7 +8,7 @@ const TABS = [
   { id: "ativos", label: "Ativos", icon: Clock },
   { id: "atrasados", label: "Atrasados", icon: AlertTriangle },
   { id: "devolvidos", label: "Devolvidos", icon: CheckCircle2 },
-];
+]
 
 export default function EmprestimosPage({
   exemplares,
@@ -45,29 +45,39 @@ export default function EmprestimosPage({
   const filtered = useMemo(() => {
     switch (activeTab) {
       case "ativos":
-        return enriched.filter((e) => e.status === "ativo" && !e.isOverdue);
+        return enriched.filter((e) => e.status === "ativo" && !e.isOverdue)
       case "atrasados":
-        return enriched.filter((e) => e.isOverdue);
+        return enriched.filter((e) => e.isOverdue)
       case "devolvidos":
-        return enriched.filter((e) => e.status === "devolvido");
+        return enriched.filter((e) => e.status === "devolvido")
       default:
-        return enriched;
+        return enriched
     }
-  }, [enriched, activeTab]);
+  }, [enriched, activeTab])
 
-  const tabCounts = useMemo(() => ({
-    ativos: enriched.filter((e) => e.status === "ativo" && !e.isOverdue).length,
-    atrasados: enriched.filter((e) => e.isOverdue).length,
-    devolvidos: enriched.filter((e) => e.status === "devolvido").length,
-  }), [enriched]);
+  const tabCounts = useMemo(
+    () => ({
+      ativos: enriched.filter((e) => e.status === "ativo" && !e.isOverdue)
+        .length,
+      atrasados: enriched.filter((e) => e.isOverdue).length,
+      devolvidos: enriched.filter((e) => e.status === "devolvido").length,
+    }),
+    [enriched],
+  )
 
-  const handleInlineReturn = useCallback((idExemplar) => {
-    if (onReturn) onReturn(idExemplar);
-  }, [onReturn]);
+  const handleInlineReturn = useCallback(
+    (idExemplar) => {
+      if (onReturn) onReturn(idExemplar)
+    },
+    [onReturn],
+  )
 
-  const handleInlineRenew = useCallback((idEmprestimo) => {
-    if (onRenew) onRenew(idEmprestimo);
-  }, [onRenew]);
+  const handleInlineRenew = useCallback(
+    (idEmprestimo) => {
+      if (onRenew) onRenew(idEmprestimo)
+    },
+    [onRenew],
+  )
 
   // Função para apagar o registro com o mesmo padrão de confirmação de exclusão de obra
   const handleApagar = useCallback((mov) => {
@@ -111,12 +121,17 @@ export default function EmprestimosPage({
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">Empréstimos & Devoluções</h2>
+          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">
+            Empréstimos & Devoluções
+          </h2>
           <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
             {tabCounts.ativos} ativo{tabCounts.ativos !== 1 && "s"} · {tabCounts.atrasados > 0 && <span className="text-red-500 font-semibold">{tabCounts.atrasados} atrasado{tabCounts.atrasados !== 1 && "s"}</span>}
           </p>
         </div>
-        <button onClick={onOpenLoan} className="rounded-2xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500">
+        <button
+          onClick={onOpenLoan}
+          className="rounded-2xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        >
           Novo Empréstimo
         </button>
       </div>
@@ -124,9 +139,9 @@ export default function EmprestimosPage({
       {/* Tabs */}
       <div className="flex gap-1 rounded-2xl border border-surface-200 bg-surface-100 p-1 dark:border-surface-700 dark:bg-surface-800">
         {TABS.map((tab) => {
-          const Icon = tab.icon;
-          const count = tabCounts[tab.id];
-          const isActive = activeTab === tab.id;
+          const Icon = tab.icon
+          const count = tabCounts[tab.id]
+          const isActive = activeTab === tab.id
           return (
             <button
               key={tab.id}
@@ -137,19 +152,26 @@ export default function EmprestimosPage({
                   : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-300"
               }`}
             >
-              <Icon size={16} className={tab.id === "atrasados" && count > 0 ? "text-red-500" : ""} />
+              <Icon
+                size={16}
+                className={
+                  tab.id === "atrasados" && count > 0 ? "text-red-500" : ""
+                }
+              />
               {tab.label}
               {count > 0 && (
-                <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                  tab.id === "atrasados"
-                    ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
-                    : "bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-400"
-                }`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                    tab.id === "atrasados"
+                      ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+                      : "bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-400"
+                  }`}
+                >
                   {count}
                 </span>
               )}
             </button>
-          );
+          )
         })}
       </div>
 
@@ -164,7 +186,7 @@ export default function EmprestimosPage({
                 <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Leitor</th>
                 <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Início</th>
                 <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
-                  {activeTab === "devolvidos" ? "Devolvido em" : "Devolução Prevista"}
+                  Inventário
                 </th>
                 <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">Ações</th>
               </tr>
@@ -181,9 +203,13 @@ export default function EmprestimosPage({
                 >
                   <td className="py-3.5 pl-5 pr-3">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">{mov.obra?.capa || "📕"}</span>
+                      <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
+                        {mov.obra?.capa || "📕"}
+                      </span>
                       <div className="min-w-0">
-                        <span className="block truncate text-base font-medium text-surface-800 dark:text-surface-200">{mov.obra?.titulo || "—"}</span>
+                        <span className="block truncate text-base font-medium text-surface-800 dark:text-surface-200">
+                          {mov.obra?.titulo || "—"}
+                        </span>
                         {mov.isOverdue && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
                             <AlertTriangle size={12} />
@@ -254,19 +280,36 @@ export default function EmprestimosPage({
                     <div className="flex flex-col items-center gap-3">
                       {activeTab === "atrasados" ? (
                         <>
-                          <CheckCircle2 size={40} className="text-emerald-400" />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">Nenhum atraso! 🎉</p>
-                          <p className="text-base text-surface-400 dark:text-surface-500">Todos os empréstimos estão em dia.</p>
+                          <CheckCircle2
+                            size={40}
+                            className="text-emerald-400"
+                          />
+                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
+                            Nenhum atraso! 🎉
+                          </p>
+                          <p className="text-base text-surface-400 dark:text-surface-500">
+                            Todos os empréstimos estão em dia.
+                          </p>
                         </>
                       ) : activeTab === "devolvidos" ? (
                         <>
-                          <Clock size={40} className="text-surface-300 dark:text-surface-600" />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">Nenhuma devolução registrada ainda.</p>
+                          <Clock
+                            size={40}
+                            className="text-surface-300 dark:text-surface-600"
+                          />
+                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
+                            Nenhuma devolução registrada ainda.
+                          </p>
                         </>
                       ) : (
                         <>
-                          <Clock size={40} className="text-surface-300 dark:text-surface-600" />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">Nenhum empréstimo ativo.</p>
+                          <Clock
+                            size={40}
+                            className="text-surface-300 dark:text-surface-600"
+                          />
+                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
+                            Nenhum empréstimo ativo.
+                          </p>
                         </>
                       )}
                     </div>
@@ -286,5 +329,5 @@ export default function EmprestimosPage({
         onCancel={() => setConfirmDialog(null)}
       />
     </div>
-  );
+  )
 }

@@ -1,24 +1,47 @@
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle, X } from "lucide-react"
 
-export default function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel, variant = "danger" }) {
-  if (!isOpen) return null;
+export default function ConfirmDialog({
+  isOpen,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  variant = "danger",
+}) {
+  if (!isOpen) return null
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm" onClick={onCancel} aria-hidden="true" />
+      <div
+        className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
+        onClick={onCancel}
+        aria-hidden="true"
+      />
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
         <div className="w-full max-w-md rounded-2xl border border-surface-200 bg-white p-6 shadow-2xl dark:border-surface-800 dark:bg-surface-900 animate-slide-up">
           <div className="flex items-start gap-4">
-            <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${
-              variant === "danger" ? "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400" : "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
-            }`}>
+            <div
+              className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl ${
+                variant === "danger"
+                  ? "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400"
+                  : "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+              }`}
+            >
               <AlertTriangle size={24} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-surface-900 dark:text-white">{title}</h3>
-              <p className="mt-2 text-base text-surface-500 dark:text-surface-400">{message}</p>
+              <h3 className="text-lg font-semibold text-surface-900 dark:text-white">
+                {title}
+              </h3>
+              <p className="mt-2 text-base text-surface-500 dark:text-surface-400">
+                {message}
+              </p>
             </div>
-            <button onClick={onCancel} className="rounded-xl p-2 text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800" aria-label="Fechar">
+            <button
+              onClick={onCancel}
+              className="rounded-xl p-2 text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
+              aria-label="Fechar"
+            >
               <X size={18} />
             </button>
           </div>
@@ -43,5 +66,5 @@ export default function ConfirmDialog({ isOpen, title, message, onConfirm, onCan
         </div>
       </div>
     </>
-  );
+  )
 }

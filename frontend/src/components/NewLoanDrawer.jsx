@@ -60,10 +60,10 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
       if (e.key === "Escape") onClose();
     };
     if (isOpen) {
-      document.addEventListener("keydown", handleEsc);
-      return () => document.removeEventListener("keydown", handleEsc);
+      document.addEventListener("keydown", handleEsc)
+      return () => document.removeEventListener("keydown", handleEsc)
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose])
 
   // CRUZAMENTO REAL: Junta os exemplares disponíveis com as obras do Banco de Dados (Ultra Rápido)
   const availableExemplares = useMemo(() => {
@@ -126,8 +126,8 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
   }, []);
 
   const filterExemplares = useCallback((items, query) => {
-    if (!query.trim()) return items;
-    const q = query.toLowerCase();
+    if (!query.trim()) return items
+    const q = query.toLowerCase()
     return items.filter(
       (e) =>
         e.titulo.toLowerCase().includes(q) ||
@@ -233,7 +233,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                         </p>
                       </div>
                     </div>
-                  );
+                  )
                 }}
                 onSelect={(l) => setSelectedLeitor(l)}
                 placeholder="Buscar leitor pelo nome..."
@@ -406,5 +406,5 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
         </form>
       </div>
     </>
-  );
+  )
 }

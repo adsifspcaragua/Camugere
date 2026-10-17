@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { jwtDecode } from "jwt-decode";
 
-const AuthContext = createContext(null);
-const STORAGE_KEY = "biblioteca-auth-token";
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const AuthContext = createContext(null)
+const STORAGE_KEY = "biblioteca-auth-token"
+const API_BASE_URL = import.meta.env.VITE_API_URL
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(null);
@@ -134,13 +134,13 @@ export function AuthProvider({ children }) {
     [token, user, login, logout, isLoading]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
+    throw new Error("useAuth must be used within AuthProvider")
   }
-  return context;
+  return context
 }

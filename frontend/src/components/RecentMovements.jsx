@@ -15,7 +15,7 @@ export default function RecentMovements({ emprestimos = [], exemplares = [], obr
   };
 
   useEffect(() => {
-    let cancelado = false;
+    let cancelado = false
 
     async function carregarDados() {
       if (!emprestimos) return;
@@ -144,5 +144,5 @@ export default function RecentMovements({ emprestimos = [], exemplares = [], obr
         )}
       </div>
     </div>
-  );
+  )
 }

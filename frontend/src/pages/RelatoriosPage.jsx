@@ -73,7 +73,7 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
     const today = new Date().toISOString().split("T")[0];
 
     // 1. Obras mais emprestadas
-    const obrasCount = {};
+    const obrasCount = {}
     emprestimos.forEach((e) => {
       const idEx = Number(e.idExemplar ?? e.id_exemplar);
       const ex = exemplares.find((x) => Number(x.idExemplar ?? x.id) === idEx) || e.exemplar;
@@ -81,7 +81,7 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
       if (idOb) {
         obrasCount[idOb] = (obrasCount[idOb] || 0) + 1;
       }
-    });
+    })
 
     const topObras = Object.entries(obrasCount)
       .map(([id, count]) => {
@@ -90,7 +90,7 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
       })
       .filter((item) => item.obra)
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      .slice(0, 5)
 
     // 2. Leitores mais ativos (filtrado por Ano, Mês, Semana e Pesquisa)
     const leitoresCount = {};
@@ -164,18 +164,18 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
       })
       .filter((item) => item.leitor)
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      .slice(0, 5)
 
     // 4. Distribuição por CDD
     const cddCount = {};
     obras.forEach((o) => {
-      const cat = o.cdd ? o.cdd.substring(0, 3) : "Outros"; // basic grouping by first 3 chars
-      cddCount[cat] = (cddCount[cat] || 0) + 1;
-    });
+      const cat = o.cdd ? o.cdd.substring(0, 3) : "Outros" // basic grouping by first 3 chars
+      cddCount[cat] = (cddCount[cat] || 0) + 1
+    })
 
     const cddDist = Object.entries(cddCount)
       .map(([cdd, count]) => ({ cdd, count }))
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => b.count - a.count)
 
     return { topObras, topLeitores, topAtrasos, cddDist };
   }, [
@@ -208,7 +208,9 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-surface-900 dark:text-white">Relatórios & Estatísticas</h2>
+        <h2 className="text-2xl font-bold text-surface-900 dark:text-white">
+          Relatórios & Estatísticas
+        </h2>
         <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
           Visão geral do uso do acervo e engajamento da comunidade
         </p>
@@ -221,22 +223,37 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
               <TrendingUp size={20} />
             </div>
-            <h3 className="text-lg font-semibold text-surface-900 dark:text-white">Obras Mais Emprestadas</h3>
+            <h3 className="text-lg font-semibold text-surface-900 dark:text-white">
+              Obras Mais Emprestadas
+            </h3>
           </div>
           <div className="space-y-3">
             {reports.topObras.map((item, i) => (
-              <div key={item.obra.idObra} className="flex items-center gap-4 rounded-xl border border-surface-100 p-3 dark:border-surface-800">
+              <div
+                key={item.obra.idObra}
+                className="flex items-center gap-4 rounded-xl border border-surface-100 p-3 dark:border-surface-800"
+              >
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-100 text-sm font-bold text-surface-500 dark:bg-surface-800 dark:text-surface-400">
                   {i + 1}
                 </span>
-                <span className="flex h-10 w-8 items-center justify-center rounded-lg bg-surface-50 text-xl dark:bg-surface-800">{item.obra.capa}</span>
+                <span className="flex h-10 w-8 items-center justify-center rounded-lg bg-surface-50 text-xl dark:bg-surface-800">
+                  {item.obra.capa}
+                </span>
                 <div className="flex-1 min-w-0">
-                  <p className="truncate text-base font-medium text-surface-900 dark:text-white">{item.obra.titulo}</p>
-                  <p className="truncate text-sm text-surface-400 dark:text-surface-500">{item.obra.autor}</p>
+                  <p className="truncate text-base font-medium text-surface-900 dark:text-white">
+                    {item.obra.titulo}
+                  </p>
+                  <p className="truncate text-sm text-surface-400 dark:text-surface-500">
+                    {item.obra.autor}
+                  </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-brand-600 dark:text-brand-400">{item.count}</p>
-                  <p className="text-xs text-surface-400 dark:text-surface-500">vezes</p>
+                  <p className="text-lg font-bold text-brand-600 dark:text-brand-400">
+                    {item.count}
+                  </p>
+                  <p className="text-xs text-surface-400 dark:text-surface-500">
+                    vezes
+                  </p>
                 </div>
               </div>
             ))}
@@ -365,12 +382,19 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
 
           <div className="space-y-3">
             {reports.topLeitores.map((item, i) => (
-              <div key={item.leitor.idLeitor} className="flex items-center gap-4 rounded-xl border border-surface-100 p-3 dark:border-surface-800">
+              <div
+                key={item.leitor.idLeitor}
+                className="flex items-center gap-4 rounded-xl border border-surface-100 p-3 dark:border-surface-800"
+              >
                 <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-100 text-sm font-bold text-surface-500 dark:bg-surface-800 dark:text-surface-400">
                   {i + 1}
                 </span>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-sm font-bold text-white">
-                  {item.leitor.nome.split(" ").map(n => n[0]).slice(0,2).join("")}
+                  {item.leitor.nome
+                    .split(" ")
+                    .map((n) => n[0])
+                    .slice(0, 2)
+                    .join("")}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="truncate text-base font-medium text-surface-900 dark:text-white">{item.leitor.nome}</p>
@@ -435,12 +459,19 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400">
               <Hash size={20} />
             </div>
-            <h3 className="text-lg font-semibold text-surface-900 dark:text-white">Distribuição do Acervo por CDD</h3>
+            <h3 className="text-lg font-semibold text-surface-900 dark:text-white">
+              Distribuição do Acervo por CDD
+            </h3>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             {reports.cddDist.map((item) => (
-              <div key={item.cdd} className="rounded-xl bg-surface-50 p-4 dark:bg-surface-800">
-                <p className="text-2xl font-bold text-surface-900 dark:text-white">{item.count}</p>
+              <div
+                key={item.cdd}
+                className="rounded-xl bg-surface-50 p-4 dark:bg-surface-800"
+              >
+                <p className="text-2xl font-bold text-surface-900 dark:text-white">
+                  {item.count}
+                </p>
                 <p className="mt-1 flex items-center gap-1 text-sm font-medium text-surface-500 dark:text-surface-400">
                   <BookOpen size={14} /> obras
                 </p>
@@ -453,5 +484,5 @@ export default function RelatoriosPage({ emprestimos, exemplares, obras, leitore
         </div>
       </div>
     </div>
-  );
+  )
 }
