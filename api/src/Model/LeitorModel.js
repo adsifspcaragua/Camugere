@@ -24,7 +24,41 @@ const leitorSchema = new z.object({
     .max(11, "O telefone deve ter no máximo 11 caracteres")
     .min(10, "o telefone deve ter no mínimo 10 caracteres")
     .optional(),
+  cep: z.string().max(8).nullable().optional(),
+  logradouro: z.string().max(150).nullable().optional(),
+  numero: z.string().max(20).nullable().optional(),
+  complemento: z.string().max(100).nullable().optional(),
+  bairro: z.string().max(100).nullable().optional(),
+  cidade: z.string().max(100).nullable().optional(),
+  estado: z.string().length(2).nullable().optional(),
+  podeEmprestar: z.boolean().optional(),
+  suspensoAte: z.coerce.date().nullable().optional(),
+  motivoSuspensao: z.string().max(255).nullable().optional(),
 })
+
+const leitorSelect = {
+  id: true,
+  id_usuario: true,
+  cpf: true,
+  telefone: true,
+  cep: true,
+  logradouro: true,
+  numero: true,
+  complemento: true,
+  bairro: true,
+  cidade: true,
+  estado: true,
+  podeEmprestar: true,
+  suspensoAte: true,
+  motivoSuspensao: true,
+  usuario: {
+    select: {
+      id: true,
+      nome: true,
+      email: true,
+    },
+  },
+}
 
 export const leitorValidator = (leitor, partial = null) => {
   if (partial) {
@@ -69,145 +103,94 @@ export async function createLeitor(leitor) {
 
   const result = await prisma.Leitor.create({
     data,
-    select: {
-      id: true,
-      id_usuario: true,
-      cpf: true,
-      telefone: true,
-      usuario: {
-        select: {
-            id: true,
-            id_usuario: true,
-            cpf: false,
-            telefone: true,
-            usuario: {
-                select: {
-                    id: true,
-                    nome: true,
-                    email: true
-                }
-            }
-        }
-    })
+    select: leitorSelect,
+  })
 
   return result
 }
 
 export async function listLeitor() {
   const result = await prisma.Leitor.findMany({
-    select: {
-      id: true,
-      id_usuario: true,
-      cpf: true,
-      telefone: true,
-      usuario: {
-        select: {
-            id: true,
-            id_usuario: true,
-            cpf: false,
-            telefone: true,
-            usuario: {
-                select: {
-                    id: true,
-                    nome: true,
-                    email: true
-                }
-            }
-        }
-    })
+    select: leitorSelect,
+  })
 
   return result
 }
 
 export async function getLeitorById(id) {
-    const result = await prisma.Leitor.findUnique({
-        where: {
-            id: id
-        }, select: {
-            id: true,
-            id_usuario: true,
-            cpf: false,
-            telefone: true,
-            usuario: {
-                select: {
-                    id: true,
-                    nome: true,
-                    email: true
-                }
-            }
-        }
-    })
+  const result = await prisma.Leitor.findUnique({
+    where: {
+      id: id,
+    },
+    select: {
+      id: true,
+      id_usuario: true,
+      cpf: false,
+      telefone: true,
+      cep: true,
+      logradouro: true,
+      numero: true,
+      complemento: true,
+      bairro: true,
+      cidade: true,
+      estado: true,
+      podeEmprestar: true,
+      suspensoAte: true,
+      motivoSuspensao: true,
+      usuario: { select: { id: true, nome: true, email: true } },
+    },
+  })
 
   return result
 }
 
 export async function deleteLeitor(id) {
-    const result = await prisma.Leitor.delete({
-        where: {
-            id: id
-        }, select: {
-            id: true,
-            id_usuario: true,
-            cpf: false,
-            telefone: true,
-            usuario: {
-                select: {
-                    id: true,
-                    nome: true,
-                    email: true
-                }
-            }
-        }
-    })
+  const result = await prisma.Leitor.delete({
+    where: {
+      id: id,
+    },
+    select: {
+      id: true,
+      id_usuario: true,
+      cpf: false,
+      telefone: true,
+      cep: true,
+      logradouro: true,
+      numero: true,
+      complemento: true,
+      bairro: true,
+      cidade: true,
+      estado: true,
+      podeEmprestar: true,
+      suspensoAte: true,
+      motivoSuspensao: true,
+      usuario: { select: { id: true, nome: true, email: true } },
+    },
+  })
 
   return result
 }
 
 export async function updateLeitor(leitor, id) {
-    const result = await prisma.Leitor.update({
-        where: {
-            id: id
-        }, data: {
-            leitor
-        }, select: {
-            id: true,
-            id_usuario: true,
-            cpf: false,
-            telefone: true,
-            usuario: {
-                select: {
-                    id: true,
-                    nome: true,
-                    email: true
-                }
-            }
-        }
+  const { nome, contato, ...dadosLeitor } = leitor
+
+  await prisma.$transaction(async (transaction) => {
+    const atualizacao = await transaction.Leitor.update({
+      where: { id },
+      data: dadosLeitor,
+      select: { id_usuario: true },
     })
 
-    if (nome || contato) {
+    if (nome !== undefined || contato !== undefined) {
       await transaction.Usuario.update({
         where: { id: atualizacao.id_usuario },
         data: {
-          ...(nome ? { nome } : {}),
-          ...(contato ? { email: contato } : {}),
+          ...(nome !== undefined ? { nome } : {}),
+          ...(contato !== undefined ? { email: contato } : {}),
         },
       })
     }
-
-    return transaction.Leitor.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        id_usuario: true,
-        cpf: true,
-        telefone: true,
-        usuario: {
-          select: {
-            nome: true,
-            email: true,
-          },
-        },
-      },
-    })
   })
+
+  return getLeitorById(id)
 }

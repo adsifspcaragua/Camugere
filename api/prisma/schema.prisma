@@ -29,9 +29,20 @@ model Leitor{
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   cpf  String   @db.VarChar(14)   @unique   
   telefone  String?    @db.VarChar(11)
+  cep String? @db.VarChar(8)
+  logradouro String? @db.VarChar(150)
+  numero String? @db.VarChar(20)
+  complemento String? @db.VarChar(100)
+  bairro String? @db.VarChar(100)
+  cidade String? @db.VarChar(100)
+  estado String? @db.VarChar(2)
+  podeEmprestar Boolean @default(true)
+  suspensoAte DateTime?
+  motivoSuspensao String? @db.VarChar(255)
 
   leitorClubes LeitorClube[]
   emprestimos Emprestimo[]
+  suspensoes SuspensaoLeitor[]
   comentarios Comentario[]
   reservas Reserva[]
 }
@@ -40,6 +51,23 @@ model Bibliotecario{
   id   Int   @id @default(autoincrement())
   id_usuario  Int
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
+  suspensoes SuspensaoLeitor[]
+}
+
+model SuspensaoLeitor {
+  id Int @id @default(autoincrement())
+  id_leitor Int
+  id_bibliotecario Int?
+  motivo String @db.VarChar(255)
+  dataInicio DateTime @default(now())
+  dataFim DateTime?
+  dataReativacao DateTime?
+  createdAt DateTime @default(now())
+
+  leitor Leitor @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
+  bibliotecario Bibliotecario? @relation(fields: [id_bibliotecario], references: [id], onDelete: SetNull)
+
+  @@index([id_leitor, dataInicio])
 }
 
 model Obra {

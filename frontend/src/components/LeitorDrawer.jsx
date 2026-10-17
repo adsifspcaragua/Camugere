@@ -11,6 +11,15 @@ export default function LeitorDrawer({
   const [cpf, setCpf] = useState("")
   const [contato, setContato] = useState("")
   const [telefone, setTelefone] = useState("")
+  const [endereco, setEndereco] = useState({
+    cep: "",
+    logradouro: "",
+    numero: "",
+    complemento: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
+  })
   const inputRef = useRef(null)
   const isEdit = !!editingLeitor
 
@@ -21,11 +30,29 @@ export default function LeitorDrawer({
         setCpf(editingLeitor.cpf || "")
         setContato(editingLeitor.contato || "")
         setTelefone(editingLeitor.telefone || "")
+        setEndereco({
+          cep: editingLeitor.cep || "",
+          logradouro: editingLeitor.logradouro || "",
+          numero: editingLeitor.numero || "",
+          complemento: editingLeitor.complemento || "",
+          bairro: editingLeitor.bairro || "",
+          cidade: editingLeitor.cidade || "",
+          estado: editingLeitor.estado || "",
+        })
       } else {
         setNome("")
         setCpf("")
         setContato("")
         setTelefone("")
+        setEndereco({
+          cep: "",
+          logradouro: "",
+          numero: "",
+          complemento: "",
+          bairro: "",
+          cidade: "",
+          estado: "",
+        })
       }
       setTimeout(() => inputRef.current?.focus(), 200)
     }
@@ -60,6 +87,10 @@ export default function LeitorDrawer({
     if (telefone.trim().length > 0) {
       payload.telefone = telefone.replace(/\D/g, "")
     }
+
+    Object.entries(endereco).forEach(([field, value]) => {
+      payload[field] = value.trim() || null
+    })
 
     onConfirm(payload)
   }
@@ -122,11 +153,15 @@ export default function LeitorDrawer({
 
             {/* Nome */}
             <div>
-              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+              <label
+                htmlFor="leitor-nome"
+                className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300"
+              >
                 <User size={18} className="text-surface-400" /> Nome Completo
               </label>
               <input
                 ref={inputRef}
+                id="leitor-nome"
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
@@ -138,11 +173,15 @@ export default function LeitorDrawer({
 
             {/* CPF */}
             <div>
-              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+              <label
+                htmlFor="leitor-cpf"
+                className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300"
+              >
                 <IdCard size={18} className="text-surface-400" /> CPF
               </label>
               <input
                 type="text"
+                id="leitor-cpf"
                 value={cpf}
                 onChange={(e) => setCpf(e.target.value)}
                 placeholder="Ex: 000.000.000-00"
@@ -153,11 +192,15 @@ export default function LeitorDrawer({
 
             {/* Email */}
             <div>
-              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+              <label
+                htmlFor="leitor-email"
+                className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300"
+              >
                 <Mail size={18} className="text-surface-400" /> E-mail
               </label>
               <input
                 type="email"
+                id="leitor-email"
                 value={contato}
                 onChange={(e) => setContato(e.target.value)}
                 placeholder="Ex: maria@email.com"
@@ -168,17 +211,59 @@ export default function LeitorDrawer({
 
             {/* Telefone */}
             <div>
-              <label className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300">
+              <label
+                htmlFor="leitor-telefone"
+                className="mb-2 flex items-center gap-2 text-base font-medium text-surface-700 dark:text-surface-300"
+              >
                 <Phone size={18} className="text-surface-400" /> Telefone{" "}
                 <span className="text-sm text-surface-400">(opcional)</span>
               </label>
               <input
                 type="tel"
+                id="leitor-telefone"
                 value={telefone}
                 onChange={(e) => setTelefone(e.target.value)}
                 placeholder="Ex: (21) 99999-0000"
                 className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
               />
+            </div>
+
+            <div className="border-t border-surface-100 pt-5 dark:border-surface-800">
+              <p className="mb-3 text-sm font-bold uppercase tracking-wider text-surface-500 dark:text-surface-400">
+                Endereço
+              </p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {[
+                  ["cep", "CEP"],
+                  ["logradouro", "Logradouro"],
+                  ["numero", "Número"],
+                  ["complemento", "Complemento"],
+                  ["bairro", "Bairro"],
+                  ["cidade", "Cidade"],
+                  ["estado", "Estado"],
+                ].map(([field, label]) => (
+                  <label
+                    key={field}
+                    className={field === "logradouro" ? "sm:col-span-2" : ""}
+                  >
+                    <span className="mb-2 block text-sm font-medium text-surface-700 dark:text-surface-300">
+                      {label}
+                    </span>
+                    <input
+                      type="text"
+                      value={endereco[field]}
+                      maxLength={field === "estado" ? 2 : undefined}
+                      onChange={(e) =>
+                        setEndereco((prev) => ({
+                          ...prev,
+                          [field]: e.target.value,
+                        }))
+                      }
+                      className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100"
+                    />
+                  </label>
+                ))}
+              </div>
             </div>
 
             {/* Summary */}

@@ -8,6 +8,7 @@ export default async function createLeitorController(req, res) {
       ...req.body,
       cpf: req.body.cpf?.replace(/\D/g, ""),
       telefone: req.body.telefone?.replace(/\D/g, ""),
+      cep: req.body.cep?.replace(/\D/g, ""),
     }
     const { success, data, error } = await leitorValidator(leitor)
 
