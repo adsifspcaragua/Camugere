@@ -9,20 +9,56 @@ import {
   Check,
   Download,
   Upload,
+  UserPlus,
 } from "lucide-react"
 import { useTheme } from "../context/ThemeContext"
 
-export default function ConfiguracoesPage() {
+export default function ConfiguracoesPage({ onRegisterBibliotecario }) {
   const { dark, toggle } = useTheme()
   const [prazoEmprestimo, setPrazoEmprestimo] = useState(14)
   const [alertaAtraso, setAlertaAtraso] = useState(true)
   const [alertaVencimento, setAlertaVencimento] = useState(true)
   const [diasAviso, setDiasAviso] = useState(2)
   const [saved, setSaved] = useState(false)
+  const [librarian, setLibrarian] = useState({
+    nome: "",
+    email: "",
+    senha: "",
+    confirmacao: "",
+  })
+  const [registrationState, setRegistrationState] = useState({
+    loading: false,
+    error: "",
+    success: false,
+  })
 
   const handleSave = () => {
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  const handleRegister = async (event) => {
+    event.preventDefault()
+    if (librarian.senha !== librarian.confirmacao) {
+      setRegistrationState({
+        loading: false,
+        error: "As senhas não conferem.",
+        success: false,
+      })
+      return
+    }
+    setRegistrationState({ loading: true, error: "", success: false })
+    const result = await onRegisterBibliotecario?.(librarian)
+    if (result?.ok) {
+      setLibrarian({ nome: "", email: "", senha: "", confirmacao: "" })
+      setRegistrationState({ loading: false, error: "", success: true })
+    } else {
+      setRegistrationState({
+        loading: false,
+        error: result?.message || "Não foi possível registrar o bibliotecário.",
+        success: false,
+      })
+    }
   }
 
   return (
@@ -211,6 +247,80 @@ export default function ConfiguracoesPage() {
               Importar
             </button>
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
+          <div className="flex items-center gap-4 border-b border-surface-100 p-5 dark:border-surface-800">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400">
+              <UserPlus size={20} />
+            </div>
+            <div>
+              <p className="text-base font-semibold text-surface-900 dark:text-white">
+                Registrar bibliotecário
+              </p>
+              <p className="text-sm text-surface-400 dark:text-surface-500">
+                Crie os dois perfis em uma única operação
+              </p>
+            </div>
+          </div>
+          <form
+            onSubmit={handleRegister}
+            className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2"
+          >
+            {[
+              ["nome", "Nome"],
+              ["email", "E-mail"],
+              ["senha", "Senha"],
+              ["confirmacao", "Confirmar senha"],
+            ].map(([field, label]) => (
+              <label
+                key={field}
+                className="text-sm font-medium text-surface-700 dark:text-surface-300"
+              >
+                {label}
+                <input
+                  required
+                  type={
+                    field === "email"
+                      ? "email"
+                      : field === "nome"
+                        ? "text"
+                        : "password"
+                  }
+                  minLength={
+                    field === "nome" ? 2 : field === "email" ? undefined : 6
+                  }
+                  value={librarian[field]}
+                  onChange={(event) =>
+                    setLibrarian((current) => ({
+                      ...current,
+                      [field]: event.target.value,
+                    }))
+                  }
+                  className="mt-2 w-full rounded-xl border border-surface-200 bg-surface-50 px-3 py-2.5 text-base text-surface-900 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white"
+                />
+              </label>
+            ))}
+            {registrationState.error && (
+              <p className="sm:col-span-2 text-sm text-red-600 dark:text-red-400">
+                {registrationState.error}
+              </p>
+            )}
+            {registrationState.success && (
+              <p className="sm:col-span-2 text-sm text-emerald-600 dark:text-emerald-400">
+                Bibliotecário registrado com sucesso.
+              </p>
+            )}
+            <button
+              disabled={registrationState.loading}
+              className="sm:col-span-2 rounded-xl bg-brand-600 py-3 text-base font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+              type="submit"
+            >
+              {registrationState.loading
+                ? "Registrando..."
+                : "Registrar bibliotecário"}
+            </button>
+          </form>
         </div>
 
         {/* Save Button */}

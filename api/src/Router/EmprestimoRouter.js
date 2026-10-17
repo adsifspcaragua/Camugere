@@ -1,24 +1,31 @@
-import express from 'express';
-import createEmprestimoController from '../Controller/Emprestimo/createEmprestimoController.js';
-import listEmprestimoController from '../Controller/Emprestimo/listEmprestimoController.js';
-import getEmprestimoByIdController from '../Controller/Emprestimo/getEmprestimoByIdController.js';
-import deleteEmprestimoController from '../Controller/Emprestimo/deleteEmprestimoController.js';
-import updateEmprestimoController from '../Controller/Emprestimo/updateEmprestimoController.js';
-import listEmprestimoAtrasadoController from '../Controller/Emprestimo/listEmprestimoAtrasadoController.js';
-import listEmprestimoAtivoController from '../Controller/Emprestimo/listEmprestimoAtivoController.js';
-import getEmprestimoByIdExemplarController from '../Controller/Emprestimo/getEmprestimoByIdExemplarController.js';
-import changeStatusDevolucaoEmprestimoController from '../Controller/Emprestimo/changeStatusDevolucaoEmprestimoController.js';
+import express from "express"
+import createEmprestimoController from "../Controller/Emprestimo/createEmprestimoController.js"
+import listEmprestimoController from "../Controller/Emprestimo/listEmprestimoController.js"
+import getEmprestimoByIdController from "../Controller/Emprestimo/getEmprestimoByIdController.js"
+import deleteEmprestimoController from "../Controller/Emprestimo/deleteEmprestimoController.js"
+import updateEmprestimoController from "../Controller/Emprestimo/updateEmprestimoController.js"
+import listEmprestimoAtrasadoController from "../Controller/Emprestimo/listEmprestimoAtrasadoController.js"
+import listEmprestimoAtivoController from "../Controller/Emprestimo/listEmprestimoAtivoController.js"
+import getEmprestimoByIdExemplarController from "../Controller/Emprestimo/getEmprestimoByIdExemplarController.js"
+import changeStatusDevolucaoEmprestimoController from "../Controller/Emprestimo/changeStatusDevolucaoEmprestimoController.js"
+import listEmprestimoLeitorController from "../Controller/Emprestimo/listEmprestimoLeitorController.js"
+import listEmprestimoLeitorAtivoController from "../Controller/Emprestimo/listEmprestimoLeitorAtivoController.js"
 
-const router = express.Router();
+const router = express.Router()
 
-router.post('/create', createEmprestimoController)
-router.get('/list', listEmprestimoController)
-router.get('/list/atrasados', listEmprestimoAtrasadoController)
-router.get('/get/:id', getEmprestimoByIdController)
-router.delete('/delete/:id', deleteEmprestimoController)
-router.put('/update/:id', updateEmprestimoController)
-router.get('/getbyexemplar/:id', getEmprestimoByIdExemplarController)
-router.get('/list/ativos', listEmprestimoAtivoController)
-router.patch('/change-status-devolucao/:id', changeStatusDevolucaoEmprestimoController)
+router.post("/create", createEmprestimoController)
+router.get("/list", listEmprestimoController)
+router.get("/list/atrasados", listEmprestimoAtrasadoController)
+router.get("/get/:id", getEmprestimoByIdController)
+router.delete("/delete/:id", deleteEmprestimoController)
+router.put("/update/:id", updateEmprestimoController)
+router.get("/getbyexemplar/:id", getEmprestimoByIdExemplarController)
+router.get("/list/ativos", listEmprestimoAtivoController)
+router.patch(
+  "/change-status-devolucao/:id",
+  changeStatusDevolucaoEmprestimoController,
+)
+router.get("/leitor/:id/ativos", listEmprestimoLeitorAtivoController)
+router.get("/leitor/:id", listEmprestimoLeitorController)
 
 export default router

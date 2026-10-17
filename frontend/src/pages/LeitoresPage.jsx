@@ -9,6 +9,10 @@ import {
   Plus,
   Pencil,
   Trash2,
+  Eye,
+  Ban,
+  CheckCircle,
+  X,
 } from "lucide-react"
 
 export default function LeitoresPage({
@@ -17,8 +21,13 @@ export default function LeitoresPage({
   onAddLeitor,
   onEditLeitor,
   onDeleteLeitor,
+  onSuspendLeitor,
+  onReactivateLeitor,
+  onLoadHistory,
+  readerDetails = {},
 }) {
   const [search, setSearch] = useState("")
+  const [selectedLeitorId, setSelectedLeitorId] = useState(null)
 
   const leitoresEnriched = useMemo(() => {
     return leitores.map((leitor) => {
@@ -30,11 +39,15 @@ export default function LeitoresPage({
       )
       const today = new Date().toISOString().split("T")[0]
       const atrasos = ativos.filter((e) => e.dataDevolucaoPrevista < today)
+      const bloqueado =
+        leitor.podeEmprestar === false &&
+        (!leitor.suspensoAte || new Date(leitor.suspensoAte) > new Date())
       return {
         ...leitor,
         ativos,
         devolvidos,
         atrasos,
+        bloqueado,
         totalEmprestimos: ativos.length + devolvidos.length,
       }
     })
@@ -51,6 +64,20 @@ export default function LeitoresPage({
       ),
     )
   }, [leitoresEnriched, search])
+
+  const selectedLeitor = selectedLeitorId
+    ? leitoresEnriched.find((l) => l.idLeitor === selectedLeitorId)
+    : null
+  const detail = selectedLeitor ? readerDetails[selectedLeitor.idLeitor] : null
+  const activeSuspensao = detail?.suspensoes?.find(
+    (s) =>
+      !s.dataReativacao && (!s.dataFim || new Date(s.dataFim) > new Date()),
+  )
+
+  const openHistory = (leitor) => {
+    setSelectedLeitorId(leitor.idLeitor)
+    onLoadHistory?.(leitor.idLeitor)
+  }
 
   return (
     <div className="space-y-6">
@@ -116,9 +143,40 @@ export default function LeitoresPage({
                     </div>
                   )}
                 </div>
+                <span
+                  className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${leitor.bloqueado ? "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"}`}
+                >
+                  {leitor.bloqueado ? "Bloqueado" : "Ativo"}
+                </span>
               </div>
               {/* Action buttons */}
               <div className="flex gap-1 flex-shrink-0">
+                <button
+                  onClick={() => openHistory(leitor)}
+                  className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-100 hover:text-brand-600 dark:hover:bg-surface-800 dark:hover:text-brand-400"
+                  title="Ver histórico do leitor"
+                >
+                  <Eye size={15} />
+                </button>
+                {leitor.bloqueado ? (
+                  <button
+                    onClick={() =>
+                      onReactivateLeitor?.(leitor, activeSuspensao?.id)
+                    }
+                    className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-400"
+                    title="Reativar leitor"
+                  >
+                    <CheckCircle size={15} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onSuspendLeitor?.(leitor)}
+                    className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-500/10 dark:hover:text-amber-400"
+                    title="Suspender leitor"
+                  >
+                    <Ban size={15} />
+                  </button>
+                )}
                 <button
                   onClick={() => onEditLeitor && onEditLeitor(leitor)}
                   className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-100 hover:text-brand-600 dark:hover:bg-surface-800 dark:hover:text-brand-400"
@@ -175,6 +233,113 @@ export default function LeitoresPage({
           </div>
         )}
       </div>
+      {selectedLeitor && (
+        <div
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setSelectedLeitorId(null)}
+        >
+          <section
+            className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl dark:bg-surface-900"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-label={`Histórico de ${selectedLeitor.nome}`}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-bold text-surface-900 dark:text-white">
+                  Histórico de {selectedLeitor.nome}
+                </h3>
+                <p className="mt-1 text-sm text-surface-500">
+                  Empréstimos e suspensões registradas
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedLeitorId(null)}
+                className="rounded-lg p-2 text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800"
+                aria-label="Fechar histórico"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            {!detail ? (
+              <p className="py-8 text-sm text-surface-500">
+                Carregando histórico...
+              </p>
+            ) : (
+              <div className="mt-6 space-y-6">
+                <div>
+                  <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-surface-500">
+                    Empréstimos ativos ({detail.ativos?.length || 0})
+                  </h4>
+                  <div className="space-y-2">
+                    {(detail.ativos || []).map((loan) => (
+                      <div
+                        key={loan.id}
+                        className="rounded-xl bg-surface-50 p-3 text-sm dark:bg-surface-800"
+                      >
+                        <strong>{loan.exemplar?.obra?.titulo || "Obra"}</strong>{" "}
+                        · desde{" "}
+                        {new Date(loan.dataInicio).toLocaleDateString("pt-BR")}
+                      </div>
+                    ))}
+                    {!detail.ativos?.length && (
+                      <p className="text-sm text-surface-500">
+                        Nenhum empréstimo ativo.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-surface-500">
+                    Histórico de empréstimos ({detail.emprestimos?.length || 0})
+                  </h4>
+                  <div className="space-y-2">
+                    {(detail.emprestimos || []).map((loan) => (
+                      <div
+                        key={loan.id}
+                        className="flex justify-between rounded-xl border border-surface-100 p-3 text-sm dark:border-surface-800"
+                      >
+                        <span>{loan.exemplar?.obra?.titulo || "Obra"}</span>
+                        <span className="text-surface-500">
+                          {loan.statusDevolucao ? "Devolvido" : "Ativo"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="mb-3 text-sm font-bold uppercase tracking-wider text-surface-500">
+                    Histórico de suspensões ({detail.suspensoes?.length || 0})
+                  </h4>
+                  <div className="space-y-2">
+                    {(detail.suspensoes || []).map((suspensao) => (
+                      <div
+                        key={suspensao.id}
+                        className="rounded-xl border border-surface-100 p-3 text-sm dark:border-surface-800"
+                      >
+                        <p className="font-medium">{suspensao.motivo}</p>
+                        <p className="mt-1 text-surface-500">
+                          {new Date(suspensao.dataInicio).toLocaleDateString(
+                            "pt-BR",
+                          )}{" "}
+                          {suspensao.dataReativacao
+                            ? `· reativado em ${new Date(suspensao.dataReativacao).toLocaleDateString("pt-BR")}`
+                            : "· ativo"}
+                        </p>
+                      </div>
+                    ))}
+                    {!detail.suspensoes?.length && (
+                      <p className="text-sm text-surface-500">
+                        Nenhuma suspensão registrada.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   )
 }

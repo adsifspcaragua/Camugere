@@ -1,64 +1,80 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { X, BookOpen, User, Calendar, Search, Hash, ChevronRight, Mail } from "lucide-react";
-import Autocomplete from "./Autocomplete";
-import { listLeitores } from "../../services/leitorService.js";
-import { listExemplaresDisponiveis } from "../../services/exemplarService.js";
-import { getUsuarioById } from "../../services/usuarioService.js";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
+import {
+  X,
+  BookOpen,
+  User,
+  Calendar,
+  Search,
+  Hash,
+  ChevronRight,
+  Mail,
+} from "lucide-react"
+import Autocomplete from "./Autocomplete"
+import { listLeitores } from "../../services/leitorService.js"
+import { listExemplaresDisponiveis } from "../../services/exemplarService.js"
+import { getUsuarioById } from "../../services/usuarioService.js"
 
 // Adicionada a prop 'obras' para receber a lista verdadeira do banco
-export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares, obras = [], onConfirm }) {
-  const [selectedLeitor, setSelectedLeitor] = useState(null);
-  const [selectedExemplar, setSelectedExemplar] = useState(null);
-  const [dataDevolucao, setDataDevolucao] = useState("");
-  const [enviarNotificacao, setEnviarNotificacao] = useState(true);
-  const [exemplaresDisponiveis, setExemplaresDisponiveis] = useState([]);
-  const [leitores, setLeitores] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false); // Trava contra múltiplos cliques
-  const drawerRef = useRef(null);
+export default function NewLoanDrawer({
+  isOpen,
+  onClose,
+  emprestimos,
+  exemplares,
+  obras = [],
+  onConfirm,
+}) {
+  const [selectedLeitor, setSelectedLeitor] = useState(null)
+  const [selectedExemplar, setSelectedExemplar] = useState(null)
+  const [dataDevolucao, setDataDevolucao] = useState("")
+  const [enviarNotificacao, setEnviarNotificacao] = useState(true)
+  const [exemplaresDisponiveis, setExemplaresDisponiveis] = useState([])
+  const [leitores, setLeitores] = useState([])
+  const [isSubmitting, setIsSubmitting] = useState(false) // Trava contra múltiplos cliques
+  const drawerRef = useRef(null)
 
   // Inicializa a data para daqui a 14 dias sempre que a gaveta abre
   useEffect(() => {
     if (isOpen) {
-      const date = new Date();
-      date.setDate(date.getDate() + 14);
-      setDataDevolucao(date.toISOString().split("T")[0]);
-      setSelectedLeitor(null);
-      setSelectedExemplar(null);
-      setEnviarNotificacao(true);
-      setIsSubmitting(false); // Destrava o botão ao abrir a gaveta
+      const date = new Date()
+      date.setDate(date.getDate() + 14)
+      setDataDevolucao(date.toISOString().split("T")[0])
+      setSelectedLeitor(null)
+      setSelectedExemplar(null)
+      setEnviarNotificacao(true)
+      setIsSubmitting(false) // Destrava o botão ao abrir a gaveta
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   useEffect(() => {
     const loadData = async () => {
       try {
         // Leitores: usamos a lógica do colega para buscar os dados de usuário do leitor
-        const lei = await listLeitores();
+        const lei = await listLeitores()
         const dataLeitores = await Promise.all(
           lei.data.map(async (l) => {
-            const usu = await getUsuarioById(l.id_usuario);
-            return { usuario: usu.data, leitor: l };
-          })
-        );
-        setLeitores(dataLeitores);
+            const usu = await getUsuarioById(l.id_usuario)
+            return { usuario: usu.data, leitor: l }
+          }),
+        )
+        setLeitores(dataLeitores)
 
         // Exemplares: apenas baixamos os disponíveis para fazer o cruzamento rápido abaixo
-        const exe = await listExemplaresDisponiveis();
-        setExemplaresDisponiveis(exe.data);
+        const exe = await listExemplaresDisponiveis()
+        setExemplaresDisponiveis(exe.data)
       } catch (error) {
-        console.error("Erro ao carregar dados locais:", error);
+        console.error("Erro ao carregar dados locais:", error)
       }
-    };
+    }
 
     if (isOpen) {
-      loadData();
+      loadData()
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === "Escape") onClose();
-    };
+      if (e.key === "Escape") onClose()
+    }
     if (isOpen) {
       document.addEventListener("keydown", handleEsc)
       return () => document.removeEventListener("keydown", handleEsc)
@@ -67,42 +83,44 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
 
   // CRUZAMENTO REAL: Junta os exemplares disponíveis com as obras do Banco de Dados (Ultra Rápido)
   const availableExemplares = useMemo(() => {
-    const apiList = exemplaresDisponiveis || [];
-    const propList = exemplares || [];
+    const apiList = exemplaresDisponiveis || []
+    const propList = exemplares || []
 
     // Combinar ambos sem duplicatas por idExemplar/id
-    const map = new Map();
+    const map = new Map()
 
     // 1. Adicionar exemplares disponíveis da API
     apiList.forEach((e) => {
-      const id = e.idExemplar ?? e.id;
+      const id = e.idExemplar ?? e.id
       if (id && e.disponivel !== false) {
-        map.set(id, { ...e, idExemplar: id });
+        map.set(id, { ...e, idExemplar: id })
       }
-    });
+    })
 
     // 2. Adicionar/fundir com exemplares de props (garante que obras recém-cadastradas apareçam imediatamente)
     propList.forEach((e) => {
-      const id = e.idExemplar ?? e.id;
+      const id = e.idExemplar ?? e.id
       if (id && e.disponivel !== false && !map.has(id)) {
-        map.set(id, { ...e, idExemplar: id });
+        map.set(id, { ...e, idExemplar: id })
       }
-    });
+    })
 
     // 3. Filtrar qualquer exemplar que possua empréstimo ativo em 'emprestimos'
     const listaFinal = Array.from(map.values()).filter((e) => {
-      const idEx = e.idExemplar ?? e.id;
+      const idEx = e.idExemplar ?? e.id
       const temEmprestimoAtivo = (emprestimos || []).some((emp) => {
-        const empExId = emp.idExemplar ?? emp.id_exemplar;
-        const isAtivo = emp.status === "ativo" || emp.statusDevolucao === false;
-        return empExId === idEx && isAtivo;
-      });
-      return !temEmprestimoAtivo && e.disponivel !== false;
-    });
+        const empExId = emp.idExemplar ?? emp.id_exemplar
+        const isAtivo = emp.status === "ativo" || emp.statusDevolucao === false
+        return empExId === idEx && isAtivo
+      })
+      return !temEmprestimoAtivo && e.disponivel !== false
+    })
 
     return listaFinal.map((e) => {
-      const idObraCruzar = e.idObra ?? e.id_obra;
-      const obra = obras.find((o) => (o.idObra ?? o.id) === idObraCruzar || o.id === idObraCruzar);
+      const idObraCruzar = e.idObra ?? e.id_obra
+      const obra = obras.find(
+        (o) => (o.idObra ?? o.id) === idObraCruzar || o.id === idObraCruzar,
+      )
       return {
         ...e,
         idExemplar: e.idExemplar ?? e.id,
@@ -111,19 +129,19 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
         autor: obra?.autor || e.autor || "—",
         capa: obra?.capa || e.capa || "📕",
         capaUrl: obra?.capaUrl || e.capaUrl,
-      };
-    });
-  }, [exemplaresDisponiveis, exemplares, obras, emprestimos]);
+      }
+    })
+  }, [exemplaresDisponiveis, exemplares, obras, emprestimos])
 
   const filterLeitores = useCallback((items, query) => {
-    if (!query.trim()) return items;
-    const q = query.toLowerCase();
+    if (!query.trim()) return items
+    const q = query.toLowerCase()
     return items.filter(
       (l) =>
         l.usuario.nome.toLowerCase().includes(q) ||
-        l.leitor.telefone.toLowerCase().includes(q)
-    );
-  }, []);
+        l.leitor.telefone.toLowerCase().includes(q),
+    )
+  }, [])
 
   const filterExemplares = useCallback((items, query) => {
     if (!query.trim()) return items
@@ -132,41 +150,46 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
       (e) =>
         e.titulo.toLowerCase().includes(q) ||
         e.numeroInventario.toLowerCase().includes(q) ||
-        e.autor.toLowerCase().includes(q)
-    );
-  }, []);
+        e.autor.toLowerCase().includes(q),
+    )
+  }, [])
 
   const returnDayLabel = useMemo(() => {
-    if (!dataDevolucao) return "";
-    const d = new Date(dataDevolucao + "T12:00:00");
-    return d.toLocaleDateString("pt-BR", { weekday: "long" });
-  }, [dataDevolucao]);
+    if (!dataDevolucao) return ""
+    const d = new Date(dataDevolucao + "T12:00:00")
+    return d.toLocaleDateString("pt-BR", { weekday: "long" })
+  }, [dataDevolucao])
 
-  const canSubmit = selectedLeitor && selectedExemplar && dataDevolucao;
+  const canSubmit = selectedLeitor && selectedExemplar && dataDevolucao
+  const leitorBloqueado = (item) =>
+    item?.leitor?.podeEmprestar === false &&
+    (!item.leitor.suspensoAte || new Date(item.leitor.suspensoAte) > new Date())
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!canSubmit || isSubmitting) return;
+    e.preventDefault()
+    if (!canSubmit || isSubmitting) return
 
-    setIsSubmitting(true);
-    
+    setIsSubmitting(true)
+
     try {
       // O banco de dados pede a quantidade de dias. Aqui fazemos o cálculo automático!
-      const dataEscolhida = new Date(dataDevolucao + "T12:00:00");
-      const hoje = new Date();
-      const diasCalculados = Math.ceil((dataEscolhida - hoje) / (1000 * 60 * 60 * 24));
+      const dataEscolhida = new Date(dataDevolucao + "T12:00:00")
+      const hoje = new Date()
+      const diasCalculados = Math.ceil(
+        (dataEscolhida - hoje) / (1000 * 60 * 60 * 24),
+      )
 
       // Passa os dias calculados e a escolha de notificação por e-mail para o App.jsx
       await onConfirm(
         selectedExemplar.id || selectedExemplar.idExemplar,
         selectedLeitor.leitor.id,
         diasCalculados,
-        enviarNotificacao
-      );
+        enviarNotificacao,
+      )
     } catch (error) {
-      setIsSubmitting(false); 
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <>
@@ -222,6 +245,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                 items={leitores}
                 filterFn={filterLeitores}
                 renderItem={(l) => {
+                  const bloqueado = leitorBloqueado(l)
                   return (
                     <div className="flex w-full items-center justify-between">
                       <div>
@@ -231,11 +255,17 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                         <p className="text-base text-surface-400 dark:text-surface-500">
                           {l.leitor.telefone}
                         </p>
+                        {bloqueado && (
+                          <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                            Bloqueado para empréstimos
+                          </p>
+                        )}
                       </div>
                     </div>
                   )
                 }}
                 onSelect={(l) => setSelectedLeitor(l)}
+                isItemDisabled={leitorBloqueado}
                 placeholder="Buscar leitor pelo nome..."
                 selected={selectedLeitor}
                 selectedLabel={selectedLeitor?.usuario.nome}
@@ -295,7 +325,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                 type="date"
                 value={dataDevolucao}
                 onChange={(e) => setDataDevolucao(e.target.value)}
-                min={new Date().toISOString().split("T")[0]} 
+                min={new Date().toISOString().split("T")[0]}
                 className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-3 px-4 text-base text-surface-900 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-white dark:focus:bg-surface-800 dark:focus:border-brand-500 cursor-text"
                 required
               />
@@ -383,7 +413,7 @@ export default function NewLoanDrawer({ isOpen, onClose, emprestimos, exemplares
                       Devolver até:{" "}
                       <strong>
                         {new Date(
-                          dataDevolucao + "T12:00:00"
+                          dataDevolucao + "T12:00:00",
                         ).toLocaleDateString("pt-BR")}{" "}
                         ({returnDayLabel})
                       </strong>

@@ -12,6 +12,7 @@ export default function Autocomplete({
   onClear,
   icon: Icon = Search,
   disabled = false,
+  isItemDisabled = () => false,
 }) {
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
@@ -51,6 +52,7 @@ export default function Autocomplete({
   }, [highlightIndex])
 
   const handleSelect = (item) => {
+    if (isItemDisabled(item)) return
     onSelect(item)
     setQuery("")
     setOpen(false)
@@ -161,9 +163,11 @@ export default function Autocomplete({
               type="button"
               role="option"
               aria-selected={i === highlightIndex}
+              aria-disabled={isItemDisabled(item)}
+              disabled={isItemDisabled(item)}
               onClick={() => handleSelect(item)}
               onMouseEnter={() => setHighlightIndex(i)}
-              className={`flex w-full items-center gap-3 px-4 py-3 text-left text-base transition-colors focus:outline-none ${
+              className={`flex w-full items-center gap-3 px-4 py-3 text-left text-base transition-colors focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${
                 i === highlightIndex
                   ? "bg-brand-50 dark:bg-brand-500/10"
                   : "hover:bg-surface-50 dark:hover:bg-surface-800"
