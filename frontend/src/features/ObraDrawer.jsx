@@ -9,7 +9,7 @@ import { useToast } from "../context/ToastContext.jsx";
 import { useForm } from "../hooks/useForm.js";
 import { useGuardedClose } from "../hooks/useGuardedClose.js";
 import { buscarPorIsbn, buscarPorTitulo, pareceIsbn } from "../services/catalogoService.js";
-import { MAX_CAPA_BYTES, uploadCapa } from "../services/capaService.js";
+import { MAX_CAPA_BYTES, uploadCapa, uploadCapaUrl } from "../services/capaService.js";
 
 const EMPTY = {
   isbn: "",
@@ -174,16 +174,36 @@ function ObraForm({ obra, onClose }) {
   const [saving, setSaving] = useState(false);
   const [detalhes, setDetalhes] = useState(true);
   const [buscandoIsbnCampo, setBuscandoIsbnCampo] = useState(false);
+  const [baixandoCapaUrl, setBaixandoCapaUrl] = useState(false);
 
   const valid = values.titulo.trim() && values.autor.trim();
+
+  const internalizarUrlSeRemota = useCallback(
+    async (urlStr) => {
+      const limpa = String(urlStr ?? "").trim();
+      if (!limpa || limpa.includes("/uploads/capas/")) return;
+      if (!/^https?:\/\//i.test(limpa) && !limpa.startsWith("data:image/")) return;
+      setBaixandoCapaUrl(true);
+      try {
+        const localUrl = await uploadCapaUrl(limpa);
+        set({ capaUrl: localUrl });
+      } catch (error) {
+        toast.error(error.message);
+      } finally {
+        setBaixandoCapaUrl(false);
+      }
+    },
+    [set, toast],
+  );
 
   const preencher = useCallback(
     (livro) => {
       set(Object.fromEntries(Object.entries(livro).filter(([k, v]) => k in EMPTY && v)));
       setDetalhes(true);
       toast.info(`Dados preenchidos (${livro.fonte}). Confira antes de salvar.`);
+      if (livro.capaUrl) internalizarUrlSeRemota(livro.capaUrl);
     },
-    [set, toast],
+    [set, toast, internalizarUrlSeRemota],
   );
 
   const buscarPeloCampoIsbn = async () => {
@@ -242,7 +262,14 @@ function ObraForm({ obra, onClose }) {
         <div className="min-w-0 space-y-4">
           <TextField label="Título" {...field("titulo")} required />
           <TextField label="Autoria" {...field("autor")} hint="Vários autores: separe por vírgula." placeholder="Carolina Maria de Jesus" required />
-          <TextField label="URL da capa" {...field("capaUrl")} placeholder="https://... (ou envie arquivo ao lado)" optional />
+          <TextField
+            label="URL da capa"
+            {...field("capaUrl")}
+            onBlur={(e) => internalizarUrlSeRemota(e.target.value)}
+            hint={baixandoCapaUrl ? "Baixando imagem para o servidor…" : "Cole um link da internet ou envie arquivo ao lado."}
+            placeholder="https://..."
+            optional
+          />
         </div>
       </div>
 

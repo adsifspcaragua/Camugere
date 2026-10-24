@@ -15,16 +15,22 @@ export const criar = (dados) => prisma.autor.create({ data: dados, select });
 export const atualizar = (id, dados) => prisma.autor.update({ where: { id }, data: dados, select });
 export const remover = (id) => prisma.autor.delete({ where: { id }, select });
 
-// "Machado de Assis, Clarice Lispector" -> [{ nome: "Machado", sobrenome: "de Assis" }, ...]
+// "Machado de Assis, Clarice Lispector" -> [{ nome: "Machado", sobrenome: "de Assis" }, ...] sem duplicatas
 export function parseAutores(texto = "") {
-  return texto
-    .split(",")
-    .map((nome) => nome.trim())
-    .filter(Boolean)
-    .map((nomeCompleto) => {
-      const [nome, ...resto] = nomeCompleto.split(/\s+/);
-      return { nome: nome.slice(0, 80), sobrenome: resto.join(" ").slice(0, 80) };
-    });
+  const vistos = new Set();
+  const resultado = [];
+  for (const parte of texto.split(",")) {
+    const nomeCompleto = parte.trim();
+    if (!nomeCompleto) continue;
+    const [nomeRaw, ...resto] = nomeCompleto.split(/\s+/);
+    const nome = nomeRaw.slice(0, 80);
+    const sobrenome = resto.join(" ").slice(0, 80);
+    const chave = `${nome.toLowerCase()}|${sobrenome.toLowerCase()}`;
+    if (vistos.has(chave)) continue;
+    vistos.add(chave);
+    resultado.push({ nome, sobrenome });
+  }
+  return resultado;
 }
 
 export const formatarNomeAutor = ({ nome, sobrenome }) => `${nome} ${sobrenome}`.trim();

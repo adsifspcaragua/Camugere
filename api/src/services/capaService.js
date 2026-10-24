@@ -76,8 +76,32 @@ async function lerCorpoLimitado(response) {
   return Buffer.concat(chunks);
 }
 
+const DATA_URL_MIMES = {
+  "image/jpeg": ".jpg",
+  "image/jpg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+};
+
+async function salvarDataUrl(dataUrl) {
+  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/s.exec(dataUrl);
+  if (!match) throw new Error("Data URL de imagem inválida.");
+  const ext = DATA_URL_MIMES[match[1].toLowerCase()];
+  if (!ext) throw new Error("Formato inválido. Use JPG, PNG, WEBP ou GIF.");
+  const buffer = Buffer.from(match[2], "base64");
+  if (buffer.length > MAX_CAPA_BYTES) throw new Error("Imagem maior que 5MB.");
+  const realExt = detectarExtensao(buffer) || ext;
+  const nome = gerarNomeArquivo(realExt);
+  await fs.promises.writeFile(path.join(CAPAS_DIR, nome), buffer);
+  return `${CAPA_PATH_PREFIX}${nome}`;
+}
+
 // Baixa uma imagem remota e salva no Storage local. Retorna o caminho relativo (/uploads/capas/xxx)
 export async function baixarCapaRemota(urlStr) {
+  if (urlStr.startsWith("data:image/")) {
+    return salvarDataUrl(urlStr);
+  }
   let atual = urlStr;
   for (let i = 0; i <= MAX_REDIRECTS; i++) {
     const url = await validarUrlRemota(atual);

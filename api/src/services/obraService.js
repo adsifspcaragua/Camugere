@@ -32,15 +32,20 @@ const vincularCdd = (codigo, descricao) =>
     },
   };
 
-const criarVinculosAutores = (texto) =>
-  parseAutores(texto).map(({ nome, sobrenome }) => ({
-    autor: {
-      connectOrCreate: {
-        where: { nome_sobrenome: { nome, sobrenome } },
-        create: { nome, sobrenome },
-      },
-    },
-  }));
+async function garantirAutores(tx, texto) {
+  const lista = parseAutores(texto);
+  const ids = [];
+  for (const { nome, sobrenome } of lista) {
+    const existente = await tx.autor.findFirst({ where: { nome, sobrenome }, select: { id: true } });
+    if (existente) {
+      ids.push(existente.id);
+    } else {
+      const criado = await tx.autor.create({ data: { nome, sobrenome }, select: { id: true } });
+      ids.push(criado.id);
+    }
+  }
+  return [...new Set(ids)].map((id_autor) => ({ id_autor }));
+}
 
 export async function listar() {
   const obras = await prisma.obra.findMany({ where: { ativa: true }, include, orderBy: { titulo: "asc" } });
@@ -54,12 +59,17 @@ export async function buscarPorId(id) {
 }
 
 export async function criar({ autor, cdd, cddDescricao, numExemplares, ...dados }) {
+  if (dados.isbn) {
+    const existente = await prisma.obra.findFirst({ where: { isbn: dados.isbn }, select: { id: true, titulo: true } });
+    if (existente) throw conflict(`Já existe uma obra cadastrada com este ISBN (${existente.titulo}).`);
+  }
   const obra = await prisma.$transaction(async (tx) => {
+    const vinculosAutores = await garantirAutores(tx, autor);
     const criada = await tx.obra.create({
       data: {
         ...dados,
         ...vincularCdd(cdd, cddDescricao),
-        autores: { create: criarVinculosAutores(autor) },
+        autores: { create: vinculosAutores },
       },
     });
     await criarParaObra(tx, criada.id, numExemplares);
@@ -69,15 +79,22 @@ export async function criar({ autor, cdd, cddDescricao, numExemplares, ...dados 
 }
 
 export async function atualizar(id, { autor, cdd, cddDescricao, ...dados }) {
-  const obra = await prisma.obra.update({
-    where: { id },
-    data: {
-      ...dados,
-      ...vincularCdd(cdd, cddDescricao),
-      ...(cdd === null && { cdd: { disconnect: true } }),
-      ...(autor !== undefined && { autores: { deleteMany: {}, create: criarVinculosAutores(autor) } }),
-    },
-    include,
+  if (dados.isbn) {
+    const existente = await prisma.obra.findFirst({ where: { isbn: dados.isbn, NOT: { id } }, select: { id: true, titulo: true } });
+    if (existente) throw conflict(`Este ISBN já pertence à obra “${existente.titulo}”.`);
+  }
+  const obra = await prisma.$transaction(async (tx) => {
+    const vinculosAutores = autor !== undefined ? await garantirAutores(tx, autor) : undefined;
+    return tx.obra.update({
+      where: { id },
+      data: {
+        ...dados,
+        ...vincularCdd(cdd, cddDescricao),
+        ...(cdd === null && { cdd: { disconnect: true } }),
+        ...(vinculosAutores !== undefined && { autores: { deleteMany: {}, create: vinculosAutores } }),
+      },
+      include,
+    });
   });
   return formatarObra(obra);
 }

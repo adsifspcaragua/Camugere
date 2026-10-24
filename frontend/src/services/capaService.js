@@ -7,3 +7,7 @@ export async function uploadCapa(file) {
   form.append("capa", file);
   return (await api.post("/upload/capa", form)).url;
 }
+
+export async function uploadCapaUrl(url) {
+  return (await api.post("/upload/capa", { url })).url;
+}

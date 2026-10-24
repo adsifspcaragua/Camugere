@@ -14,7 +14,7 @@ const base = z.object({
   edicao: textoOpcional(20),
   numeroPaginas: z.coerce.number().int().min(0).default(0),
   resumo: textoOpcional(10000),
-  capaUrl: textoOpcional(500),
+  capaUrl: textoOpcional(2000),
   ativa: z.boolean().default(true),
   // Relacionamentos resolvidos no service
   autor: z.string().trim().nullish(),
