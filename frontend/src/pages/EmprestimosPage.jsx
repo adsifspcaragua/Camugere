@@ -1,333 +1,143 @@
-import { useMemo, useState, useCallback } from "react";
-import { Hash, CornerDownLeft, Clock, CheckCircle2, AlertTriangle, RefreshCcw, Trash2 } from "lucide-react";
-import ConfirmDialog from "../components/ConfirmDialog";
-import { useToast } from "../context/ToastContext";
-import { deleteEmprestimo } from "../../services/emprestimoService";
+import { useMemo, useState } from "react";
+import { ArrowLeftRight, CornerDownLeft, Plus, RefreshCcw, Trash2 } from "lucide-react";
+import { useLibrary } from "../context/LibraryContext.jsx";
+import { useConfirm } from "../context/ConfirmContext.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
+import { Panel } from "../components/ui/Panel.jsx";
+import Button from "../components/ui/Button.jsx";
+import Badge from "../components/ui/Badge.jsx";
+import Cover from "../components/ui/Cover.jsx";
+import Segmented from "../components/ui/Segmented.jsx";
+import SearchInput from "../components/ui/SearchInput.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import { formatDate, matches } from "../lib/format.js";
+import { loanStatus } from "../lib/loans.js";
+import { loadSettings } from "../services/settings.js";
 
-const TABS = [
-  { id: "ativos", label: "Ativos", icon: Clock },
-  { id: "atrasados", label: "Atrasados", icon: AlertTriangle },
-  { id: "devolvidos", label: "Devolvidos", icon: CheckCircle2 },
-]
+const TABS = {
+  ativos: { label: "Em dia", filter: (l) => !l.devolvido && !l.atrasado, sort: (a, b) => a.dataPrevista - b.dataPrevista },
+  atrasados: { label: "Em atraso", filter: (l) => l.atrasado, sort: (a, b) => a.dataPrevista - b.dataPrevista },
+  devolvidos: { label: "Devolvidos", filter: (l) => l.devolvido, sort: (a, b) => b.dataDevolucao - a.dataDevolucao },
+};
 
-export default function EmprestimosPage({
-  exemplares,
-  emprestimos,
-  obras,
-  leitores,
-  onOpenLoan,
-  onReturn,
-  onRenew,
-  onDeleteEmprestimo,
-  onDelete,
-}) {
-  const [activeTab, setActiveTab] = useState("ativos");
-  const [apagados, setApagados] = useState([]); // <-- Memória para itens apagados
-  const [confirmDialog, setConfirmDialog] = useState(null);
-  const { addToast } = useToast();
-  const today = new Date().toISOString().split("T")[0];
+const EMPTY = {
+  ativos: "Nenhum empréstimo em andamento.",
+  atrasados: "Nenhum atraso. Todos os empréstimos estão em dia.",
+  devolvidos: "Nenhuma devolução registrada ainda.",
+};
 
- const enriched = useMemo(() => {
-    return emprestimos
-      .filter((emp) => !apagados.includes(emp.idEmprestimo)) // <-- Esconde os itens apagados!
-      .map((emp) => {
-        const idEx = Number(emp.idExemplar ?? emp.id_exemplar);
-        const idLei = Number(emp.idLeitor ?? emp.id_leitor);
-        const ex = exemplares.find((e) => Number(e.idExemplar ?? e.id) === idEx) || emp.exemplar || null;
-        const idOb = Number(ex?.idObra ?? ex?.id_obra ?? emp.exemplar?.id_obra);
-        const obra = (idOb ? obras.find((o) => Number(o.idObra ?? o.id) === idOb) : null) || ex?.obra || emp.exemplar?.obra || null;
-        const leitor = leitores.find((l) => Number(l.idLeitor ?? l.id) === idLei) || (emp.leitor?.usuario ? { ...emp.leitor, nome: emp.leitor.usuario.nome } : emp.leitor) || null;
-        const isOverdue = emp.status === "ativo" && emp.dataDevolucaoPrevista < today;
-        return { ...emp, exemplar: ex, obra, leitor, isOverdue };
-      }).sort((a, b) => new Date(a.dataDevolucaoPrevista) - new Date(b.dataDevolucaoPrevista));
-  }, [emprestimos, exemplares, obras, leitores, today, apagados]); // <-- 'apagados' adicionado aqui no final
+export default function EmprestimosPage({ onNewLoan }) {
+  const { loans, returnLoan, renewLoan, deleteLoan } = useLibrary();
+  const confirm = useConfirm();
+  const [tab, setTab] = useState(() => (loans.some((l) => l.atrasado) ? "atrasados" : "ativos"));
+  const [query, setQuery] = useState("");
+  const { renovacaoDias } = useMemo(() => loadSettings(), []);
 
-  const filtered = useMemo(() => {
-    switch (activeTab) {
-      case "ativos":
-        return enriched.filter((e) => e.status === "ativo" && !e.isOverdue)
-      case "atrasados":
-        return enriched.filter((e) => e.isOverdue)
-      case "devolvidos":
-        return enriched.filter((e) => e.status === "devolvido")
-      default:
-        return enriched
+  const counts = useMemo(() => Object.fromEntries(Object.entries(TABS).map(([k, t]) => [k, loans.filter(t.filter).length])), [loans]);
+
+  const rows = useMemo(
+    () =>
+      loans
+        .filter(TABS[tab].filter)
+        .filter((l) => matches(query, l.obra.titulo, l.leitor.nome, l.exemplar.numeroInventario))
+        .sort(TABS[tab].sort),
+    [loans, tab, query],
+  );
+
+  const remove = async (loan) => {
+    if (await confirm({ title: "Apagar do histórico?", message: `O registro de “${loan.obra.titulo}” emprestado a ${loan.leitor.nome} será apagado.`, confirmLabel: "Apagar" })) {
+      deleteLoan(loan).catch(() => {});
     }
-  }, [enriched, activeTab])
-
-  const tabCounts = useMemo(
-    () => ({
-      ativos: enriched.filter((e) => e.status === "ativo" && !e.isOverdue)
-        .length,
-      atrasados: enriched.filter((e) => e.isOverdue).length,
-      devolvidos: enriched.filter((e) => e.status === "devolvido").length,
-    }),
-    [enriched],
-  )
-
-  const handleInlineReturn = useCallback(
-    (idExemplar) => {
-      if (onReturn) onReturn(idExemplar)
-    },
-    [onReturn],
-  )
-
-  const handleInlineRenew = useCallback(
-    (idEmprestimo) => {
-      if (onRenew) onRenew(idEmprestimo)
-    },
-    [onRenew],
-  )
-
-  // Função para apagar o registro com o mesmo padrão de confirmação de exclusão de obra
-  const handleApagar = useCallback((mov) => {
-    const idEmprestimo = typeof mov === "object" ? mov.idEmprestimo : mov;
-    const deleteFn = onDeleteEmprestimo || onDelete;
-
-    if (deleteFn) {
-      deleteFn(idEmprestimo);
-      return;
-    }
-
-    const item = typeof mov === "object" ? mov : enriched.find((e) => e.idEmprestimo === idEmprestimo);
-    const obraTitulo = item?.obra?.titulo;
-
-    setConfirmDialog({
-      title: "Excluir Registro de Devolução",
-      message: `Tem certeza que deseja excluir este registro de devolução${obraTitulo ? ` de "${obraTitulo}"` : ""}? Esta ação não pode ser desfeita.`,
-      onConfirm: async () => {
-        try {
-          const result = await deleteEmprestimo(idEmprestimo);
-          if (result && !result.ok) throw new Error(result.message);
-
-          setApagados((prev) => [...prev, idEmprestimo]);
-          addToast("Registro de devolução removido com sucesso");
-        } catch (error) {
-          console.error("Erro ao apagar:", error);
-          addToast(error.message || "Erro ao apagar o registro", "error");
-        } finally {
-          setConfirmDialog(null);
-        }
-      },
-    });
-  }, [onDeleteEmprestimo, onDelete, enriched, addToast]);
-
-  const formatarData = (dataIso) => {
-    if (!dataIso) return "—";
-    return dataIso.split("T")[0].split("-").reverse().join("/");
   };
 
+  const ignore = () => {};
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">
-            Empréstimos & Devoluções
-          </h2>
-          <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
-            {tabCounts.ativos} ativo{tabCounts.ativos !== 1 && "s"} · {tabCounts.atrasados > 0 && <span className="text-red-500 font-semibold">{tabCounts.atrasados} atrasado{tabCounts.atrasados !== 1 && "s"}</span>}
-          </p>
-        </div>
-        <button
-          onClick={onOpenLoan}
-          className="rounded-2xl bg-brand-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-        >
-          Novo Empréstimo
-        </button>
+    <>
+      <PageHeader
+        eyebrow="Circulação"
+        title="Empréstimos"
+        description="Acompanhe prazos, renove e registre devoluções."
+        actions={
+          <Button icon={Plus} onClick={onNewLoan}>
+            Novo empréstimo
+          </Button>
+        }
+      />
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Segmented
+          label="Situação"
+          value={tab}
+          onChange={setTab}
+          options={Object.entries(TABS).map(([value, t]) => ({ value, label: t.label, count: counts[value], alert: value === "atrasados" }))}
+        />
+        <SearchInput value={query} onChange={setQuery} placeholder="Filtrar por obra, leitor ou inventário" className="w-full sm:w-72" />
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 rounded-2xl border border-surface-200 bg-surface-100 p-1 dark:border-surface-700 dark:bg-surface-800">
-        {TABS.map((tab) => {
-          const Icon = tab.icon
-          const count = tabCounts[tab.id]
-          const isActive = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-base font-medium transition-all duration-200 ${
-                isActive
-                  ? "bg-white text-surface-900 shadow-sm dark:bg-surface-900 dark:text-white"
-                  : "text-surface-500 hover:text-surface-700 dark:text-surface-400 dark:hover:text-surface-300"
-              }`}
-            >
-              <Icon
-                size={16}
-                className={
-                  tab.id === "atrasados" && count > 0 ? "text-red-500" : ""
-                }
-              />
-              {tab.label}
-              {count > 0 && (
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                    tab.id === "atrasados"
-                      ? "bg-red-100 text-red-700 dark:bg-red-500/10 dark:text-red-400"
-                      : "bg-surface-200 text-surface-600 dark:bg-surface-700 dark:text-surface-400"
-                  }`}
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Table */}
-      <div className="rounded-2xl border border-surface-200 bg-white dark:border-surface-800 dark:bg-surface-900">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
+      <Panel className="overflow-x-auto">
+        {rows.length === 0 ? (
+          <EmptyState icon={ArrowLeftRight} title={query ? "Nada encontrado" : EMPTY[tab]} />
+        ) : (
+          <table className="w-full min-w-[760px] text-sm">
             <thead>
-              <tr className="border-b border-surface-100 dark:border-surface-800">
-                <th className="py-3.5 pl-5 pr-3 text-base font-semibold text-surface-500 dark:text-surface-400">Obra</th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Exemplar</th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Leitor</th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">Início</th>
-                <th className="px-3 py-3.5 text-base font-semibold text-surface-500 dark:text-surface-400">
-                  Inventário
-                </th>
-                <th className="py-3.5 pl-3 pr-5 text-base font-semibold text-surface-500 dark:text-surface-400 text-right">Ações</th>
+              <tr className="border-b border-line text-left text-xs text-ink-muted">
+                <th className="py-2.5 pl-5 font-medium">Obra</th>
+                <th className="py-2.5 font-medium">Leitor</th>
+                <th className="py-2.5 font-medium">Retirada</th>
+                <th className="py-2.5 font-medium">{tab === "devolvidos" ? "Devolvido em" : "Prazo"}</th>
+                <th className="py-2.5 font-medium">Situação</th>
+                <th className="py-2.5 pr-5" aria-label="Ações" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-50 dark:divide-surface-800/50">
-              {filtered.map((mov) => (
-                <tr
-                  key={mov.idEmprestimo}
-                  className={`transition-colors ${
-                    mov.isOverdue
-                      ? "bg-red-50/50 hover:bg-red-50 dark:bg-red-500/5 dark:hover:bg-red-500/10"
-                      : "hover:bg-surface-50 dark:hover:bg-surface-800/30"
-                  }`}
-                >
-                  <td className="py-3.5 pl-5 pr-3">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-7 items-center justify-center rounded-lg bg-surface-100 text-lg dark:bg-surface-800">
-                        {mov.obra?.capa || "📕"}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="block truncate text-base font-medium text-surface-800 dark:text-surface-200">
-                          {mov.obra?.titulo || "—"}
-                        </span>
-                        {mov.isOverdue && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700 dark:bg-red-500/10 dark:text-red-400">
-                            <AlertTriangle size={12} />
-                            ATRASADO
-                          </span>
+            <tbody className="divide-y divide-line">
+              {rows.map((loan) => {
+                const status = loanStatus(loan);
+                return (
+                  <tr key={loan.id} className="hover:bg-sunken/40">
+                    <td className="py-2.5 pl-5">
+                      <div className="flex items-center gap-3">
+                        <Cover src={loan.obra.capaUrl} title={loan.obra.titulo} />
+                        <div className="min-w-0">
+                          <p className="line-clamp-1 font-medium text-ink">{loan.obra.titulo}</p>
+                          <p className="font-mono text-xs text-ink-muted">{loan.exemplar.numeroInventario}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-2.5 pr-4">
+                      <p className="text-ink">{loan.leitor.nome}</p>
+                      <p className="text-xs text-ink-muted">{loan.leitor.email}</p>
+                    </td>
+                    <td className="tabular py-2.5 text-ink-soft">{formatDate(loan.dataInicio)}</td>
+                    <td className={`tabular py-2.5 ${loan.atrasado ? "font-medium text-danger" : "text-ink-soft"}`}>
+                      {formatDate(loan.devolvido ? loan.dataDevolucao : loan.dataPrevista)}
+                    </td>
+                    <td className="py-2.5">
+                      <Badge tone={status.tone}>{status.label}</Badge>
+                    </td>
+                    <td className="py-2.5 pr-5">
+                      <div className="flex justify-end gap-1">
+                        {loan.devolvido ? (
+                          <Button variant="ghost" size="icon" icon={Trash2} onClick={() => remove(loan)} aria-label="Apagar do histórico" />
+                        ) : (
+                          <>
+                            <Button variant="ghost" size="sm" icon={RefreshCcw} onClick={() => renewLoan(loan, renovacaoDias).catch(ignore)} tooltip={`Soma ${renovacaoDias} dias ao prazo`}>
+                              Renovar
+                            </Button>
+                            <Button variant="secondary" size="sm" icon={CornerDownLeft} onClick={() => returnLoan(loan).catch(ignore)}>
+                              Devolver
+                            </Button>
+                          </>
                         )}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-3 py-3.5">
-                    <span className="inline-flex items-center gap-1.5 font-mono text-base text-surface-500 dark:text-surface-400">
-                      <Hash size={14} />
-                      {mov.exemplar?.numeroInventario || "—"}
-                    </span>
-                  </td>
-                  <td className="px-3 py-3.5 text-base text-surface-600 dark:text-surface-300">{mov.leitor?.nome || "—"}</td>
-                  <td className="px-3 py-3.5 text-base text-surface-500 dark:text-surface-400">
-                    {formatarData(mov.dataInicio)}
-                  </td>
-                  <td className={`px-3 py-3.5 text-base ${
-                    mov.isOverdue
-                      ? "font-semibold text-red-600 dark:text-red-400"
-                      : "text-surface-500 dark:text-surface-400"
-                  }`}>
-                    {activeTab === "devolvidos" && mov.dataDevolvido
-                      ? formatarData(mov.dataDevolvido)
-                      : formatarData(mov.dataDevolucaoPrevista)
-                    }
-                  </td>
-                  <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap">
-                    <div className="flex justify-end gap-2">
-                      {activeTab !== "devolvidos" ? (
-                        <>
-                          <button
-                            onClick={() => handleInlineRenew(mov.idEmprestimo)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-surface-200 bg-white px-3 py-2 text-sm font-semibold text-surface-700 transition-all hover:bg-surface-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-                            title="Renovar empréstimo (+14 dias)"
-                          >
-                            <RefreshCcw size={14} />
-                            Renovar
-                          </button>
-                          <button
-                            onClick={() => handleInlineReturn(mov.idExemplar)}
-                            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 transition-all hover:bg-emerald-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/20"
-                            title="Registrar devolução"
-                          >
-                            <CornerDownLeft size={14} />
-                            Devolver
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={() => handleApagar(mov)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 transition-all hover:bg-red-100 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-400 dark:hover:bg-red-500/20"
-                          title="Excluir registro de devolução"
-                        >
-                          <Trash2 size={14} />
-                          Apagar
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      {activeTab === "atrasados" ? (
-                        <>
-                          <CheckCircle2
-                            size={40}
-                            className="text-emerald-400"
-                          />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
-                            Nenhum atraso! 🎉
-                          </p>
-                          <p className="text-base text-surface-400 dark:text-surface-500">
-                            Todos os empréstimos estão em dia.
-                          </p>
-                        </>
-                      ) : activeTab === "devolvidos" ? (
-                        <>
-                          <Clock
-                            size={40}
-                            className="text-surface-300 dark:text-surface-600"
-                          />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
-                            Nenhuma devolução registrada ainda.
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <Clock
-                            size={40}
-                            className="text-surface-300 dark:text-surface-600"
-                          />
-                          <p className="text-base font-medium text-surface-500 dark:text-surface-400">
-                            Nenhum empréstimo ativo.
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      <ConfirmDialog
-        isOpen={!!confirmDialog}
-        title={confirmDialog?.title || ""}
-        message={confirmDialog?.message || ""}
-        onConfirm={confirmDialog?.onConfirm}
-        onCancel={() => setConfirmDialog(null)}
-      />
-    </div>
-  )
+        )}
+      </Panel>
+    </>
+  );
 }

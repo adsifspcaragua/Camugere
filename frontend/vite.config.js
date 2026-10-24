@@ -2,8 +2,9 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
+  ...(mode === "test" && { esbuild: { jsx: "automatic" } }),
   test: {
     globals: true,
     environment: "jsdom",
@@ -13,4 +14,4 @@ export default defineConfig({
       reporter: ["text", "json", "html"],
     },
   },
-})
+}))

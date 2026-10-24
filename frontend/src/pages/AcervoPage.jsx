@@ -1,69 +1,181 @@
-import BookTable from "../components/BookTable"
-import { useState } from "react"
-import { Search, Plus } from "lucide-react"
+import { Fragment, useMemo, useState } from "react";
+import { BookOpen, ChevronRight, Download, Pencil, Plus, Trash2 } from "lucide-react";
+import { useLibrary } from "../context/LibraryContext.jsx";
+import { useConfirm } from "../context/ConfirmContext.jsx";
+import PageHeader from "../components/ui/PageHeader.jsx";
+import { Panel } from "../components/ui/Panel.jsx";
+import Button from "../components/ui/Button.jsx";
+import Badge from "../components/ui/Badge.jsx";
+import Cover from "../components/ui/Cover.jsx";
+import Segmented from "../components/ui/Segmented.jsx";
+import EmptyState from "../components/ui/EmptyState.jsx";
+import { downloadFile, matches, plural, toCsv } from "../lib/format.js";
 
-export default function AcervoPage({
-  exemplares,
-  searchQuery,
-  emprestimos,
-  obras,
-  leitores,
-  onAddObra,
-  onEditObra,
-  onDeleteObra,
-  onAddExemplar,
-  onDeleteExemplar,
-}) {
-  const [localSearch, setLocalSearch] = useState("")
-  const effectiveQuery = searchQuery || localSearch
+const FILTERS = {
+  todas: () => true,
+  disponiveis: (o) => o.disponiveis > 0,
+  esgotadas: (o) => o.total > 0 && o.disponiveis === 0,
+};
+
+function exportCsv(obras) {
+  const rows = [["Título", "Autoria", "CDD", "ISBN", "Exemplares", "Disponíveis"]];
+  obras.forEach((o) => rows.push([o.titulo, o.autor, o.cdd, o.isbn, o.total, o.disponiveis]));
+  downloadFile(toCsv(rows), `acervo-camugere-${new Date().toISOString().slice(0, 10)}.csv`);
+}
+
+function Exemplares({ obra, loansByExemplar, onAdd, onDelete }) {
+  return (
+    <tr>
+      <td colSpan={6} className="bg-sunken/50 px-5 py-4">
+        <div className="ml-11">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-xs font-medium tracking-wider text-ink-muted uppercase">Exemplares</p>
+            <Button variant="secondary" size="sm" icon={Plus} onClick={() => onAdd(obra)}>
+              Adicionar exemplar
+            </Button>
+          </div>
+          {obra.exemplares.length === 0 && <p className="py-2 text-sm text-ink-muted">Esta obra ainda não tem exemplares físicos.</p>}
+          <ul className="divide-y divide-line rounded-md border border-line bg-panel">
+            {obra.exemplares.map((ex) => {
+              const loan = loansByExemplar.get(ex.id);
+              return (
+                <li key={ex.id} className="flex items-center gap-4 px-3 py-2 text-sm">
+                  <span className="w-20 font-mono text-xs text-ink-soft">{ex.numeroInventario}</span>
+                  {ex.disponivel ? <Badge tone="ok">Na estante</Badge> : <Badge tone={loan?.atrasado ? "danger" : "warn"}>{loan ? `Com ${loan.leitor.nome}` : "Emprestado"}</Badge>}
+                  {ex.disponivel && (
+                    <Button variant="ghost" size="icon" icon={Trash2} className="ml-auto" onClick={() => onDelete(ex)} aria-label={`Remover exemplar ${ex.numeroInventario}`} />
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+export default function AcervoPage({ search, onAddObra, onEditObra }) {
+  const { obras, loans, deleteObra, addExemplar, deleteExemplar } = useLibrary();
+  const confirm = useConfirm();
+  const [filter, setFilter] = useState("todas");
+  const [expanded, setExpanded] = useState(null);
+
+  const enriched = useMemo(
+    () => obras.map((o) => ({ ...o, total: o.exemplares.length, disponiveis: o.exemplares.filter((e) => e.disponivel).length })),
+    [obras],
+  );
+
+  const loansByExemplar = useMemo(() => new Map(loans.filter((l) => !l.devolvido).map((l) => [l.exemplar.id, l])), [loans]);
+
+  const visible = enriched.filter((o) => FILTERS[filter](o) && matches(search, o.titulo, o.autor, o.cdd, o.isbn));
+  const count = (key) => enriched.filter(FILTERS[key]).length;
+
+  const removeObra = async (obra) => {
+    const ok = await confirm({
+      title: "Excluir obra?",
+      message: `“${obra.titulo}” e ${plural(obra.total, "exemplar", "exemplares")} serão removidos, junto com o histórico de empréstimos. Isso não pode ser desfeito.`,
+    });
+    if (ok) deleteObra(obra).catch(() => {});
+  };
+
+  const removeExemplar = async (ex) => {
+    if (await confirm({ title: "Remover exemplar?", message: `O exemplar ${ex.numeroInventario} sairá do acervo.`, confirmLabel: "Remover" })) {
+      deleteExemplar(ex).catch(() => {});
+    }
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-surface-900 dark:text-white">
-            Acervo
-          </h2>
-          <p className="mt-1 text-base text-surface-400 dark:text-surface-500">
-            Obras e exemplares da Biblioteca Camugerê
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {!searchQuery && (
-            <div className="relative max-w-xs w-full">
-              <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400"
-              />
-              <input
-                type="text"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                placeholder="Filtrar acervo..."
-                className="w-full rounded-2xl border border-surface-200 bg-surface-50 py-2.5 pl-11 pr-4 text-base text-surface-900 placeholder-surface-400 outline-none transition-all focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-500/20 dark:border-surface-700 dark:bg-surface-800 dark:text-surface-100 dark:placeholder-surface-500 dark:focus:border-brand-500"
-              />
-            </div>
-          )}
-          <button
-            onClick={onAddObra}
-            className="inline-flex items-center gap-2 rounded-2xl bg-brand-600 px-5 py-2.5 text-base font-semibold text-white shadow-sm transition-all hover:bg-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          >
-            <Plus size={18} />
-            Nova Obra
-          </button>
-        </div>
-      </div>
-      <BookTable
-        exemplares={exemplares}
-        searchQuery={effectiveQuery}
-        emprestimos={emprestimos}
-        obras={obras}
-        leitores={leitores}
-        onEditObra={onEditObra}
-        onDeleteObra={onDeleteObra}
-        onAddExemplar={onAddExemplar}
-        onDeleteExemplar={onDeleteExemplar}
+    <>
+      <PageHeader
+        eyebrow="Catálogo"
+        title="Acervo"
+        description={`${plural(obras.length, "obra")} · ${plural(enriched.reduce((n, o) => n + o.total, 0), "exemplar", "exemplares")}`}
+        actions={
+          <>
+            <Button variant="secondary" icon={Download} onClick={() => exportCsv(visible)}>
+              Exportar CSV
+            </Button>
+            <Button icon={Plus} onClick={onAddObra}>
+              Nova obra
+            </Button>
+          </>
+        }
       />
-    </div>
-  )
+
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Segmented
+          label="Filtrar obras"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: "todas", label: "Todas", count: count("todas") },
+            { value: "disponiveis", label: "Com exemplar livre", count: count("disponiveis") },
+            { value: "esgotadas", label: "Todos emprestados", count: count("esgotadas") },
+          ]}
+        />
+        {search && <p className="text-sm text-ink-muted">Resultados para “{search}”</p>}
+      </div>
+
+      <Panel className="overflow-x-auto">
+        {visible.length === 0 ? (
+          <EmptyState
+            icon={BookOpen}
+            title={obras.length ? "Nenhuma obra encontrada" : "O acervo está vazio"}
+            description={obras.length ? "Tente outro termo de busca ou filtro." : "Cadastre a primeira obra — a busca por ISBN preenche os dados para você."}
+            action={!obras.length && <Button icon={Plus} onClick={onAddObra}>Nova obra</Button>}
+          />
+        ) : (
+          <table className="w-full min-w-[720px] text-sm">
+            <thead>
+              <tr className="border-b border-line text-left text-xs text-ink-muted">
+                <th className="py-2.5 pl-5 font-medium">Obra</th>
+                <th className="py-2.5 font-medium">Autoria</th>
+                <th className="py-2.5 font-medium">CDD</th>
+                <th className="py-2.5 text-right font-medium">Exemplares</th>
+                <th className="py-2.5 pl-6 font-medium">Situação</th>
+                <th className="w-24 py-2.5 pr-5" aria-label="Ações" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {visible.map((obra) => {
+                const open = expanded === obra.id;
+                return (
+                  <Fragment key={obra.id}>
+                    <tr className={`group ${open ? "bg-sunken/50" : "hover:bg-sunken/40"}`}>
+                      <td className="py-2.5 pl-5">
+                        <button onClick={() => setExpanded(open ? null : obra.id)} aria-expanded={open} className="flex items-center gap-3 text-left">
+                          <ChevronRight size={14} className={`shrink-0 text-ink-muted transition-transform ${open ? "rotate-90" : ""}`} />
+                          <Cover src={obra.capaUrl} title={obra.titulo} />
+                          <span>
+                            <span className="line-clamp-1 font-medium text-ink">{obra.titulo}</span>
+                            {obra.anoPublicacao && <span className="text-xs text-ink-muted">{obra.anoPublicacao}{obra.editora && ` · ${obra.editora}`}</span>}
+                          </span>
+                        </button>
+                      </td>
+                      <td className="max-w-56 truncate py-2.5 pr-4 text-ink-soft">{obra.autor || "—"}</td>
+                      <td className="py-2.5 font-mono text-xs text-ink-soft">{obra.cdd || "—"}</td>
+                      <td className="tabular py-2.5 text-right text-ink-soft">
+                        <span className="font-medium text-ink">{obra.disponiveis}</span> / {obra.total}
+                      </td>
+                      <td className="py-2.5 pl-6">
+                        {obra.total === 0 ? <Badge>Sem exemplares</Badge> : obra.disponiveis ? <Badge tone="ok">Disponível</Badge> : <Badge tone="warn">Todos emprestados</Badge>}
+                      </td>
+                      <td className="py-2.5 pr-5">
+                        <div className="flex justify-end gap-0.5 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                          <Button variant="ghost" size="icon" icon={Pencil} onClick={() => onEditObra(obra)} aria-label={`Editar ${obra.titulo}`} />
+                          <Button variant="ghost" size="icon" icon={Trash2} onClick={() => removeObra(obra)} aria-label={`Excluir ${obra.titulo}`} />
+                        </div>
+                      </td>
+                    </tr>
+                    {open && <Exemplares obra={obra} loansByExemplar={loansByExemplar} onAdd={(o) => addExemplar(o).catch(() => {})} onDelete={removeExemplar} />}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </Panel>
+    </>
+  );
 }

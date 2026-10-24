@@ -1,5 +1,8 @@
-import "dotenv/config"
-import app from "./app.js"
-app.listen(3000, () => {
-  console.log("Servidor Rodando no http://localhost:3000")
-})
+import app from "./app.js";
+import { env } from "./config/env.js";
+import { agendarLembretes } from "./services/lembreteService.js";
+
+app.listen(env.port, () => {
+  console.info(`API rodando em http://localhost:${env.port}`);
+  agendarLembretes();
+});

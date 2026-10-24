@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
   // output   = "../generated/prisma"
@@ -15,8 +13,8 @@ datasource db {
 
 model Usuario{
   id      Int       @id @default(autoincrement())
-  nome    String    @db.VarChar(20)
-  email   String    @unique @db.VarChar(40) 
+  nome    String    @db.VarChar(80)
+  email   String    @unique @db.VarChar(100)
   hash    String
 
   leitores Leitor[]
@@ -29,20 +27,18 @@ model Leitor{
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
   cpf  String   @db.VarChar(14)   @unique   
   telefone  String?    @db.VarChar(11)
-  cep String? @db.VarChar(8)
-  logradouro String? @db.VarChar(150)
-  numero String? @db.VarChar(20)
-  complemento String? @db.VarChar(100)
-  bairro String? @db.VarChar(100)
-  cidade String? @db.VarChar(100)
-  estado String? @db.VarChar(2)
-  podeEmprestar Boolean @default(true)
-  suspensoAte DateTime?
-  motivoSuspensao String? @db.VarChar(255)
 
+  cep          String?  @db.VarChar(8)
+  logradouro   String?  @db.VarChar(150)
+  numero       String?  @db.VarChar(20)
+  complemento  String?  @db.VarChar(80)
+  bairro       String?  @db.VarChar(80)
+  cidade       String?  @db.VarChar(80)
+  uf           String?  @db.Char(2)
+
+  suspensoes   Suspensao[]
   leitorClubes LeitorClube[]
   emprestimos Emprestimo[]
-  suspensoes SuspensaoLeitor[]
   comentarios Comentario[]
   reservas Reserva[]
 }
@@ -51,42 +47,43 @@ model Bibliotecario{
   id   Int   @id @default(autoincrement())
   id_usuario  Int
   usuario   Usuario   @relation(fields: [id_usuario], references: [id], onDelete: Cascade)
-  suspensoes SuspensaoLeitor[]
+
+  suspensoesAplicadas Suspensao[]
 }
 
-model SuspensaoLeitor {
-  id Int @id @default(autoincrement())
-  id_leitor Int
+// Bloqueio temporário (dataFim) ou indefinido (dataFim nula) de um leitor.
+// Encerrada antes do prazo quando dataEncerramento é preenchida.
+model Suspensao {
+  id               Int       @id @default(autoincrement())
+  id_leitor        Int
+  leitor           Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
+  motivo           String    @db.VarChar(500)
+  dataInicio       DateTime  @default(now())
+  dataFim          DateTime?
+  dataEncerramento DateTime?
   id_bibliotecario Int?
-  motivo String @db.VarChar(255)
-  dataInicio DateTime @default(now())
-  dataFim DateTime?
-  dataReativacao DateTime?
-  createdAt DateTime @default(now())
+  bibliotecario    Bibliotecario? @relation(fields: [id_bibliotecario], references: [id], onDelete: SetNull)
 
-  leitor Leitor @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
-  bibliotecario Bibliotecario? @relation(fields: [id_bibliotecario], references: [id], onDelete: SetNull)
-
-  @@index([id_leitor, dataInicio])
+  @@index([id_leitor])
 }
 
 model Obra {
   id              Int       @id @default(autoincrement())
-  isbn            String?   @unique @db.VarChar(20) // NOVO: evita cadastrar o mesmo livro 2x
+  isbn            String?   @unique @db.VarChar(20)
   titulo          String    @db.VarChar(200)
   subtitulo       String?   @db.VarChar(200)
   editora         String?   @db.VarChar(100)
-  localPublicacao String?   @db.VarChar(100)        // NOVO: vindo do ObraDrawer / Brasil API
-  anoPublicacao   Int?                              // NOVO: vindo do ObraDrawer / Brasil API
+  localPublicacao String?   @db.VarChar(100)
+  anoPublicacao   Int?
   edicao          String?   @db.VarChar(20)
-  numeroPaginas   Int       @default(0)             // Default evita erro caso a API não informe
-  resumo          String?   @db.Text                // NOVO: @db.Text suporta sinopses longas
-  capa            String?   @db.VarChar(20)         // Mantém o emoji padrão "📕"
-  capaUrl         String?   @db.VarChar(500)        // NOVO: URL da imagem da capa sem truncar
+  numeroPaginas   Int       @default(0)
+  resumo          String?   @db.Text
+  capa            String?   @db.VarChar(20)
+  capaUrl         String?   @db.VarChar(500)
   ativa           Boolean   @default(true)
   notaMedia       Float?
 
-  id_cdd          String?   @db.VarChar(6)         // Tornado opcional e ampliado para CDDs maiores
+  id_cdd          String?   @db.VarChar(15)
   cdd             Cdd?      @relation(fields: [id_cdd], references: [id], onUpdate: Cascade, onDelete: SetNull)
 
   exemplares      Exemplar[]
@@ -148,7 +145,7 @@ model Exemplar {
   id               Int          @id @default(autoincrement())
   id_obra          Int
   obra             Obra         @relation(fields: [id_obra], references: [id], onDelete: Cascade)
-  numeroInventario String       @unique @db.VarChar(20) // Ampliado para códigos de tombo únicos
+  numeroInventario String       @unique @db.VarChar(20)
   disponivel       Boolean      @default(true)
 
   emprestimos      Emprestimo[]
@@ -161,7 +158,8 @@ model Emprestimo{
   dataInicio    DateTime    @default(now())
   diasLocacao   Int
   statusDevolucao   Boolean   @default(false)
-  dataDevolucao     DateTime?    
+  dataDevolucao     DateTime?
+  lembreteEnviadoEm DateTime?
   
   id_leitor     Int
   leitor    Leitor    @relation(fields: [id_leitor], references: [id], onDelete: Cascade)

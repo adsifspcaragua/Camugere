@@ -1,38 +1,48 @@
-import { useState, useEffect, createContext, useContext } from "react"
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-const ThemeContext = createContext()
+const KEY = "camugere:theme";
+const ThemeContext = createContext(null);
+const media = () => window.matchMedia?.("(prefers-color-scheme: dark)");
 
+function readPreference() {
+  try {
+    const saved = localStorage.getItem(KEY);
+    return ["light", "dark", "system"].includes(saved) ? saved : "system";
+  } catch {
+    return "system";
+  }
+}
+
+/** Preferência de tema: "system" (segue o sistema), "light" ou "dark". Alterada só em Configurações. */
 export function ThemeProvider({ children }) {
-  const [dark, setDark] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("biblioteca-dark-mode")
-      if (saved !== null) return JSON.parse(saved)
-      return window.matchMedia("(prefers-color-scheme: dark)").matches
-    }
-    return false
-  })
+  const [preference, setPreference] = useState(readPreference);
+  const [systemDark, setSystemDark] = useState(() => media()?.matches ?? false);
 
   useEffect(() => {
-    const root = document.documentElement
-    if (dark) {
-      root.classList.add("dark")
-    } else {
-      root.classList.remove("dark")
+    const mq = media();
+    if (!mq) return;
+    const onChange = (e) => setSystemDark(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
+  const dark = preference === "dark" || (preference === "system" && systemDark);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    try {
+      localStorage.setItem(KEY, preference);
+    } catch {
+      /* sem armazenamento: vale só nesta sessão */
     }
-    localStorage.setItem("biblioteca-dark-mode", JSON.stringify(dark))
-  }, [dark])
+  }, [dark, preference]);
 
-  const toggle = () => setDark((prev) => !prev)
-
-  return (
-    <ThemeContext.Provider value={{ dark, toggle }}>
-      {children}
-    </ThemeContext.Provider>
-  )
+  const value = useMemo(() => ({ dark, preference, setPreference }), [dark, preference]);
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {
-  const ctx = useContext(ThemeContext)
-  if (!ctx) throw new Error("useTheme must be used within ThemeProvider")
-  return ctx
+  const ctx = useContext(ThemeContext);
+  if (!ctx) throw new Error("useTheme precisa estar dentro de <ThemeProvider>");
+  return ctx;
 }

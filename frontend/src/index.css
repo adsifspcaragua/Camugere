@@ -2,106 +2,146 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Identidade visual: biblioteca comunitária, editorial e sóbria.
+ * Papel (fundo), tinta (texto), verde-floresta (marca) e terracota (destaque).
+ * Os tokens semânticos mudam no modo escuro; os componentes usam só os semânticos.
+ */
 @theme {
-  --color-brand-50: #f4f6ef;
-  --color-brand-100: #e6ecd9;
-  --color-brand-200: #cedab5;
-  --color-brand-300: #afc18a;
-  --color-brand-400: #93a866;
-  --color-brand-500: #748c48;
-  --color-brand-600: #5a6e36;
-  --color-brand-700: #45552c;
-  --color-brand-800: #3a4528;
-  --color-brand-900: #323b24;
-  --color-brand-950: #192010;
-
-  --color-surface-50: #faf8f5;
-  --color-surface-100: #f2efe8;
-  --color-surface-200: #e4dfd4;
-  --color-surface-300: #d1c9b9;
-  --color-surface-400: #b9ad99;
-  --color-surface-500: #a59882;
-  --color-surface-600: #93846d;
-  --color-surface-700: #7b6d5b;
-  --color-surface-800: #665b4d;
-  --color-surface-900: #554c41;
-  --color-surface-950: #2d2822;
-
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-paper: var(--paper);
+  --color-panel: var(--panel);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+
+  --color-forest: var(--forest);
+  --color-forest-strong: var(--forest-strong);
+  --color-forest-soft: var(--forest-soft);
+  --color-on-forest: var(--on-forest);
+
+  --color-clay: var(--clay);
+  --color-clay-soft: var(--clay-soft);
+
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-pop: 0 1px 2px rgb(31 29 26 / 0.06), 0 8px 24px -8px rgb(31 29 26 / 0.18);
+}
+
+:root {
+  --paper: #f3efe6;
+  --panel: #fffcf6;
+  --sunken: #ebe5d8;
+  --line: #e2dacb;
+  --line-strong: #cbc1ae;
+  --ink: #1f1d1a;
+  --ink-soft: #4a453e;
+  --ink-muted: #857d71;
+
+  --forest: #1f3a2e;
+  --forest-strong: #142a20;
+  --forest-soft: #e3ebe5;
+  --on-forest: #f6f2ea;
+
+  --clay: #b4532a;
+  --clay-soft: #f6e6dc;
+
+  --ok: #2f6b45;
+  --ok-soft: #e2efe6;
+  --warn: #8a5a12;
+  --warn-soft: #f5ead2;
+  --danger: #a8322a;
+  --danger-soft: #f7e1de;
+  color-scheme: light;
+}
+
+.dark {
+  --paper: #161513;
+  --panel: #1d1c19;
+  --sunken: #252320;
+  --line: #2f2c28;
+  --line-strong: #403c36;
+  --ink: #eeeae2;
+  --ink-soft: #c4bdb1;
+  --ink-muted: #8d867a;
+
+  --forest: #8fbf9f;
+  --forest-strong: #a9d3b6;
+  --forest-soft: #1f2c24;
+  --on-forest: #10201a;
+
+  --clay: #e0895f;
+  --clay-soft: #33231b;
+
+  --ok: #8cc79f;
+  --ok-soft: #1b2a20;
+  --warn: #e2b866;
+  --warn-soft: #2e2617;
+  --danger: #ec8b82;
+  --danger-soft: #34201d;
+  color-scheme: dark;
 }
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-    font-size: 16px;
-  }
-
   body {
-    @apply bg-surface-50 text-surface-900 antialiased transition-colors duration-300;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    @apply bg-paper font-sans text-[15px] text-ink antialiased;
+    font-feature-settings: "cv11", "ss01";
   }
-
-  .dark body,
-  body.dark {
-    @apply bg-surface-950 text-surface-100;
+  ::selection {
+    background: var(--clay-soft);
   }
-
-  .dark input:not(.bg-transparent):focus,
-  .dark textarea:not(.bg-transparent):focus,
-  .dark select:not(.bg-transparent):focus {
-    color: var(--color-surface-900) !important;
+  :focus-visible {
+    outline: 2px solid var(--clay);
+    outline-offset: 2px;
+  }
+  input,
+  textarea,
+  select {
+    color: inherit;
   }
 }
 
 @layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: theme(--color-surface-300) transparent;
+    scrollbar-color: var(--line-strong) transparent;
   }
-  .dark .scrollbar-thin {
-    scrollbar-color: theme(--color-surface-600) transparent;
-  }
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+  .animate-rise {
+    animation: rise 0.22s ease-out;
   }
 }
 
-@keyframes slideUp {
+@keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+    transform: translateY(6px);
   }
 }
 
-/* Dark mode: keep typed text legible in every form control
-   (focus:bg-white combined with dark:text-white made typed text invisible). */
-.dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
-.dark textarea,
-.dark select {
-  background-color: var(--color-surface-800) !important;
-  color: #fff !important;
-  color-scheme: dark;
-}
-.dark input:focus,
-.dark textarea:focus,
-.dark select:focus {
-  background-color: var(--color-surface-900) !important;
-  color: #fff !important;
-}
-.dark input::placeholder,
-.dark textarea::placeholder {
-  color: var(--color-surface-400) !important;
-}
-.dark input:-webkit-autofill,
-.dark textarea:-webkit-autofill {
-  -webkit-text-fill-color: #fff;
-  box-shadow: 0 0 0 1000px var(--color-surface-800) inset;
-}
-.dark select option {
-  background-color: var(--color-surface-800);
-  color: #fff;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }

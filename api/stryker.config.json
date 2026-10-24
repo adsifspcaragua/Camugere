@@ -1,13 +1,8 @@
 {
-  "mutate": [
-    "src/Model/**/*.js",
-    "!src/tests/**/*.js"
-  ],
+  "mutate": ["src/**/*.js", "!src/server.js", "!src/seed.js"],
   "testRunner": "jest",
   "testRunnerNodeArgs": ["--experimental-vm-modules"],
   "reporters": ["progress", "clear-text", "html"],
   "coverageAnalysis": "perTest",
-  "jest": {
-    "configFile": "package.json"
-  }
+  "jest": { "configFile": "package.json" }
 }

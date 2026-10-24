@@ -1,39 +1,46 @@
 {
-    "name": "bibliotecacamugere",
-    "version": "1.0.0",
-    "type": "module",
-    "description": "",
-    "license": "ISC",
-    "author": "",
-    "main": "index.js",
-    "scripts": {
-        "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-        "server": "node --watch src/server.js",
-        "seed": "node src/seed.js"
-    },
-    "dependencies": {
-        "@prisma/client": "6.5",
-        "bcrypt": "^6.0.0",
-        "cors": "^2.8.6",
-        "dotenv": "^17.4.2",
-        "express": "^5.2.1",
-        "jsonwebtoken": "^9.0.3",
-        "multer": "^2.4.0",
-        "nodemailer": "^10.1.2",
-        "prisma": "6.5",
-        "zod": "^4.3.6"
-    },
-    "devDependencies": {
-        "@stryker-mutator/core": "^9.6.1",
-        "@stryker-mutator/jest-runner": "^9.6.1",
-        "jest": "^30.4.2",
-        "jest-mock-extended": "^4.0.1",
-        "supertest": "^7.2.2"
-    },
-    "jest": {
-        "collectCoverageFrom": [
-            "src/Controller/**/*.js",
-            "src/Model/**/*.js"
-        ]
-    }
+  "name": "camugere-api",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "API da Biblioteca Camugerê",
+  "license": "ISC",
+  "author": "",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "server": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:coverage": "npm test -- --coverage",
+    "db:migrate": "prisma migrate dev",
+    "db:reset": "prisma migrate reset",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "6.5",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "nodemailer": "^10.1.2",
+    "prisma": "6.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/jest-runner": "^9.6.1",
+    "jest": "^30.4.2",
+    "jest-mock-extended": "^4.0.1",
+    "supertest": "^7.2.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "src/**/*.js",
+      "!src/server.js",
+      "!src/seed.js"
+    ]
+  }
 }

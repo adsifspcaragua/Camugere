@@ -1,45 +1,48 @@
 import express from "express";
-import cors from "cors"
-import authenticateUsuarioBibliotecarioController from "./Controller/Usuario/authenticateUsuarioController.js";
-import validateTokenUsuarioController from "./Controller/Usuario/validateTokenUsuarioController.js";
-import UsuarioRouter from "./Router/UsuarioRouter.js"
-import LeitorRouter from "./Router/LeitorRouter.js"
-import BibliotecarioRouter from "./Router/BibliotecarioRouter.js"
-import CddRouter from "./Router/CddRouter.js"
-import ObraRouter from "./Router/ObraRouter.js"
-import AutorRouter from "./Router/AutorRouter.js"
-import ExemplarRouter from "./Router/ExemplarRouter.js"
-import EmprestimoRouter from "./Router/EmprestimoRouter.js"
-import ObraAutorRouter from "./Router/ObraAutorRouter.js"
-import authMiddleware from "./Middlewares/authMiddleware.js";
-import UploadRouter, { UPLOADS_DIR } from "./Router/UploadRouter.js";
+import cors from "cors";
+import { env } from "./config/env.js";
+import { authMiddleware } from "./middlewares/auth.js";
+import { errorHandler, notFoundHandler } from "./middlewares/errorHandler.js";
+import { UPLOADS_DIR } from "./services/capaService.js";
+import authRouter from "./routes/authRouter.js";
+import uploadRouter from "./routes/uploadRouter.js";
+import {
+  autorRouter,
+  bibliotecarioRouter,
+  cddRouter,
+  emprestimoRouter,
+  exemplarRouter,
+  leitorRouter,
+  obraAutorRouter,
+  obraRouter,
+  usuarioRouter,
+} from "./routes/index.js";
 
-const app = express()
+const app = express();
 
-app.use(express.json())
-app.use(cors())
-app.use("/uploads", express.static(UPLOADS_DIR))
+app.use(cors({ origin: env.corsOrigin }));
+app.use(express.json({ limit: "1mb" }));
+app.use("/uploads", express.static(UPLOADS_DIR, { maxAge: "7d" }));
 
-app.get('/', (req, res) => {
-    return res.json({
-        message: "Funcionou"
-    })
-})
+app.get("/", (_req, res) => res.json({ message: "API Biblioteca Camugerê", status: "ok" }));
 
-app.post("/login", authenticateUsuarioBibliotecarioController)
-app.post("/validate", validateTokenUsuarioController)
+// Rotas públicas
+app.use(authRouter);
 
-app.use(authMiddleware)
+// Rotas protegidas
+app.use(authMiddleware);
+app.use("/usuario", usuarioRouter);
+app.use("/leitor", leitorRouter);
+app.use("/bibliotecario", bibliotecarioRouter);
+app.use("/cdd", cddRouter);
+app.use("/obra", obraRouter);
+app.use("/autor", autorRouter);
+app.use("/exemplar", exemplarRouter);
+app.use("/emprestimo", emprestimoRouter);
+app.use("/obraautor", obraAutorRouter);
+app.use("/upload", uploadRouter);
 
-app.use("/usuario", UsuarioRouter)
-app.use("/leitor", LeitorRouter)
-app.use("/bibliotecario", BibliotecarioRouter)
-app.use("/cdd", CddRouter)
-app.use("/obra", ObraRouter)
-app.use("/upload", UploadRouter)
-app.use("/autor", AutorRouter)
-app.use("/exemplar", ExemplarRouter)
-app.use("/emprestimo", EmprestimoRouter)
-app.use("/obraautor", ObraAutorRouter)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;

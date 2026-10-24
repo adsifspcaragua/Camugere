@@ -1,94 +1,74 @@
-import { useState } from "react"
-import { Lock, Mail, ArrowRight } from "lucide-react"
-import { useAuth } from "../context/AuthContext"
+import { useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { useAuth } from "../context/AuthContext.jsx";
+import Button from "../components/ui/Button.jsx";
+import { TextField } from "../components/ui/Field.jsx";
 
 export default function LoginPage() {
-  const { login } = useAuth()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const { login, exitReason } = useAuth();
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault()
-    setError("")
-    setIsSubmitting(true)
-
+  const submit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
     try {
-      await login({ email, password })
+      await login(email.trim(), senha);
     } catch (err) {
-      setError(err.message || "Não foi possível fazer login.")
-    } finally {
-      setIsSubmitting(false)
+      setError(err.message);
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-surface-50 py-10 dark:bg-surface-950">
-      <div className="mx-auto max-w-md rounded-3xl border border-surface-200 bg-white p-10 shadow-xl dark:border-surface-800 dark:bg-surface-900">
-        <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-brand-500 text-white shadow-lg shadow-brand-500/20">
-            <Lock size={28} />
-          </div>
-          <h1 className="text-3xl font-semibold text-surface-900 dark:text-white">
-            Entrar
-          </h1>
-          <p className="mt-2 text-sm text-surface-500 dark:text-surface-400">
-            Faça login para acessar o sistema da biblioteca.
+    <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden bg-forest p-12 text-on-forest lg:flex">
+        <div className="flex items-center gap-3">
+          <img src="/favicon.svg" alt="" className="size-9 rounded-md ring-1 ring-white/20" />
+          <span className="font-display text-lg">Camugerê</span>
+        </div>
+        <div className="max-w-md">
+          <p className="mb-4 text-xs tracking-[0.18em] uppercase opacity-70">Biblioteca comunitária</p>
+          <p className="font-display text-[40px] leading-[1.1]">Um acervo que circula é um acervo vivo.</p>
+          <p className="mt-5 text-sm leading-relaxed opacity-75">
+            Sistema de gestão da biblioteca do Espaço Cultural Casa da Democracia — acervo, leitores e empréstimos em um só lugar.
           </p>
         </div>
+        <p className="text-xs opacity-60">Projeto de extensão universitária</p>
+        {/* lombadas decorativas */}
+        <div aria-hidden className="pointer-events-none absolute right-10 bottom-0 flex items-end gap-1.5 opacity-[0.14]">
+          {[180, 240, 150, 300, 210, 260, 170].map((h, i) => (
+            <span key={i} style={{ height: h }} className="w-7 rounded-t-sm border border-current" />
+          ))}
+        </div>
+      </aside>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
-          <label className="block">
-            <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
-              Email
-            </span>
-            <div className="mt-2 rounded-2xl border border-surface-200 bg-surface-50 px-4 py-3 dark:border-surface-700 dark:bg-surface-800 flex items-center">
-              <Mail size={18} className="mr-2 inline text-surface-400" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-transparent text-sm text-surface-900 outline-none dark:text-surface-100"
-                placeholder="seu@email.com"
-                required
-              />
-            </div>
-          </label>
-
-          <label className="block">
-            <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
-              Senha
-            </span>
-            <div className="mt-2 rounded-2xl border border-surface-200 bg-surface-50 px-4 py-3 dark:border-surface-700 dark:bg-surface-800 flex items-center">
-              <Lock size={18} className="mr-2 inline text-surface-400 flex" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-transparent text-sm text-surface-900 outline-none dark:text-surface-100"
-                placeholder="Senha"
-                required
-              />
-            </div>
-          </label>
-
+      <main className="flex items-center justify-center bg-paper px-6 py-16">
+        <form onSubmit={submit} className="w-full max-w-sm">
+          <h1 className="font-display text-3xl font-medium text-ink">Entrar</h1>
+          <p className="mt-2 mb-8 text-sm text-ink-muted">Acesso restrito à equipe da biblioteca.</p>
+          {exitReason === "expired" && !error && (
+            <p role="status" className="mb-5 rounded-xl bg-warn-soft px-3.5 py-2.5 text-sm text-warn">
+              Sua sessão expirou. Entre de novo para continuar de onde parou.
+            </p>
+          )}
+          <div className="space-y-4">
+            <TextField label="E-mail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username" required autoFocus />
+            <TextField label="Senha" type="password" value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="current-password" required />
+          </div>
           {error && (
-            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+            <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm text-danger">
               {error}
             </p>
           )}
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-600 px-5 py-3 text-base font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Entrar
-            <ArrowRight size={18} />
-          </button>
+          <Button type="submit" size="lg" loading={loading} className="mt-6 w-full justify-center">
+            Entrar <ArrowRight size={16} />
+          </Button>
         </form>
-      </div>
+      </main>
     </div>
-  )
+  );
 }
