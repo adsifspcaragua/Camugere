@@ -172,7 +172,8 @@ function ObraForm({ obra, onClose }) {
   const requestClose = useGuardedClose(onClose, dirty);
   const [quantidade, setQuantidade] = useState(1);
   const [saving, setSaving] = useState(false);
-  const [detalhes, setDetalhes] = useState(editing);
+  const [detalhes, setDetalhes] = useState(true);
+  const [buscandoIsbnCampo, setBuscandoIsbnCampo] = useState(false);
 
   const valid = values.titulo.trim() && values.autor.trim();
 
@@ -184,6 +185,20 @@ function ObraForm({ obra, onClose }) {
     },
     [set, toast],
   );
+
+  const buscarPeloCampoIsbn = async () => {
+    const raw = values.isbn?.trim();
+    if (!raw) return;
+    setBuscandoIsbnCampo(true);
+    try {
+      const livro = await buscarPorIsbn(raw);
+      preencher(livro);
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setBuscandoIsbnCampo(false);
+    }
+  };
 
   const submit = async () => {
     if (!valid) return;
@@ -227,6 +242,7 @@ function ObraForm({ obra, onClose }) {
         <div className="min-w-0 space-y-4">
           <TextField label="Título" {...field("titulo")} required />
           <TextField label="Autoria" {...field("autor")} hint="Vários autores: separe por vírgula." placeholder="Carolina Maria de Jesus" required />
+          <TextField label="URL da capa" {...field("capaUrl")} placeholder="https://... (ou envie arquivo ao lado)" optional />
         </div>
       </div>
 
@@ -244,6 +260,16 @@ function ObraForm({ obra, onClose }) {
 
       {detalhes && (
         <div className="space-y-4">
+          <Field label="ISBN" optional>
+            {(id) => (
+              <div className="flex gap-2">
+                <input id={id} {...field("isbn")} inputMode="numeric" placeholder="9788535914849" className={`${inputClass} flex-1 font-mono`} />
+                <Button variant="secondary" size="sm" onClick={buscarPeloCampoIsbn} loading={buscandoIsbnCampo} disabled={!values.isbn?.trim()}>
+                  Buscar ISBN
+                </Button>
+              </div>
+            )}
+          </Field>
           <TextField label="Subtítulo" {...field("subtitulo")} optional />
           <div className="grid grid-cols-2 gap-4">
             <TextField label="Editora" {...field("editora")} optional />
@@ -251,9 +277,6 @@ function ObraForm({ obra, onClose }) {
             <TextField label="Ano" {...field("anoPublicacao")} inputMode="numeric" optional />
             <TextField label="Páginas" {...field("numeroPaginas")} inputMode="numeric" optional />
           </div>
-          <Field label="ISBN" optional>
-            {(id) => <input id={id} {...field("isbn")} inputMode="numeric" className={`${inputClass} font-mono`} />}
-          </Field>
           <TextArea label="Sinopse" {...field("resumo")} rows={4} optional />
         </div>
       )}
