@@ -3,6 +3,7 @@ import { CornerDownLeft, Menu, Plus } from "lucide-react";
 import Button from "../ui/Button.jsx";
 import SearchInput from "../ui/SearchInput.jsx";
 import Kbd from "../ui/Kbd.jsx";
+import ThemeToggle from "../ThemeToggle.jsx";
 
 const Topbar = forwardRef(function Topbar({ search, onSearch, onOpenMenu, onNewLoan, onReturn, bell }, searchRef) {
   return (
@@ -20,6 +21,7 @@ const Topbar = forwardRef(function Topbar({ search, onSearch, onOpenMenu, onNewL
           )}
         </div>
         <div className="ml-auto flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           {bell}
           <Button variant="secondary" icon={CornerDownLeft} onClick={onReturn} tooltip="Atalho: D" className="max-sm:hidden">
             Devolução

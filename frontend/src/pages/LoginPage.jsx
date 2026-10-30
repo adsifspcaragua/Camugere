@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import Button from "../components/ui/Button.jsx";
 import { TextField } from "../components/ui/Field.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 
 export default function LoginPage() {
   const { login, exitReason } = useAuth();
@@ -46,7 +47,10 @@ export default function LoginPage() {
         </div>
       </aside>
 
-      <main className="flex items-center justify-center bg-paper px-6 py-16">
+      <main className="relative flex items-center justify-center bg-paper px-6 py-16">
+        <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+          <ThemeToggle className="border-[1.5px] border-line bg-panel hover:bg-sunken" />
+        </div>
         <form onSubmit={submit} className="w-full max-w-md">
           <h1 className="font-display font-bold text-3xl text-ink">Entrar</h1>
           <p className="mt-2 mb-8 text-base text-ink-muted">Acesso restrito à equipe da biblioteca.</p>
