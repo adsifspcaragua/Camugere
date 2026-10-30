@@ -11,6 +11,7 @@ import Spinner from "./components/ui/Spinner.jsx";
 import Button from "./components/ui/Button.jsx";
 import ConnectionBanner from "./components/ConnectionBanner.jsx";
 import NotificationBell from "./components/NotificationBell.jsx";
+import ThemeToggle from "./components/ThemeToggle.jsx";
 import NewLoanDrawer from "./features/NewLoanDrawer.jsx";
 import ReturnDrawer from "./features/ReturnDrawer.jsx";
 import ObraDrawer from "./features/ObraDrawer.jsx";
@@ -75,7 +76,7 @@ function Workspace() {
   return (
     <div className="min-h-screen">
       <Sidebar page={page} onNavigate={navigate} overdue={stats.atrasados} open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <div className="lg:pl-60">
+      <div className="lg:pl-72">
         <ConnectionBanner onRetry={reload} />
         <Topbar
           bell={<NotificationBell onNavigate={navigate} onOpenLeitor={(id) => open("leitorDetalhe", id)} />}
@@ -94,9 +95,12 @@ function Workspace() {
 
 function OfflineGate({ onRetry }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="font-display text-2xl text-ink">Sem conexão com o servidor</p>
-      <p className="max-w-sm text-sm text-ink-muted">Confira a internet ou se a API está no ar. Sua sessão continua salva.</p>
+    <div className="relative flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6">
+        <ThemeToggle className="border-[1.5px] border-line bg-panel hover:bg-sunken" />
+      </div>
+      <p className="font-display font-bold text-2xl text-ink">Sem conexão com o servidor</p>
+      <p className="max-w-md text-base text-ink-muted">Confira a internet ou se a API está no ar. Sua sessão continua salva.</p>
       <Button onClick={onRetry}>Tentar de novo</Button>
     </div>
   );

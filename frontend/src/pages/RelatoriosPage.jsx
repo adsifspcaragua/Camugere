@@ -39,12 +39,12 @@ function RelatorioAtrasos({ linhas, telefones }) {
         <table className="w-full min-w-[820px] text-sm">
           <thead>
             <tr className="border-b border-line text-left text-xs text-ink-muted">
-              <th className="py-2.5 pl-5 font-medium">Obra</th>
-              <th className="py-2.5 font-medium">Leitor</th>
-              <th className="py-2.5 font-medium">Prevista</th>
-              <th className="py-2.5 font-medium">Devolvida</th>
-              <th className="py-2.5 text-right font-medium">Atraso</th>
-              <th className="py-2.5 pr-5 pl-6 font-medium">Situação</th>
+              <th className="py-2.5 pl-5 font-semibold">Obra</th>
+              <th className="py-2.5 font-semibold">Leitor</th>
+              <th className="py-2.5 font-semibold">Prevista</th>
+              <th className="py-2.5 font-semibold">Devolvida</th>
+              <th className="py-2.5 text-right font-semibold">Atraso</th>
+              <th className="py-2.5 pr-5 pl-6 font-semibold">Situação</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -53,20 +53,20 @@ function RelatorioAtrasos({ linhas, telefones }) {
                 <td className="py-2.5 pl-5">
                   <div className="flex items-center gap-3">
                     <Cover src={l.obra.capaUrl} title={l.obra.titulo} />
-                    <div className="min-w-0">
-                      <p className="line-clamp-1 font-medium text-ink">{l.obra.titulo}</p>
+                    <div className="min-w-48">
+                      <p className="break-words font-semibold text-ink">{l.obra.titulo}</p>
                       <p className="font-mono text-xs text-ink-muted">{l.exemplar.numeroInventario}</p>
                     </div>
                   </div>
                 </td>
-                <td className="py-2.5 pr-4">
+                <td data-label="Leitor" className="min-w-44 py-2.5 pr-4">
                   <p className="text-ink">{l.leitor.nome}</p>
-                  <p className="text-xs text-ink-muted">{[l.leitor.email, telefones.get(l.leitor.id) && formatPhone(telefones.get(l.leitor.id))].filter(Boolean).join(" · ")}</p>
+                  <p className="text-xs wrap-anywhere text-ink-muted">{[l.leitor.email, telefones.get(l.leitor.id) && formatPhone(telefones.get(l.leitor.id))].filter(Boolean).join(" · ")}</p>
                 </td>
-                <td className="tabular py-2.5 text-ink-soft">{formatDate(l.dataPrevista)}</td>
-                <td className="tabular py-2.5 text-ink-soft">{l.devolvido ? formatDate(l.dataDevolucao) : "—"}</td>
-                <td className={`tabular py-2.5 text-right font-medium ${l.emAberto ? "text-danger" : "text-ink-soft"}`}>{l.diasAtraso}d</td>
-                <td className="py-2.5 pr-5 pl-6">{l.emAberto ? <Badge tone="danger">Em aberto</Badge> : <Badge>Devolvido com atraso</Badge>}</td>
+                <td data-label="Prevista" className="tabular py-2.5 text-ink-soft">{formatDate(l.dataPrevista)}</td>
+                <td data-label="Devolvida" className="tabular py-2.5 text-ink-soft">{l.devolvido ? formatDate(l.dataDevolucao) : "—"}</td>
+                <td data-label="Atraso" className={`tabular py-2.5 text-right font-medium ${l.emAberto ? "text-danger" : "text-ink-soft"}`}>{l.diasAtraso}d</td>
+                <td data-label="Situação" className="py-2.5 pr-5 pl-6">{l.emAberto ? <Badge tone="danger">Em aberto</Badge> : <Badge>Devolvido com atraso</Badge>}</td>
               </tr>
             ))}
           </tbody>
@@ -88,11 +88,11 @@ function Ranking({ title, description, rows, unit, tone = "forest" }) {
           {rows.map((row, i) => (
             <li key={row.key} className="grid grid-cols-[20px_1fr_auto] items-center gap-x-3 gap-y-1 text-sm">
               <span className="tabular text-xs text-ink-muted">{i + 1}</span>
-              <span className="truncate text-ink">{row.label}</span>
+              <span className="break-words text-ink">{row.label}</span>
               <span className="tabular text-xs text-ink-soft">
                 {row.count} {unit}
               </span>
-              <span className="col-start-2 col-end-4 h-1 overflow-hidden rounded-full bg-sunken">
+              <span className="col-start-2 col-end-4 h-2 overflow-hidden rounded-full bg-sunken">
                 <span className={`block h-full rounded-full ${tone === "danger" ? "bg-danger" : "bg-forest"}`} style={{ width: `${(row.count / max) * 100}%` }} />
               </span>
             </li>
@@ -106,14 +106,14 @@ function Ranking({ title, description, rows, unit, tone = "forest" }) {
 function MonthlyChart({ data, ano }) {
   const max = Math.max(1, ...data.map((d) => d.count));
   return (
-    <Panel className="lg:col-span-2">
+    <Panel className="overflow-x-auto lg:col-span-2">
       <PanelHeader title={`Empréstimos por mês · ${ano}`} description={`${data.reduce((n, d) => n + d.count, 0)} no ano`} />
-      <div className="flex h-44 items-end gap-2 px-5 pt-6 pb-4" role="img" aria-label={`Empréstimos por mês em ${ano}`}>
+      <div className="flex h-44 min-w-[30rem] items-end gap-2 px-5 pt-6 pb-4 sm:min-w-0" role="img" aria-label={`Empréstimos por mês em ${ano}`}>
         {data.map((d) => (
           <div key={d.label} className="flex flex-1 flex-col items-center gap-1.5">
-            <span className="tabular text-[11px] text-ink-muted">{d.count || ""}</span>
+            <span className="tabular text-xs text-ink-muted">{d.count || ""}</span>
             <span className="w-full max-w-9 rounded-t-sm bg-forest/85" style={{ height: `${(d.count / max) * 100}px`, minHeight: d.count ? 3 : 1, opacity: d.count ? 1 : 0.25 }} />
-            <span className="text-[11px] text-ink-muted">{d.label}</span>
+            <span className="text-xs text-ink-muted">{d.label}</span>
           </div>
         ))}
       </div>
@@ -145,13 +145,13 @@ export default function RelatoriosPage() {
         description="Como o acervo está circulando na comunidade."
         actions={
           <div className="flex gap-2">
-            <select value={ano} onChange={(e) => setAno(e.target.value === "todos" ? "todos" : Number(e.target.value))} className={`${inputClass} h-9 w-auto`} aria-label="Ano">
+            <select value={ano} onChange={(e) => setAno(e.target.value === "todos" ? "todos" : Number(e.target.value))} className={`${inputClass} w-auto`} aria-label="Ano">
               <option value="todos">Todos os anos</option>
               {anos.map((a) => (
                 <option key={a} value={a}>{a}</option>
               ))}
             </select>
-            <select value={mes} onChange={(e) => setMes(e.target.value)} className={`${inputClass} h-9 w-auto`} aria-label="Mês" disabled={ano === "todos"}>
+            <select value={mes} onChange={(e) => setMes(e.target.value)} className={`${inputClass} w-auto`} aria-label="Mês" disabled={ano === "todos"}>
               <option value="">Ano inteiro</option>
               {MESES.map((m, i) => (
                 <option key={m} value={i}>{m}</option>
@@ -161,15 +161,15 @@ export default function RelatoriosPage() {
         }
       />
 
-      <Panel className="mb-6 grid grid-cols-3 divide-x divide-line">
+      <Panel className="mb-6 grid divide-line max-sm:divide-y sm:grid-cols-3 sm:divide-x">
         {[
           ["Empréstimos no período", periodo.length],
           ["Leitores atendidos", new Set(periodo.map((l) => l.leitor.id)).size],
           ["Com atraso", atrasos],
         ].map(([label, value]) => (
-          <div key={label} className="px-5 py-4">
+          <div key={label} className="px-6 py-5">
             <p className="text-xs text-ink-muted">{label}</p>
-            <p className="tabular mt-1 font-display text-3xl text-ink">{value}</p>
+            <p className="tabular mt-1 font-display font-bold text-3xl text-ink">{value}</p>
           </div>
         ))}
       </Panel>
@@ -202,8 +202,8 @@ export default function RelatoriosPage() {
               <li key={c.label} className="grid grid-cols-[44px_1fr_auto] items-center gap-3">
                 <span className="font-mono text-xs text-ink-soft">{c.label === "Sem CDD" ? "—" : c.label}</span>
                 <span>
-                  <span className="block truncate text-xs text-ink-muted">{CLASSES_CDD[c.label] ?? "Sem classificação"}</span>
-                  <span className="mt-1 block h-1 rounded-full bg-sunken">
+                  <span className="block break-words text-xs text-ink-muted">{CLASSES_CDD[c.label] ?? "Sem classificação"}</span>
+                  <span className="mt-1.5 block h-2 rounded-full bg-sunken">
                     <span className="block h-full rounded-full bg-clay" style={{ width: `${(c.count / maxCdd) * 100}%` }} />
                   </span>
                 </span>

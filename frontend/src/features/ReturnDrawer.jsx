@@ -15,8 +15,8 @@ function LoanOption({ loan }) {
     <div className="flex items-center gap-3">
       <Cover src={loan.obra.capaUrl} title={loan.obra.titulo} />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink">{loan.obra.titulo}</p>
-        <p className="truncate text-xs text-ink-muted">
+        <p className="break-words text-sm font-semibold text-ink">{loan.obra.titulo}</p>
+        <p className="break-words text-xs text-ink-muted">
           <span className="font-mono">{loan.exemplar.numeroInventario}</span> · {loan.leitor.nome}
         </p>
       </div>
@@ -80,7 +80,7 @@ function ReturnForm({ onClose, initialLoan }) {
       </Field>
 
       {loan && (
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border border-line p-4 text-sm">
+        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md border-[1.5px] border-line p-5 text-base">
           <dt className="text-ink-muted">Leitor</dt>
           <dd className="text-right font-medium text-ink">{loan.leitor.nome}</dd>
           <dt className="text-ink-muted">Retirado em</dt>
@@ -88,7 +88,7 @@ function ReturnForm({ onClose, initialLoan }) {
           <dt className="text-ink-muted">Previsto para</dt>
           <dd className={`tabular text-right ${loan.atrasado ? "font-medium text-danger" : "text-ink"}`}>{formatDate(loan.dataPrevista)}</dd>
           {loan.atrasado && (
-            <p className="col-span-2 rounded-sm bg-danger-soft px-3 py-2 text-danger">Devolução com {Math.abs(loan.diasRestantes)} dia(s) de atraso.</p>
+            <p className="col-span-2 rounded-md border-[1.5px] border-danger/40 bg-danger-soft px-4 py-3 font-semibold text-danger">Devolução com {Math.abs(loan.diasRestantes)} dia(s) de atraso.</p>
           )}
         </dl>
       )}

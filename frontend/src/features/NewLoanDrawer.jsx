@@ -19,8 +19,8 @@ function LeitorOption({ leitor }) {
     <div className={`flex items-center gap-3 ${leitor.suspensao ? "opacity-70" : ""}`}>
       <Avatar name={leitor.nome} size="sm" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink">{leitor.nome}</p>
-        <p className="truncate text-xs text-ink-muted">{leitor.email}</p>
+        <p className="break-words text-sm font-semibold text-ink">{leitor.nome}</p>
+        <p className="wrap-anywhere text-xs text-ink-muted">{leitor.email}</p>
       </div>
       {leitor.suspensao && <Badge tone="danger">Suspenso</Badge>}
     </div>
@@ -32,8 +32,8 @@ function ExemplarOption({ item }) {
     <div className="flex items-center gap-3">
       <Cover src={item.obra.capaUrl} title={item.obra.titulo} />
       <div className="min-w-0">
-        <p className="truncate text-sm font-medium text-ink">{item.obra.titulo}</p>
-        <p className="truncate text-xs text-ink-muted">
+        <p className="break-words text-sm font-semibold text-ink">{item.obra.titulo}</p>
+        <p className="break-words text-xs text-ink-muted">
           <span className="font-mono">{item.numeroInventario}</span> · {item.obra.autor || "Autor não informado"}
         </p>
       </div>
@@ -112,7 +112,7 @@ function LoanForm({ onClose, initialObra }) {
       </Field>
 
       {suspenso && (
-        <p role="alert" className="-mt-2 rounded-md bg-danger-soft px-3 py-2.5 text-sm text-danger">
+        <p role="alert" className="-mt-2 rounded-md border-[1.5px] border-danger/40 bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
           {leitor.nome} está suspenso(a) {suspenso.dataFim ? `até ${formatDate(suspenso.dataFim)}` : "por tempo indeterminado"}: {suspenso.motivo}
         </p>
       )}
@@ -136,12 +136,12 @@ function LoanForm({ onClose, initialObra }) {
 
       <Field label="Devolver até" hint={dias >= 1 ? `${dias} dias de empréstimo` : "Escolha uma data futura."}>
         {(id) => (
-          <input id={id} type="date" value={devolucao} min={toInputDate(addDays(today, 1))} onChange={(e) => setDevolucao(e.target.value)} className={inputClass} required />
+          <input id={id} autoComplete="off" type="date" value={devolucao} min={toInputDate(addDays(today, 1))} onChange={(e) => setDevolucao(e.target.value)} className={inputClass} required />
         )}
       </Field>
 
-      <label className="flex cursor-pointer items-start gap-3 rounded-md border border-line p-3">
-        <input type="checkbox" checked={enviarEmail} onChange={(e) => setEnviarEmail(e.target.checked)} className="mt-0.5 size-4 accent-[var(--forest)]" />
+      <label className="flex min-h-16 cursor-pointer items-start gap-3 rounded-md border-2 border-ink p-4">
+        <input type="checkbox" checked={enviarEmail} onChange={(e) => setEnviarEmail(e.target.checked)} className="mt-0.5 size-6 shrink-0 accent-[var(--forest)]" />
         <span className="text-sm">
           <span className="font-medium text-ink">Enviar comprovante por e-mail</span>
           <span className="block text-ink-muted">{leitor?.email ? `Para ${leitor.email}` : "O leitor recebe título, exemplar e data de devolução."}</span>
@@ -149,9 +149,9 @@ function LoanForm({ onClose, initialObra }) {
       </label>
 
       {valid && (
-        <div className="rounded-md bg-sunken px-4 py-3 text-sm text-ink-soft">
-          <strong className="font-medium text-ink">{exemplar.obra.titulo}</strong> para <strong className="font-medium text-ink">{leitor.nome}</strong>, com devolução em{" "}
-          <strong className="font-medium text-ink">{formatDate(`${devolucao}T12:00:00`)}</strong>.
+        <div className="rounded-md border-[1.5px] border-line bg-sunken px-4 py-3 text-base text-ink-soft">
+          <strong className="font-semibold text-ink">{exemplar.obra.titulo}</strong> para <strong className="font-semibold text-ink">{leitor.nome}</strong>, com devolução em{" "}
+          <strong className="font-semibold text-ink">{formatDate(`${devolucao}T12:00:00`)}</strong>.
         </div>
       )}
     </Drawer>

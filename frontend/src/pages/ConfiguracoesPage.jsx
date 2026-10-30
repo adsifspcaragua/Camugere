@@ -9,10 +9,10 @@ import LembretesPanel from "../features/LembretesPanel.jsx";
 
 function Row({ title, description, children }) {
   return (
-    <div className="flex items-center gap-4 px-5 py-4">
+    <div className="flex items-center gap-4 px-6 py-5">
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-ink">{title}</p>
-        <p className="mt-0.5 text-[13px] leading-snug text-ink-muted">{description}</p>
+        <p className="text-sm font-semibold text-ink">{title}</p>
+        <p className="mt-1 text-xs leading-snug text-ink-muted">{description}</p>
       </div>
       <div className="shrink-0">{children}</div>
     </div>
@@ -22,12 +22,12 @@ function Row({ title, description, children }) {
 function Stepper({ value, onChange, label }) {
   const clamp = (n) => Math.min(90, Math.max(1, n));
   return (
-    <div className="flex items-center rounded-full border border-line-strong bg-panel" role="group" aria-label={label}>
-      <button type="button" onClick={() => onChange(clamp(value - 1))} className="size-8 rounded-full text-ink-soft hover:bg-sunken" aria-label={`Diminuir ${label}`}>
+    <div className="flex items-center rounded-md border-[1.5px] border-field bg-panel" role="group" aria-label={label}>
+      <button type="button" onClick={() => onChange(clamp(value - 1))} className="flex size-11 items-center justify-center rounded-md text-2xl font-semibold text-ink hover:bg-sunken" aria-label={`Diminuir ${label}`}>
         −
       </button>
-      <span className="tabular w-14 text-center text-sm font-medium text-ink">{value} dias</span>
-      <button type="button" onClick={() => onChange(clamp(value + 1))} className="size-8 rounded-full text-ink-soft hover:bg-sunken" aria-label={`Aumentar ${label}`}>
+      <span className="tabular w-20 text-center text-sm font-semibold text-ink">{value} dias</span>
+      <button type="button" onClick={() => onChange(clamp(value + 1))} className="flex size-11 items-center justify-center rounded-md text-2xl font-semibold text-ink hover:bg-sunken" aria-label={`Aumentar ${label}`}>
         +
       </button>
     </div>
@@ -42,9 +42,9 @@ function Switch({ checked, onChange, label }) {
       aria-checked={checked}
       aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative h-6 w-11 rounded-full transition-colors ${checked ? "bg-forest" : "bg-line-strong"}`}
+      className={`relative h-8 w-14 rounded-full border-2 transition-colors ${checked ? "border-forest bg-forest" : "border-field bg-sunken"}`}
     >
-      <span className={`absolute top-0.5 size-5 rounded-full bg-panel shadow transition-all ${checked ? "left-[22px]" : "left-0.5"}`} />
+      <span className={`absolute top-0.5 size-6 rounded-full shadow transition-all ${checked ? "left-[26px] bg-on-forest" : "left-0.5 bg-ink-muted"}`} />
     </button>
   );
 }
@@ -60,7 +60,7 @@ function AparenciaPanel() {
   return (
     <Panel>
       <PanelHeader title="Aparência" description="Vale para este navegador." />
-      <div className="grid grid-cols-3 gap-2 p-4" role="radiogroup" aria-label="Tema">
+      <div className="grid grid-cols-3 gap-3 p-5" role="radiogroup" aria-label="Tema">
         {TEMAS.map(({ value, label, icon: Icon, hint }) => {
           const active = preference === value;
           return (
@@ -69,13 +69,13 @@ function AparenciaPanel() {
               role="radio"
               aria-checked={active}
               onClick={() => setPreference(value)}
-              className={`flex flex-col items-center gap-1.5 rounded-xl border px-3 py-3 text-sm transition-colors ${
-                active ? "border-forest bg-forest-soft font-medium text-ink" : "border-line text-ink-soft hover:bg-sunken"
+              className={`flex min-h-24 flex-col items-center justify-center gap-1.5 rounded-lg border-2 px-3 py-4 text-sm transition-colors ${
+                active ? "border-forest bg-forest-soft font-bold text-ink" : "border-field font-medium text-ink-soft hover:bg-sunken"
               }`}
             >
-              <Icon size={18} className={active ? "text-forest" : "text-ink-muted"} />
+              <Icon size={22} className={active ? "text-forest" : "text-ink-muted"} />
               {label}
-              {hint && <span className="text-[11px] font-normal text-ink-muted">{hint}</span>}
+              {hint && <span className="text-xs font-medium text-ink-muted">{hint}</span>}
             </button>
           );
         })}

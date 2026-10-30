@@ -35,14 +35,14 @@ export default function LembretesPanel() {
   return (
     <Panel>
       <PanelHeader title="Lembretes de devolução" description="E-mail automático enviado ao leitor antes do vencimento." />
-      <div className="flex flex-wrap items-center gap-4 px-5 py-4 text-sm">
-        <div className="min-w-0 flex-1 text-ink-soft">
+      <div className="flex flex-wrap items-center gap-4 px-6 py-5 text-sm">
+        <div className="min-w-0 flex-[1_1_20rem] text-ink-soft">
           {status ? (
             <>
               <p>
-                Enviados <strong className="font-medium text-ink">{status.diasAntes} dia(s) antes</strong> do prazo, {status.automatico ? "verificando de hora em hora." : "envio automático desligado no servidor."}
+                Enviados <strong className="font-semibold text-ink">{status.diasAntes} dia(s) antes</strong> do prazo, {status.automatico ? "verificando de hora em hora." : "envio automático desligado no servidor."}
               </p>
-              <p className="mt-0.5 text-ink-muted">
+              <p className="mt-1 text-ink-muted">
                 {status.pendentes ? `${status.pendentes} empréstimo(s) aguardando lembrete.` : "Nenhum lembrete pendente."} Cada empréstimo recebe um lembrete por prazo (renovar gera um novo).
               </p>
             </>
@@ -54,7 +54,7 @@ export default function LembretesPanel() {
           Enviar pendentes agora
         </Button>
       </div>
-      <p className="border-t border-line px-5 py-3 text-xs text-ink-muted">
+      <p className="border-t border-line px-6 py-4 text-xs text-ink-muted">
         A antecedência é definida por <code className="font-mono">LEMBRETE_DIAS_ANTES</code> no <code className="font-mono">.env</code> da API.
       </p>
     </Panel>

@@ -80,9 +80,9 @@ function BuscaCatalogo({ onFill }) {
   }, [termo, onFill, toast]);
 
   return (
-    <div className="rounded-xl bg-forest-soft/70 p-4">
-      <label htmlFor="busca-catalogo" className="mb-2 flex items-center gap-2 text-sm font-medium text-ink">
-        <Sparkles size={15} className="text-forest" /> Preencher automaticamente
+    <div className="rounded-lg border-[1.5px] border-forest/30 bg-forest-soft p-5">
+      <label htmlFor="busca-catalogo" className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
+        <Sparkles size={18} className="text-forest" /> Preencher automaticamente
       </label>
       <div className="relative">
         <input
@@ -95,14 +95,14 @@ function BuscaCatalogo({ onFill }) {
           }}
           placeholder="Bipe ou digite o ISBN, ou escreva o título"
           autoComplete="off"
-          className={`${inputClass} h-11 bg-panel pr-24`}
+          className={`${inputClass} bg-panel ${buscando ? "pr-28" : ""}`}
         />
         {buscando && <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-ink-muted">Buscando…</span>}
       </div>
       <p className="mt-2 text-xs text-ink-muted">Capa, autoria, editora, ano, páginas, sinopse e uma sugestão de CDD vêm prontos. Depois é só revisar.</p>
 
       {resultados.length > 0 && (
-        <ul className="mt-3 max-h-72 divide-y divide-line overflow-y-auto rounded-lg border border-line bg-panel scrollbar-thin">
+        <ul className="mt-3 max-h-72 divide-y divide-line overflow-y-auto rounded-lg border-[1.5px] border-line bg-panel scrollbar-thin">
           {resultados.map((livro, i) => (
             <li key={`${livro.isbn}-${i}`}>
               <button
@@ -112,12 +112,12 @@ function BuscaCatalogo({ onFill }) {
                   setResultados([]);
                   setTermo("");
                 }}
-                className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-sunken"
+                className="flex min-h-16 w-full items-center gap-3 px-4 py-3 text-left hover:bg-sunken"
               >
                 <Cover src={livro.capaUrl} title={livro.titulo} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-ink">{livro.titulo}</span>
-                  <span className="block truncate text-xs text-ink-muted">
+                  <span className="block break-words text-sm font-semibold text-ink">{livro.titulo}</span>
+                  <span className="block break-words text-xs text-ink-muted">
                     {[livro.autor, livro.editora, livro.anoPublicacao].filter(Boolean).join(" · ")}
                   </span>
                 </span>
@@ -244,7 +244,7 @@ function ObraForm({ obra, onClose }) {
           {!editing && (
             <div className="mr-auto flex items-center gap-2 text-sm text-ink-soft">
               <Button variant="secondary" size="icon" icon={Minus} onClick={() => setQuantidade((q) => Math.max(1, q - 1))} aria-label="Menos um exemplar" />
-              <span className="tabular w-6 text-center font-medium text-ink">{quantidade}</span>
+              <span className="tabular w-8 text-center font-bold text-ink">{quantidade}</span>
               <Button variant="secondary" size="icon" icon={Plus} onClick={() => setQuantidade((q) => Math.min(50, q + 1))} aria-label="Mais um exemplar" />
               <span>{quantidade === 1 ? "exemplar" : "exemplares"}</span>
             </div>
@@ -257,7 +257,7 @@ function ObraForm({ obra, onClose }) {
     >
       {!editing && <BuscaCatalogo onFill={preencher} />}
 
-      <div className="grid grid-cols-[96px_1fr] gap-5">
+      <div className="grid gap-5 sm:grid-cols-[96px_1fr]">
         <CoverPicker value={values.capaUrl} title={values.titulo} onChange={(capaUrl) => set({ capaUrl })} />
         <div className="min-w-0 space-y-4">
           <TextField label="Título" {...field("titulo")} required />
@@ -278,11 +278,11 @@ function ObraForm({ obra, onClose }) {
         <TextField label="Assunto" {...field("cddDescricao")} placeholder="Literatura brasileira — ficção" />
       </div>
 
-      <button type="button" onClick={() => setDetalhes((d) => !d)} aria-expanded={detalhes} className="flex w-full items-center justify-between border-t border-line pt-4 text-sm font-medium text-ink-soft hover:text-ink">
+      <button type="button" onClick={() => setDetalhes((d) => !d)} aria-expanded={detalhes} className="flex min-h-12 w-full items-center justify-between border-t border-line pt-4 text-sm font-semibold text-ink-soft hover:text-ink">
         <span className="flex items-center gap-2">
           <BookOpen size={15} /> Dados da publicação
         </span>
-        <ChevronDown size={16} className={`transition-transform ${detalhes ? "rotate-180" : ""}`} />
+        <ChevronDown size={20} className={`transition-transform ${detalhes ? "rotate-180" : ""}`} />
       </button>
 
       {detalhes && (
@@ -290,7 +290,7 @@ function ObraForm({ obra, onClose }) {
           <Field label="ISBN" optional>
             {(id) => (
               <div className="flex gap-2">
-                <input id={id} {...field("isbn")} inputMode="numeric" placeholder="9788535914849" className={`${inputClass} flex-1 font-mono`} />
+                <input id={id} autoComplete="off" {...field("isbn")} inputMode="numeric" placeholder="9788535914849" className={`${inputClass} flex-1 font-mono`} />
                 <Button variant="secondary" size="sm" onClick={buscarPeloCampoIsbn} loading={buscandoIsbnCampo} disabled={!values.isbn?.trim()}>
                   Buscar ISBN
                 </Button>

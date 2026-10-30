@@ -73,31 +73,31 @@ export default function NotificationBell({ onNavigate, onOpenLeitor }) {
         tooltip={open ? "" : novas ? `${novas} nova${novas === 1 ? "" : "s"}` : "Notificações"}
       />
       {novas > 0 && (
-        <span className="tabular pointer-events-none absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-white ring-2 ring-paper dark:text-paper">
+        <span className="tabular pointer-events-none absolute -top-1 -right-1 flex h-6 min-w-6 items-center justify-center rounded-full bg-danger px-1 text-xs font-bold text-white ring-2 ring-paper dark:text-paper">
           {novas > 9 ? "9+" : novas}
         </span>
       )}
 
       {open && (
-        <div role="dialog" aria-label="Notificações" className="animate-rise absolute top-11 right-0 z-40 w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-line bg-panel shadow-pop">
-          <div className="flex items-baseline justify-between border-b border-line px-4 py-3">
-            <p className="font-display text-base text-ink">Notificações</p>
+        <div role="dialog" aria-label="Notificações" className="animate-rise absolute top-13 right-0 z-40 w-[min(420px,calc(100vw-2rem))] overflow-hidden rounded-lg border-[1.5px] border-line-strong bg-panel shadow-pop">
+          <div className="flex items-baseline justify-between border-b border-line px-5 py-4">
+            <p className="font-display text-lg font-bold text-ink">Notificações</p>
             <p className="text-xs text-ink-muted">{itens.length ? `${itens.length} pendente${itens.length === 1 ? "" : "s"}` : ""}</p>
           </div>
           {itens.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-6 py-10 text-center">
-              <BellOff size={20} className="text-ink-muted" aria-hidden />
-              <p className="text-sm text-ink-soft">Tudo em dia. Nada precisa da sua atenção agora.</p>
+              <BellOff size={24} className="text-ink-muted" aria-hidden />
+              <p className="text-base text-ink-soft">Tudo em dia. Nada precisa da sua atenção agora.</p>
             </div>
           ) : (
             <ul className="max-h-[60vh] divide-y divide-line overflow-y-auto scrollbar-thin">
               {itens.map((n) => (
                 <li key={n.id}>
-                  <button onClick={() => abrir(n)} className="flex w-full gap-3 px-4 py-3 text-left hover:bg-sunken">
-                    <span className={`mt-1.5 size-2 shrink-0 rounded-full ${DOT[n.tone]}`} aria-hidden />
+                  <button onClick={() => abrir(n)} className="flex min-h-16 w-full gap-3 px-5 py-3.5 text-left hover:bg-sunken">
+                    <span className={`mt-2 size-3 shrink-0 rounded-full ${DOT[n.tone]}`} aria-hidden />
                     <span className="min-w-0">
-                      <span className="block text-sm text-ink">{n.titulo}</span>
-                      <span className="block truncate text-xs text-ink-muted">{n.detalhe}</span>
+                      <span className="block text-sm font-semibold text-ink">{n.titulo}</span>
+                      <span className="mt-0.5 block break-words text-xs text-ink-muted">{n.detalhe}</span>
                     </span>
                   </button>
                 </li>

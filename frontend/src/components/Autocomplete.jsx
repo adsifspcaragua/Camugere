@@ -45,10 +45,10 @@ export default function Autocomplete({ id, items, filter, renderItem, getKey, ge
 
   if (value) {
     return (
-      <div className="flex min-h-10 items-center gap-3 rounded-md border border-forest/40 bg-forest-soft/60 px-3 py-2">
+      <div className="flex min-h-[52px] items-center gap-3 rounded-md border-[1.5px] border-forest/50 bg-forest-soft px-4 py-2">
         <div className="min-w-0 flex-1">{renderItem(value)}</div>
-        <button type="button" onClick={() => onChange(null)} className="rounded p-1 text-ink-muted hover:text-ink" aria-label={`Remover ${getLabel(value)}`}>
-          <X size={15} />
+        <button type="button" onClick={() => onChange(null)} className="flex size-10 items-center justify-center rounded-md text-ink-muted hover:bg-panel hover:text-ink" aria-label={`Remover ${getLabel(value)}`}>
+          <X size={18} />
         </button>
       </div>
     );
@@ -56,7 +56,7 @@ export default function Autocomplete({ id, items, filter, renderItem, getKey, ge
 
   return (
     <div ref={rootRef} className="relative">
-      <Search size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-muted" />
+      <Search size={18} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-ink-muted" />
       <input
         id={id}
         value={query}
@@ -73,11 +73,11 @@ export default function Autocomplete({ id, items, filter, renderItem, getKey, ge
         aria-expanded={open}
         aria-controls={listId}
         aria-activedescendant={open && results[active] ? `${listId}-${active}` : undefined}
-        className={`${inputClass} pl-9`}
+        className={`${inputClass} pl-11`}
       />
       {open && (
-        <ul id={listId} role="listbox" className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-md border border-line bg-panel py-1 shadow-pop scrollbar-thin">
-          {results.length === 0 && <li className="px-3 py-3 text-sm text-ink-muted">{emptyMessage}</li>}
+        <ul id={listId} role="listbox" className="absolute z-20 mt-2 max-h-80 w-full overflow-y-auto rounded-md border-[1.5px] border-line-strong bg-panel py-1 shadow-pop scrollbar-thin">
+          {results.length === 0 && <li className="px-4 py-4 text-base text-ink-muted">{emptyMessage}</li>}
           {results.map((item, i) => (
             <li
               key={getKey(item)}
@@ -87,7 +87,7 @@ export default function Autocomplete({ id, items, filter, renderItem, getKey, ge
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => choose(item)}
               onMouseEnter={() => setActive(i)}
-              className={`cursor-pointer px-3 py-2 ${i === active ? "bg-sunken" : ""}`}
+              className={`cursor-pointer px-4 py-3 ${i === active ? "bg-forest-soft" : ""}`}
             >
               {renderItem(item)}
             </li>

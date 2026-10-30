@@ -20,10 +20,10 @@ function Metric({ label, value, detail, tone, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-start rounded-2xl px-5 py-4 text-left transition-colors ${alerta ? "bg-danger-soft hover:bg-danger-soft/70" : "bg-panel hover:bg-sunken"}`}
+      className={`flex flex-col items-start rounded-lg border-[1.5px] px-6 py-5 text-left shadow-card transition-colors ${alerta ? "border-danger/40 bg-danger-soft hover:bg-danger-soft/70" : "border-line bg-panel hover:bg-sunken"}`}
     >
-      <span className={`text-xs font-medium ${alerta ? "text-danger" : "text-ink-muted"}`}>{label}</span>
-      <span className={`tabular mt-1 font-display text-[34px] leading-none ${alerta ? "text-danger" : "text-ink"}`}>{value}</span>
+      <span className={`text-sm font-semibold ${alerta ? "text-danger" : "text-ink-muted"}`}>{label}</span>
+      <span className={`tabular mt-2 font-display font-bold text-3xl leading-none ${alerta ? "text-danger" : "text-ink"}`}>{value}</span>
       <span className="mt-2 text-xs text-ink-muted">{detail}</span>
     </button>
   );
@@ -34,16 +34,16 @@ function QuickAction({ icon: Icon, title, hint, kbd, onClick, primary }) {
   return (
     <button
       onClick={onClick}
-      className={`group flex items-center gap-3 rounded-2xl p-4 text-left transition-colors ${primary ? "bg-forest text-on-forest hover:bg-forest-strong" : "bg-panel text-ink hover:bg-sunken"}`}
+      className={`group flex min-h-20 items-center gap-4 rounded-lg border-[1.5px] p-4 text-left shadow-card transition-colors ${primary ? "border-forest bg-forest text-on-forest hover:bg-forest-strong" : "border-line bg-panel text-ink hover:bg-sunken"}`}
     >
-      <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${primary ? "bg-on-forest/15" : "bg-sunken group-hover:bg-panel"}`}>
+      <span className={`flex size-12 shrink-0 items-center justify-center rounded-md ${primary ? "bg-on-forest/15" : "bg-sunken group-hover:bg-panel"}`}>
         <Icon size={18} />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium">{title}</span>
-        <span className={`block text-xs ${primary ? "opacity-75" : "text-ink-muted"}`}>{hint}</span>
+        <span className="block text-base font-bold">{title}</span>
+        <span className={`block text-xs ${primary ? "opacity-90" : "text-ink-muted"}`}>{hint}</span>
       </span>
-      {kbd && <span className={`hidden rounded-md px-1.5 font-mono text-[11px] sm:block ${primary ? "bg-on-forest/15" : "bg-sunken text-ink-muted"}`}>{kbd}</span>}
+      {kbd && <span className={`hidden rounded-sm px-2 py-0.5 font-mono text-xs sm:block ${primary ? "bg-on-forest/15" : "bg-sunken text-ink-muted"}`}>{kbd}</span>}
     </button>
   );
 }
@@ -51,15 +51,15 @@ function QuickAction({ icon: Icon, title, hint, kbd, onClick, primary }) {
 function LoanRow({ loan }) {
   const status = loanStatus(loan);
   return (
-    <li className="flex items-center gap-3 px-5 py-3">
+    <li className="flex min-h-16 flex-wrap items-center gap-x-3 gap-y-2 px-6 py-3">
       <Cover src={loan.obra.capaUrl} title={loan.obra.titulo} />
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink">{loan.obra.titulo}</p>
-        <p className="truncate text-xs text-ink-muted">
+      <div className="min-w-[11rem] flex-1">
+        <p className="break-words text-sm font-semibold text-ink">{loan.obra.titulo}</p>
+        <p className="break-words text-xs text-ink-muted">
           {loan.leitor.nome} · <span className="font-mono">{loan.exemplar.numeroInventario}</span>
         </p>
       </div>
-      <div className="flex flex-col items-end gap-1">
+      <div className="ml-auto flex flex-col items-end gap-1">
         <Badge tone={status.tone}>{status.label}</Badge>
         <span className="tabular text-xs text-ink-muted">até {formatShortDate(loan.dataPrevista)}</span>
       </div>
@@ -86,11 +86,11 @@ export default function DashboardPage({ onNavigate, onNewLoan, onReturn, onNewLe
     <>
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="mb-1.5 text-xs font-medium tracking-[0.14em] text-clay uppercase">{hoje}</p>
-          <h1 className="font-display text-[30px] leading-tight font-medium text-ink">
+          <p className="mb-2 text-xs font-semibold tracking-[0.1em] text-clay uppercase">{hoje}</p>
+          <h1 className="font-display font-bold text-2xl tracking-[-0.01em] text-ink sm:text-3xl sm:tracking-[-0.02em]">
             {greeting()}, {user?.nome?.split(" ")[0]}.
           </h1>
-          <p className="mt-1.5 text-sm text-ink-muted">
+          <p className="mt-2 text-base text-ink-muted">
             {stats.atrasados > 0
               ? `Há ${stats.atrasados} empréstimo(s) em atraso precisando de contato.`
               : "Nenhum empréstimo em atraso. Tudo em dia por aqui."}
@@ -98,21 +98,21 @@ export default function DashboardPage({ onNavigate, onNewLoan, onReturn, onNewLe
         </div>
       </header>
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
         <QuickAction primary icon={Plus} title="Emprestar livro" hint="Leitor + exemplar, pronto" kbd="N" onClick={onNewLoan} />
         <QuickAction icon={CornerDownLeft} title="Receber devolução" hint="Busque pelo nº ou leitor" kbd="D" onClick={onReturn} />
         <QuickAction icon={UserPlus} title="Cadastrar leitor" hint="CEP preenche o endereço" onClick={onNewLeitor} />
         <QuickAction icon={BookPlus} title="Adicionar livro" hint="ISBN preenche tudo" onClick={onNewObra} />
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Metric label="Obras no acervo" value={stats.obras} detail={`${stats.exemplares} exemplares`} onClick={() => onNavigate("acervo")} />
         <Metric label="Emprestados agora" value={stats.ativos} detail={`${ocupacao}% do acervo em circulação`} onClick={() => onNavigate("emprestimos")} />
         <Metric label="Em atraso" value={stats.atrasados} tone="danger" detail={`${stats.venceEmBreve} vencem em até 2 dias`} onClick={() => onNavigate("emprestimos")} />
         <Metric label="Leitores" value={leitores.length} detail="cadastrados" onClick={() => onNavigate("leitores")} />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2">
         <Panel>
           <PanelHeader
             title="Pedem atenção"

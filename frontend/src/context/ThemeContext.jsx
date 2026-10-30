@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 const KEY = "camugere:theme";
 const ThemeContext = createContext(null);
@@ -13,7 +13,7 @@ function readPreference() {
   }
 }
 
-/** Preferência de tema: "system" (segue o sistema), "light" ou "dark". Alterada só em Configurações. */
+/** Preferência de tema: "system" (segue o sistema), "light" ou "dark". */
 export function ThemeProvider({ children }) {
   const [preference, setPreference] = useState(readPreference);
   const [systemDark, setSystemDark] = useState(() => media()?.matches ?? false);
@@ -37,7 +37,14 @@ export function ThemeProvider({ children }) {
     }
   }, [dark, preference]);
 
-  const value = useMemo(() => ({ dark, preference, setPreference }), [dark, preference]);
+  const toggleTheme = useCallback(() => {
+    setPreference((prev) => {
+      const isDark = prev === "dark" || (prev === "system" && (media()?.matches ?? false));
+      return isDark ? "light" : "dark";
+    });
+  }, []);
+
+  const value = useMemo(() => ({ dark, preference, setPreference, toggleTheme }), [dark, preference, toggleTheme]);
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 

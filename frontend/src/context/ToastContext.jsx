@@ -49,7 +49,7 @@ export function ToastProvider({ children }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed bottom-5 left-1/2 z-[100] flex w-[min(440px,calc(100vw-2rem))] -translate-x-1/2 flex-col items-center gap-2" aria-live="polite">
+      <div className="pointer-events-none fixed bottom-6 left-1/2 z-[100] flex w-[min(520px,calc(100vw-2rem))] -translate-x-1/2 flex-col items-center gap-2" aria-live="polite">
         {toasts.map((toast) => {
           const Icon = ICONS[toast.type];
           return (
@@ -58,22 +58,22 @@ export function ToastProvider({ children }) {
               role={toast.type === "error" ? "alert" : "status"}
               onMouseEnter={() => clearTimeout(timers.current.get(toast.id))}
               onMouseLeave={() => schedule(toast.id, 2500)}
-              className="animate-rise pointer-events-auto flex w-full items-center gap-3 rounded-2xl border border-line bg-panel py-2.5 pr-2.5 pl-4 shadow-pop"
+              className="animate-rise pointer-events-auto flex w-full items-center gap-3 min-h-16 rounded-lg border-[1.5px] border-line-strong bg-panel py-3 pr-3 pl-5 shadow-pop"
             >
-              <Icon size={18} className={`shrink-0 ${ACCENT[toast.type]}`} aria-hidden />
-              <p className="flex-1 py-0.5 text-sm text-ink">{toast.message}</p>
+              <Icon size={22} className={`shrink-0 ${ACCENT[toast.type]}`} aria-hidden />
+              <p className="flex-1 py-0.5 text-base text-ink">{toast.message}</p>
               {toast.action && (
                 <button
                   onClick={() => {
                     dismiss(toast.id);
                     toast.action.onClick();
                   }}
-                  className="shrink-0 rounded-full px-3 py-1 text-sm font-medium text-forest hover:bg-forest-soft"
+                  className="min-h-11 shrink-0 rounded-md px-4 text-sm font-bold text-forest hover:bg-forest-soft"
                 >
                   {toast.action.label}
                 </button>
               )}
-              <button onClick={() => dismiss(toast.id)} className="shrink-0 rounded-full p-1.5 text-ink-muted hover:bg-sunken hover:text-ink" aria-label="Fechar aviso">
+              <button onClick={() => dismiss(toast.id)} className="flex size-11 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-sunken hover:text-ink" aria-label="Fechar aviso">
                 <X size={15} />
               </button>
             </div>

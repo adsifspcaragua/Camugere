@@ -3,23 +3,45 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Identidade visual: biblioteca comunitária, editorial e sóbria.
- * Papel (fundo), tinta (texto), verde-floresta (marca) e terracota (destaque).
- * Os tokens semânticos mudam no modo escuro; os componentes usam só os semânticos.
+ * Design system "Comunidade Viva & Leitura Acessível" (ver DESIGN.md).
+ * Humanismo estruturado: terracota solar (ação), ardósia profunda (estrutura) e superfícies neutras.
+ * Os nomes dos tokens são históricos ("forest" = cor de ação primária, "clay" = acento);
+ * os componentes usam só os semânticos, e todos mudam no modo escuro.
  */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Escala acessível: nenhum texto abaixo de 15px. */
+  --text-xs: 0.9375rem;
+  --text-xs--line-height: 1.25rem;
+  --text-sm: 1rem;
+  --text-sm--line-height: 1.625rem;
+  --text-base: 1.125rem;
+  --text-base--line-height: 1.75rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.875rem;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 2.375rem;
+  --text-3xl: 2.25rem;
+  --text-3xl--line-height: 3rem;
 
   --color-paper: var(--paper);
   --color-panel: var(--panel);
   --color-sunken: var(--sunken);
+  --color-zebra: var(--zebra);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-ink-muted: var(--ink-muted);
+  --color-field: var(--field);
+  --color-deep: var(--deep);
+  --color-on-deep: var(--on-deep);
+  --color-on-deep-muted: var(--on-deep-muted);
 
   --color-forest: var(--forest);
   --color-forest-strong: var(--forest-strong);
@@ -36,84 +58,198 @@
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
 
-  --shadow-pop: 0 1px 2px rgb(31 29 26 / 0.06), 0 8px 24px -8px rgb(31 29 26 / 0.18);
+  --shadow-card: 0 4px 12px rgb(15 23 42 / 0.06);
+  --shadow-pop: 0 10px 24px rgb(15 23 42 / 0.12);
 }
 
 :root {
-  --paper: #f3efe6;
-  --panel: #fffcf6;
-  --sunken: #ebe5d8;
-  --line: #e2dacb;
-  --line-strong: #cbc1ae;
-  --ink: #1f1d1a;
-  --ink-soft: #4a453e;
-  --ink-muted: #857d71;
+  /* Neutros quentes (família "stone"): conversam com o terracota sem puxar para o azul. */
+  --paper: #fafaf9;
+  --panel: #ffffff;
+  --sunken: #f5f5f4;
+  --zebra: #fafaf9;
+  --line: #e7e5e4;
+  --line-strong: #d6d3d1;
+  --field: #8a817a;
+  --ink: #1c1917;
+  --ink-soft: #44403c;
+  --ink-muted: #57534e;
+  --deep: #292524;
+  --on-deep: #fafaf9;
+  --on-deep-muted: #d6d3d1;
 
-  --forest: #1f3a2e;
-  --forest-strong: #142a20;
-  --forest-soft: #e3ebe5;
-  --on-forest: #f6f2ea;
+  /* Terracota solar: #EA580C é o acento/foco; tons mais fundos garantem contraste com texto branco. */
+  --forest: #c2410c;
+  --forest-strong: #9a3412;
+  --forest-soft: #fff7ed;
+  --on-forest: #ffffff;
 
-  --clay: #b4532a;
-  --clay-soft: #f6e6dc;
+  --clay: #c2410c;
+  --clay-soft: #ffedd5;
+  --focus: #ea580c;
+  --focus-gap: #ffffff;
 
-  --ok: #2f6b45;
-  --ok-soft: #e2efe6;
-  --warn: #8a5a12;
-  --warn-soft: #f5ead2;
-  --danger: #a8322a;
-  --danger-soft: #f7e1de;
+  /* Semânticas de acervo (texto escurecido sobre a superfície para contraste AA+). */
+  --ok: #047857;
+  --ok-soft: #ecfdf5;
+  --warn: #b45309;
+  --warn-soft: #fffbeb;
+  --danger: #b91c1c;
+  --danger-soft: #fef2f2;
   color-scheme: light;
 }
 
+/* Modo noturno: grafite quente em camadas (nada de preto puro nem branco puro, que ofuscam). */
 .dark {
-  --paper: #161513;
-  --panel: #1d1c19;
-  --sunken: #252320;
-  --line: #2f2c28;
-  --line-strong: #403c36;
-  --ink: #eeeae2;
-  --ink-soft: #c4bdb1;
-  --ink-muted: #8d867a;
+  --paper: #161412;
+  --panel: #211e1b;
+  --sunken: #2b2724;
+  --zebra: #25221f;
+  --line: #3b3632;
+  --line-strong: #524c46;
+  --field: #8c847c;
+  --ink: #f5f2ee;
+  --ink-soft: #ddd7d0;
+  --ink-muted: #b8b0a7;
+  --deep: #211e1b;
+  --on-deep: #f5f2ee;
+  --on-deep-muted: #ddd7d0;
 
-  --forest: #8fbf9f;
-  --forest-strong: #a9d3b6;
-  --forest-soft: #1f2c24;
-  --on-forest: #10201a;
+  --forest: #f97316;
+  --forest-strong: #fb923c;
+  --forest-soft: #3a2415;
+  --on-forest: #1c1917;
 
-  --clay: #e0895f;
-  --clay-soft: #33231b;
+  --clay: #fb923c;
+  --clay-soft: #4a2a14;
+  --focus: #ffffff;
+  --focus-gap: #f97316;
 
-  --ok: #8cc79f;
-  --ok-soft: #1b2a20;
-  --warn: #e2b866;
-  --warn-soft: #2e2617;
-  --danger: #ec8b82;
-  --danger-soft: #34201d;
+  --ok: #4ade80;
+  --ok-soft: #15281c;
+  --warn: #fbbf24;
+  --warn-soft: #362a10;
+  --danger: #fb8a80;
+  --danger-soft: #3d1c18;
   color-scheme: dark;
 }
 
 @layer base {
   body {
-    @apply bg-paper font-sans text-[15px] text-ink antialiased;
-    font-feature-settings: "cv11", "ss01";
+    @apply bg-paper font-sans text-sm text-ink antialiased;
   }
   ::selection {
     background: var(--clay-soft);
   }
+  /* Anel duplo de foco: contorno de 3px com respiro de 2px preenchido em contraste. */
   :focus-visible {
-    outline: 2px solid var(--clay);
+    outline: 3px solid var(--focus);
     outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--focus-gap);
   }
   input,
   textarea,
   select {
     color: inherit;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 1.5rem;
+    height: 1.5rem;
+    accent-color: var(--forest);
+    cursor: pointer;
+  }
+
+  /* Tabelas: linhas de 64px, cabeçalho legível, zebra suave e divisórias nítidas. */
+  table thead th {
+    font-weight: 600;
+    color: var(--ink-soft);
+    padding-top: 0.875rem;
+    padding-bottom: 0.875rem;
+  }
+  table thead tr {
+    background: var(--sunken);
+  }
+  table th,
+  table td {
+    padding-inline-end: 1rem;
+  }
+  table tbody td {
+    height: 4rem;
+  }
+  /* Datas, telefones e códigos nunca quebram no meio. */
+  table td.tabular,
+  table td.font-mono {
+    white-space: nowrap;
+  }
+  table tbody tr {
+    border-top: 1px solid var(--line);
+  }
+  table tbody tr:nth-child(even) {
+    background: var(--zebra);
+  }
+
+  /*
+   * Celular, tablet de balcão e telas estreitas: quando o painel da tabela fica pequeno,
+   * cada linha vira um card com o rótulo da coluna (data-label) à esquerda e o valor à direita
+   * — sem rolagem lateral. Em painéis médios os pares rótulo/valor se distribuem em colunas.
+   * O !important vence as larguras e paddings utilitários pensados para a tabela de desktop.
+   */
+  section:has(> table) {
+    container-type: inline-size;
+  }
+  @container (width < 66rem) {
+    table {
+      display: block;
+      min-width: 0 !important;
+    }
+    table thead {
+      display: none;
+    }
+    table tbody {
+      display: block;
+    }
+    table tbody tr {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+      column-gap: 2.5rem;
+      padding: 1rem 1.25rem;
+    }
+    table tbody td {
+      display: flow-root;
+      height: auto;
+      min-width: 0 !important;
+      max-width: none !important;
+      padding: 0.5rem 0 !important;
+      text-align: right !important;
+      white-space: normal;
+    }
+    table tbody td:first-child,
+    table tbody td:last-child:not([data-label]),
+    table tbody td[colspan] {
+      grid-column: 1 / -1;
+    }
+    table tbody td:first-child,
+    table tbody td[colspan] {
+      text-align: left !important;
+    }
+    table tbody td:last-child:not([data-label]) > * {
+      justify-content: flex-end;
+    }
+    table tbody td[data-label]::before {
+      content: attr(data-label);
+      float: left;
+      margin-right: 1rem;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ink-muted);
+    }
   }
 }
 

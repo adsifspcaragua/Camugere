@@ -32,27 +32,28 @@ export default function Drawer({ open, onClose, title, description, footer, onSu
   const Body = onSubmit ? "form" : "div";
   return createPortal(
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-ink/30" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-stone-950/40" onClick={onClose} aria-hidden />
       <aside
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l border-line bg-panel shadow-pop animate-rise"
+        className="absolute inset-y-0 right-0 flex w-full max-w-[560px] flex-col border-l-[1.5px] border-line-strong bg-panel shadow-pop animate-rise"
       >
         <header className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
           <div>
-            <h2 id={titleId} className="font-display text-xl font-medium text-ink">
+            <h2 id={titleId} className="font-display text-xl font-bold text-ink">
               {title}
             </h2>
-            {description && <p className="mt-1 text-sm text-ink-muted">{description}</p>}
+            {description && <p className="mt-1 text-base text-ink-muted">{description}</p>}
           </div>
-          <button onClick={onClose} aria-label="Fechar" className="-mr-1 rounded-md p-1.5 text-ink-muted hover:bg-sunken hover:text-ink">
-            <X size={18} />
+          <button onClick={onClose} aria-label="Fechar" className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-md text-ink-muted hover:bg-sunken hover:text-ink">
+            <X size={22} />
           </button>
         </header>
         <Body
           className="flex min-h-0 flex-1 flex-col"
+          autoComplete="off"
           {...(onSubmit && {
             onSubmit: (e) => {
               e.preventDefault();
@@ -60,8 +61,8 @@ export default function Drawer({ open, onClose, title, description, footer, onSu
             },
           })}
         >
-          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-6 scrollbar-thin">{children}</div>
-          {footer && <footer className="flex justify-end gap-2 border-t border-line bg-paper/60 px-6 py-4">{footer}</footer>}
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6 scrollbar-thin">{children}</div>
+          {footer && <footer className="flex flex-wrap justify-end gap-3 border-t border-line bg-sunken px-6 py-4">{footer}</footer>}
         </Body>
       </aside>
     </div>,
