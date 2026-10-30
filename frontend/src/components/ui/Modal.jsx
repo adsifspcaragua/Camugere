@@ -12,8 +12,8 @@ export default function Modal({ open, onClose, labelledBy, children }) {
   if (!open) return null;
   return createPortal(
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" onClick={onClose} aria-hidden />
-      <div role="alertdialog" aria-modal="true" aria-labelledby={labelledBy} className="animate-rise relative w-full max-w-md rounded-lg border border-line bg-panel shadow-pop">
+      <div className="absolute inset-0 bg-stone-950/50" onClick={onClose} aria-hidden />
+      <div role="alertdialog" aria-modal="true" aria-labelledby={labelledBy} className="animate-rise relative w-full max-w-md rounded-lg border-[1.5px] border-line-strong bg-panel shadow-pop">
         {children}
       </div>
     </div>,

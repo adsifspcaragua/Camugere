@@ -85,7 +85,7 @@ export default function Tooltip({ content, side = "top", children }) {
             ref={tipRef}
             id={id}
             role="tooltip"
-            className="pointer-events-none fixed top-0 left-0 z-[120] max-w-[240px] rounded-md bg-ink px-2.5 py-1.5 text-xs leading-snug font-medium text-paper opacity-0 shadow-pop transition-opacity duration-100 data-[ready=true]:opacity-100"
+            className="pointer-events-none fixed top-0 left-0 z-[120] max-w-[280px] rounded-md bg-deep px-3 py-2 text-xs leading-snug font-medium text-on-deep ring-1 ring-on-deep/20 opacity-0 shadow-pop transition-opacity duration-100 data-[ready=true]:opacity-100"
           >
             {content}
           </div>,

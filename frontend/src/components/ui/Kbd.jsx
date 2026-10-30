@@ -1,3 +1,3 @@
 export default function Kbd({ children }) {
-  return <kbd className="rounded-sm border border-line-strong bg-panel px-1.5 py-px font-mono text-[11px] text-ink-muted">{children}</kbd>;
+  return <kbd className="rounded-sm border-[1.5px] border-line-strong bg-sunken px-2 py-0.5 font-mono text-xs text-ink-soft">{children}</kbd>;
 }

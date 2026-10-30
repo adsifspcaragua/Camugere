@@ -2,7 +2,7 @@ import { useState } from "react";
 import { tomPara } from "../../lib/palette.js";
 
 // Capa do livro; sem imagem, uma lombada colorida com a inicial do título.
-const SIZES = { sm: "h-11 w-8 text-sm", md: "h-16 w-11 text-lg", lg: "h-36 w-24 text-3xl" };
+const SIZES = { sm: "h-14 w-10 text-base", md: "h-18 w-13 text-xl", lg: "h-36 w-24 text-3xl" };
 
 export default function Cover({ src, title = "", size = "sm" }) {
   const [failed, setFailed] = useState(false);
@@ -13,7 +13,7 @@ export default function Cover({ src, title = "", size = "sm" }) {
   }
   const tom = tomPara(title);
   return (
-    <span aria-hidden className={`${classes} flex items-center justify-center font-display`} style={{ background: tom.bg, color: tom.fg }}>
+    <span aria-hidden className={`${classes} flex items-center justify-center font-display font-bold`} style={{ background: tom.bg, color: tom.fg }}>
       {title.trim()[0]?.toUpperCase() ?? "·"}
     </span>
   );

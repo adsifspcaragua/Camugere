@@ -101,11 +101,11 @@ export default function EquipePanel() {
         {equipe.map((b) => {
           const voce = b.usuario.id === user?.id;
           return (
-            <li key={b.id} className="flex items-center gap-3 px-5 py-3">
+            <li key={b.id} className="flex min-h-16 items-center gap-3 px-6 py-3">
               <Avatar name={b.usuario.nome} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-ink">{b.usuario.nome}</p>
-                <p className="truncate text-xs text-ink-muted">{b.usuario.email}</p>
+                <p className="break-words text-sm font-semibold text-ink">{b.usuario.nome}</p>
+                <p className="wrap-anywhere text-xs text-ink-muted">{b.usuario.email}</p>
               </div>
               {voce ? (
                 <Badge tone="forest" dot={false}>Você</Badge>

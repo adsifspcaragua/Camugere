@@ -26,21 +26,21 @@ function exportCsv(obras) {
 function Exemplares({ obra, loansByExemplar, onAdd, onDelete }) {
   return (
     <tr>
-      <td colSpan={6} className="bg-sunken/50 px-5 py-4">
-        <div className="ml-11">
-          <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium tracking-wider text-ink-muted uppercase">Exemplares</p>
+      <td colSpan={6} className="bg-sunken px-6 py-5">
+        <div className="md:ml-11">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-semibold tracking-wider text-ink-muted uppercase">Exemplares</p>
             <Button variant="secondary" size="sm" icon={Plus} onClick={() => onAdd(obra)}>
               Adicionar exemplar
             </Button>
           </div>
           {obra.exemplares.length === 0 && <p className="py-2 text-sm text-ink-muted">Esta obra ainda não tem exemplares físicos.</p>}
-          <ul className="divide-y divide-line rounded-md border border-line bg-panel">
+          <ul className="divide-y divide-line rounded-md border-[1.5px] border-line bg-panel">
             {obra.exemplares.map((ex) => {
               const loan = loansByExemplar.get(ex.id);
               return (
-                <li key={ex.id} className="flex items-center gap-4 px-3 py-2 text-sm">
-                  <span className="w-20 font-mono text-xs text-ink-soft">{ex.numeroInventario}</span>
+                <li key={ex.id} className="flex min-h-16 items-center gap-4 px-4 py-2 text-sm">
+                  <span className="w-24 font-mono text-xs text-ink-soft">{ex.numeroInventario}</span>
                   {ex.disponivel ? <Badge tone="ok">Na estante</Badge> : <Badge tone={loan?.atrasado ? "danger" : "warn"}>{loan ? `Com ${loan.leitor.nome}` : "Emprestado"}</Badge>}
                   {ex.disponivel && (
                     <Button variant="ghost" size="icon" icon={Trash2} className="ml-auto" onClick={() => onDelete(ex)} aria-label={`Remover exemplar ${ex.numeroInventario}`} />
@@ -103,7 +103,7 @@ export default function AcervoPage({ search, onAddObra, onEditObra }) {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <Segmented
           label="Filtrar obras"
           value={filter}
@@ -129,11 +129,11 @@ export default function AcervoPage({ search, onAddObra, onEditObra }) {
           <table className="w-full min-w-[720px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs text-ink-muted">
-                <th className="py-2.5 pl-5 font-medium">Obra</th>
-                <th className="py-2.5 font-medium">Autoria</th>
-                <th className="py-2.5 font-medium">CDD</th>
-                <th className="py-2.5 text-right font-medium">Exemplares</th>
-                <th className="py-2.5 pl-6 font-medium">Situação</th>
+                <th className="py-2.5 pl-5 font-semibold">Obra</th>
+                <th className="py-2.5 font-semibold">Autoria</th>
+                <th className="py-2.5 font-semibold">CDD</th>
+                <th className="py-2.5 text-right font-semibold">Exemplares</th>
+                <th className="py-2.5 pl-6 font-semibold">Situação</th>
                 <th className="w-24 py-2.5 pr-5" aria-label="Ações" />
               </tr>
             </thead>
@@ -145,24 +145,24 @@ export default function AcervoPage({ search, onAddObra, onEditObra }) {
                     <tr className={`group ${open ? "bg-sunken/50" : "hover:bg-sunken/40"}`}>
                       <td className="py-2.5 pl-5">
                         <button onClick={() => setExpanded(open ? null : obra.id)} aria-expanded={open} className="flex items-center gap-3 text-left">
-                          <ChevronRight size={14} className={`shrink-0 text-ink-muted transition-transform ${open ? "rotate-90" : ""}`} />
+                          <ChevronRight size={20} className={`shrink-0 text-ink-muted transition-transform ${open ? "rotate-90" : ""}`} />
                           <Cover src={obra.capaUrl} title={obra.titulo} />
-                          <span>
-                            <span className="line-clamp-1 font-medium text-ink">{obra.titulo}</span>
+                          <span className="min-w-48">
+                            <span className="block break-words font-semibold text-ink">{obra.titulo}</span>
                             {obra.anoPublicacao && <span className="text-xs text-ink-muted">{obra.anoPublicacao}{obra.editora && ` · ${obra.editora}`}</span>}
                           </span>
                         </button>
                       </td>
-                      <td className="max-w-56 truncate py-2.5 pr-4 text-ink-soft">{obra.autor || "—"}</td>
-                      <td className="py-2.5 font-mono text-xs text-ink-soft">{obra.cdd || "—"}</td>
-                      <td className="tabular py-2.5 text-right text-ink-soft">
+                      <td data-label="Autoria" className="max-w-56 min-w-40 break-words py-2.5 pr-4 text-ink-soft">{obra.autor || "—"}</td>
+                      <td data-label="CDD" className="py-2.5 font-mono text-xs text-ink-soft">{obra.cdd || "—"}</td>
+                      <td data-label="Exemplares" className="tabular py-2.5 text-right text-ink-soft">
                         <span className="font-medium text-ink">{obra.disponiveis}</span> / {obra.total}
                       </td>
-                      <td className="py-2.5 pl-6">
+                      <td data-label="Situação" className="py-2.5 pl-6">
                         {obra.total === 0 ? <Badge>Sem exemplares</Badge> : obra.disponiveis ? <Badge tone="ok">Disponível</Badge> : <Badge tone="warn">Todos emprestados</Badge>}
                       </td>
                       <td className="py-2.5 pr-5">
-                        <div className="flex justify-end gap-0.5 opacity-60 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                        <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" icon={Pencil} onClick={() => onEditObra(obra)} aria-label={`Editar ${obra.titulo}`} />
                           <Button variant="ghost" size="icon" icon={Trash2} onClick={() => removeObra(obra)} aria-label={`Excluir ${obra.titulo}`} />
                         </div>

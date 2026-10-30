@@ -31,17 +31,17 @@ export function ConfirmProvider({ children }) {
         {dialog && (
           <div className="p-6">
             <div className="flex gap-4">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-danger-soft text-danger">
                 <AlertTriangle size={18} />
               </span>
               <div>
-                <h2 id="confirm-title" className="font-display text-lg text-ink">
+                <h2 id="confirm-title" className="font-display font-bold text-xl text-ink">
                   {dialog.title}
                 </h2>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{dialog.message}</p>
+                <p className="mt-2 text-base leading-relaxed text-ink-soft">{dialog.message}</p>
               </div>
             </div>
-            <div className="mt-6 flex justify-end gap-2">
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
               <Button variant="ghost" onClick={() => close(false)} autoFocus>
                 {dialog.cancelLabel ?? "Cancelar"}
               </Button>

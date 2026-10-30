@@ -65,14 +65,14 @@ export default function EmprestimosPage({ onNewLoan }) {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <Segmented
           label="Situação"
           value={tab}
           onChange={setTab}
           options={Object.entries(TABS).map(([value, t]) => ({ value, label: t.label, count: counts[value], alert: value === "atrasados" }))}
         />
-        <SearchInput value={query} onChange={setQuery} placeholder="Filtrar por obra, leitor ou inventário" className="w-full sm:w-72" />
+        <SearchInput value={query} onChange={setQuery} placeholder="Filtrar por obra, leitor ou inventário" className="w-full sm:w-[28rem]" />
       </div>
 
       <Panel className="overflow-x-auto">
@@ -82,11 +82,11 @@ export default function EmprestimosPage({ onNewLoan }) {
           <table className="w-full min-w-[760px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs text-ink-muted">
-                <th className="py-2.5 pl-5 font-medium">Obra</th>
-                <th className="py-2.5 font-medium">Leitor</th>
-                <th className="py-2.5 font-medium">Retirada</th>
-                <th className="py-2.5 font-medium">{tab === "devolvidos" ? "Devolvido em" : "Prazo"}</th>
-                <th className="py-2.5 font-medium">Situação</th>
+                <th className="py-2.5 pl-5 font-semibold">Obra</th>
+                <th className="py-2.5 font-semibold">Leitor</th>
+                <th className="py-2.5 font-semibold">Retirada</th>
+                <th className="py-2.5 font-semibold">{tab === "devolvidos" ? "Devolvido em" : "Prazo"}</th>
+                <th className="py-2.5 font-semibold">Situação</th>
                 <th className="py-2.5 pr-5" aria-label="Ações" />
               </tr>
             </thead>
@@ -98,21 +98,21 @@ export default function EmprestimosPage({ onNewLoan }) {
                     <td className="py-2.5 pl-5">
                       <div className="flex items-center gap-3">
                         <Cover src={loan.obra.capaUrl} title={loan.obra.titulo} />
-                        <div className="min-w-0">
-                          <p className="line-clamp-1 font-medium text-ink">{loan.obra.titulo}</p>
+                        <div className="min-w-44">
+                          <p className="break-words font-semibold text-ink">{loan.obra.titulo}</p>
                           <p className="font-mono text-xs text-ink-muted">{loan.exemplar.numeroInventario}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-2.5 pr-4">
+                    <td data-label="Leitor" className="min-w-44 py-2.5 pr-4">
                       <p className="text-ink">{loan.leitor.nome}</p>
-                      <p className="text-xs text-ink-muted">{loan.leitor.email}</p>
+                      <p className="text-xs wrap-anywhere text-ink-muted">{loan.leitor.email}</p>
                     </td>
-                    <td className="tabular py-2.5 text-ink-soft">{formatDate(loan.dataInicio)}</td>
-                    <td className={`tabular py-2.5 ${loan.atrasado ? "font-medium text-danger" : "text-ink-soft"}`}>
+                    <td data-label="Retirada" className="tabular py-2.5 text-ink-soft">{formatDate(loan.dataInicio)}</td>
+                    <td data-label={tab === "devolvidos" ? "Devolvido em" : "Prazo"} className={`tabular py-2.5 ${loan.atrasado ? "font-medium text-danger" : "text-ink-soft"}`}>
                       {formatDate(loan.devolvido ? loan.dataDevolucao : loan.dataPrevista)}
                     </td>
-                    <td className="py-2.5">
+                    <td data-label="Situação" className="py-2.5">
                       <Badge tone={status.tone}>{status.label}</Badge>
                     </td>
                     <td className="py-2.5 pr-5">

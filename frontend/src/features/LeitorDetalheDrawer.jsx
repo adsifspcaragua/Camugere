@@ -45,7 +45,7 @@ function SuspensaoForm({ leitor, onDone }) {
   };
 
   return (
-    <div className="space-y-4 rounded-md border border-danger/30 bg-danger-soft/40 p-4">
+    <div className="space-y-4 rounded-md border-[1.5px] border-danger/40 bg-danger-soft p-5">
       <TextArea label="Motivo da suspensão" value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={2} placeholder="Atraso de mais de 30 dias na devolução de…" />
       <Field label="Duração">
         {(id) => (
@@ -71,14 +71,14 @@ function SuspensaoForm({ leitor, onDone }) {
 function LoanList({ loans, empty }) {
   if (!loans.length) return <p className="py-6 text-center text-sm text-ink-muted">{empty}</p>;
   return (
-    <ul className="divide-y divide-line rounded-md border border-line">
+    <ul className="divide-y divide-line rounded-md border-[1.5px] border-line">
       {loans.map((loan) => {
         const status = loanStatus(loan);
         return (
-          <li key={loan.id} className="flex items-center gap-3 px-3 py-2.5">
+          <li key={loan.id} className="flex min-h-16 items-center gap-3 px-4 py-3">
             <Cover src={loan.obra.capaUrl} title={loan.obra.titulo} />
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-ink">{loan.obra.titulo}</p>
+              <p className="break-words text-sm font-semibold text-ink">{loan.obra.titulo}</p>
               <p className="tabular text-xs text-ink-muted">
                 {formatDate(loan.dataInicio)} → {formatDate(loan.devolvido ? loan.dataDevolucao : loan.dataPrevista)}
               </p>
@@ -96,7 +96,7 @@ function SuspensaoList({ suspensoes }) {
   return (
     <ul className="space-y-2">
       {suspensoes.map((s) => (
-        <li key={s.id} className="rounded-md border border-line px-3 py-2.5 text-sm">
+        <li key={s.id} className="rounded-md border-[1.5px] border-line px-4 py-3 text-sm">
           <div className="flex items-center justify-between gap-2">
             <span className="tabular text-xs text-ink-muted">
               {formatDate(s.dataInicio)} → {s.dataEncerramento ? formatDate(s.dataEncerramento) : s.dataFim ? formatDate(s.dataFim) : "indeterminado"}
@@ -157,15 +157,15 @@ function Detalhe({ leitorId, onClose, onEdit }) {
       <div className="flex items-start gap-4">
         <Avatar name={leitor.nome} size="lg" />
         <ul className="min-w-0 space-y-1.5 text-sm text-ink-soft">
-          <li className="flex items-center gap-2"><Mail size={14} className="shrink-0 text-ink-muted" />{leitor.email}</li>
-          {leitor.telefone && <li className="flex items-center gap-2"><Phone size={14} className="shrink-0 text-ink-muted" />{formatPhone(leitor.telefone)}</li>}
-          <li className="flex items-start gap-2"><MapPin size={14} className="mt-0.5 shrink-0 text-ink-muted" />{endereco || <span className="text-ink-muted">Endereço não informado</span>}</li>
+          <li className="flex items-center gap-2"><Mail size={18} className="shrink-0 text-ink-muted" />{leitor.email}</li>
+          {leitor.telefone && <li className="flex items-center gap-2"><Phone size={18} className="shrink-0 text-ink-muted" />{formatPhone(leitor.telefone)}</li>}
+          <li className="flex items-start gap-2"><MapPin size={18} className="mt-1 shrink-0 text-ink-muted" />{endereco || <span className="text-ink-muted">Endereço não informado</span>}</li>
         </ul>
       </div>
 
       {s ? (
-        <div className="rounded-md border border-danger/30 bg-danger-soft p-4 text-sm">
-          <p className="font-medium text-danger">Suspenso {s.dataFim ? `até ${formatDate(s.dataFim)}` : "por tempo indeterminado"}</p>
+        <div className="rounded-md border-[1.5px] border-danger/40 bg-danger-soft p-5 text-sm">
+          <p className="font-bold text-danger">Suspenso {s.dataFim ? `até ${formatDate(s.dataFim)}` : "por tempo indeterminado"}</p>
           <p className="mt-1 text-ink-soft">{s.motivo}</p>
           <Button variant="secondary" size="sm" icon={ShieldCheck} className="mt-3" onClick={() => endSuspension(leitor).catch(() => {})}>
             Liberar agora

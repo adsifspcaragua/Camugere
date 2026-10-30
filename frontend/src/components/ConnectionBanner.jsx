@@ -22,10 +22,10 @@ export default function ConnectionBanner({ onRetry }) {
 
   if (online) return null;
   return (
-    <div role="status" className="sticky top-0 z-30 flex items-center justify-center gap-2 bg-warn-soft px-4 py-2 text-sm text-warn">
-      <WifiOff size={15} aria-hidden />
+    <div role="status" className="sticky top-0 z-30 flex items-center justify-center gap-2 bg-warn-soft px-4 py-3 text-sm font-semibold text-warn">
+      <WifiOff size={18} aria-hidden />
       <span>
-        Sem conexão com o servidor. Tentando reconectar… <span className="text-warn/80">O que você fizer agora pode não ser salvo.</span>
+        Sem conexão com o servidor. Tentando reconectar… <span className="font-normal">O que você fizer agora pode não ser salvo.</span>
       </span>
     </div>
   );

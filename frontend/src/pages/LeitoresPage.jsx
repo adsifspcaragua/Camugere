@@ -50,7 +50,7 @@ export default function LeitoresPage({ onAddLeitor, onEditLeitor, onOpenLeitor }
         }
       />
 
-      <SearchInput value={query} onChange={setQuery} placeholder="Buscar por nome, e-mail, CPF ou telefone" className="mb-4 w-full sm:w-80" />
+      <SearchInput value={query} onChange={setQuery} placeholder="Buscar por nome, e-mail, CPF ou telefone" className="mb-6 w-full sm:w-[28rem]" />
 
       <Panel className="overflow-x-auto">
         {rows.length === 0 ? (
@@ -63,11 +63,11 @@ export default function LeitoresPage({ onAddLeitor, onEditLeitor, onOpenLeitor }
           <table className="w-full min-w-[860px] text-sm">
             <thead>
               <tr className="border-b border-line text-left text-xs text-ink-muted">
-                <th className="py-2.5 pl-5 font-medium">Nome</th>
-                <th className="py-2.5 font-medium">CPF</th>
-                <th className="py-2.5 font-medium">Telefone</th>
-                <th className="py-2.5 font-medium">Empréstimos</th>
-                <th className="py-2.5 font-medium">Situação</th>
+                <th className="py-2.5 pl-5 font-semibold">Nome</th>
+                <th className="py-2.5 font-semibold">CPF</th>
+                <th className="py-2.5 font-semibold">Telefone</th>
+                <th className="py-2.5 font-semibold">Empréstimos</th>
+                <th className="py-2.5 font-semibold">Situação</th>
                 <th className="py-2.5 pr-5" aria-label="Ações" />
               </tr>
             </thead>
@@ -79,22 +79,22 @@ export default function LeitoresPage({ onAddLeitor, onEditLeitor, onOpenLeitor }
                     <td className="py-2.5 pl-5">
                       <button onClick={() => onOpenLeitor(leitor)} className="flex items-center gap-3 text-left">
                         <Avatar name={leitor.nome} />
-                        <span className="min-w-0">
-                          <span className="block font-medium text-ink hover:underline">{leitor.nome}</span>
-                          <span className="block text-xs text-ink-muted">{leitor.email}</span>
+                        <span className="min-w-52">
+                          <span className="block font-semibold text-ink underline-offset-4 hover:underline">{leitor.nome}</span>
+                          <span className="block text-xs wrap-anywhere text-ink-muted">{leitor.email}</span>
                         </span>
                       </button>
                     </td>
-                    <td className="py-2.5 font-mono text-xs text-ink-soft">{formatCpf(leitor.cpf)}</td>
-                    <td className="tabular py-2.5 text-ink-soft">{leitor.telefone ? formatPhone(leitor.telefone) : "—"}</td>
-                    <td className="py-2.5">
+                    <td data-label="CPF" className="py-2.5 font-mono text-xs text-ink-soft">{formatCpf(leitor.cpf)}</td>
+                    <td data-label="Telefone" className="tabular py-2.5 text-ink-soft">{leitor.telefone ? formatPhone(leitor.telefone) : "—"}</td>
+                    <td data-label="Empréstimos" className="py-2.5">
                       <div className="flex flex-wrap items-center gap-1.5">
                         {h.atrasados > 0 && <Badge tone="danger">{h.atrasados} em atraso</Badge>}
                         {h.ativos - h.atrasados > 0 && <Badge tone="warn">{h.ativos - h.atrasados} em andamento</Badge>}
                         <span className="tabular text-xs text-ink-muted">{h.total} no total</span>
                       </div>
                     </td>
-                    <td className="py-2.5">
+                    <td data-label="Situação" className="py-2.5">
                       {leitor.suspensao ? (
                         <Badge tone="danger">{leitor.suspensao.dataFim ? `Suspenso até ${formatDate(leitor.suspensao.dataFim)}` : "Suspenso"}</Badge>
                       ) : (

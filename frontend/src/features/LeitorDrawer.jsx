@@ -95,7 +95,7 @@ function LeitorForm({ leitor, onClose }) {
       </div>
 
       <fieldset className="space-y-4 border-t border-line pt-5">
-        <legend className="flex items-center gap-2 pr-2 text-xs font-medium tracking-wider text-ink-muted uppercase">
+        <legend className="flex items-center gap-2 pr-2 text-xs font-semibold tracking-wider text-ink-muted uppercase">
           <MapPin size={13} /> Endereço
         </legend>
         <Field label="CEP" hint={buscandoCep ? "Buscando endereço…" : "Preenche rua, bairro e cidade automaticamente."} optional>

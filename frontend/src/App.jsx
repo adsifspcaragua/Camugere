@@ -75,7 +75,7 @@ function Workspace() {
   return (
     <div className="min-h-screen">
       <Sidebar page={page} onNavigate={navigate} overdue={stats.atrasados} open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <div className="lg:pl-60">
+      <div className="lg:pl-72">
         <ConnectionBanner onRetry={reload} />
         <Topbar
           bell={<NotificationBell onNavigate={navigate} onOpenLeitor={(id) => open("leitorDetalhe", id)} />}
@@ -95,8 +95,8 @@ function Workspace() {
 function OfflineGate({ onRetry }) {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="font-display text-2xl text-ink">Sem conexão com o servidor</p>
-      <p className="max-w-sm text-sm text-ink-muted">Confira a internet ou se a API está no ar. Sua sessão continua salva.</p>
+      <p className="font-display font-bold text-2xl text-ink">Sem conexão com o servidor</p>
+      <p className="max-w-md text-base text-ink-muted">Confira a internet ou se a API está no ar. Sua sessão continua salva.</p>
       <Button onClick={onRetry}>Tentar de novo</Button>
     </div>
   );
