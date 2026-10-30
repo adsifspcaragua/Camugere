@@ -263,7 +263,7 @@ function ObraForm({ obra, onClose }) {
           <Field label="ISBN" optional>
             {(id) => (
               <div className="flex gap-2">
-                <input id={id} {...field("isbn")} inputMode="numeric" placeholder="9788535914849" className={`${inputClass} flex-1 font-mono`} />
+                <input id={id} autoComplete="off" {...field("isbn")} inputMode="numeric" placeholder="9788535914849" className={`${inputClass} flex-1 font-mono`} />
                 <Button variant="secondary" size="sm" onClick={buscarPeloCampoIsbn} loading={buscandoIsbnCampo} disabled={!values.isbn?.trim()}>
                   Buscar ISBN
                 </Button>

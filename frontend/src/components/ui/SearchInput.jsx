@@ -8,6 +8,7 @@ const SearchInput = forwardRef(function SearchInput({ value, onChange, placehold
       <input
         ref={ref}
         type="search"
+        autoComplete="off"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}

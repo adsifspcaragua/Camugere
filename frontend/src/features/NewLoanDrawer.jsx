@@ -136,7 +136,7 @@ function LoanForm({ onClose, initialObra }) {
 
       <Field label="Devolver até" hint={dias >= 1 ? `${dias} dias de empréstimo` : "Escolha uma data futura."}>
         {(id) => (
-          <input id={id} type="date" value={devolucao} min={toInputDate(addDays(today, 1))} onChange={(e) => setDevolucao(e.target.value)} className={inputClass} required />
+          <input id={id} autoComplete="off" type="date" value={devolucao} min={toInputDate(addDays(today, 1))} onChange={(e) => setDevolucao(e.target.value)} className={inputClass} required />
         )}
       </Field>
 

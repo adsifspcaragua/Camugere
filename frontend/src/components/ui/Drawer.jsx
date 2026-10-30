@@ -53,6 +53,7 @@ export default function Drawer({ open, onClose, title, description, footer, onSu
         </header>
         <Body
           className="flex min-h-0 flex-1 flex-col"
+          autoComplete="off"
           {...(onSubmit && {
             onSubmit: (e) => {
               e.preventDefault();

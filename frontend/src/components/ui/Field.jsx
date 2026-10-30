@@ -23,7 +23,7 @@ export function Field({ label, hint, error, optional, className = "", children }
 export function TextField({ label, hint, error, optional, className, ...props }) {
   return (
     <Field label={label} hint={hint} error={error} optional={optional} className={className}>
-      {(id) => <input id={id} className={inputClass} aria-invalid={Boolean(error)} {...props} />}
+      {(id) => <input id={id} className={inputClass} aria-invalid={Boolean(error)} autoComplete="off" {...props} />}
     </Field>
   );
 }
@@ -31,7 +31,7 @@ export function TextField({ label, hint, error, optional, className, ...props })
 export function TextArea({ label, hint, optional, className, ...props }) {
   return (
     <Field label={label} hint={hint} optional={optional} className={className}>
-      {(id) => <textarea id={id} className={`${control} min-h-28 py-3 leading-relaxed scrollbar-thin`} {...props} />}
+      {(id) => <textarea id={id} className={`${control} min-h-28 py-3 leading-relaxed scrollbar-thin`} autoComplete="off" {...props} />}
     </Field>
   );
 }

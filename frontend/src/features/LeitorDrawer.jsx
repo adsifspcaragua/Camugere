@@ -100,7 +100,7 @@ function LeitorForm({ leitor, onClose }) {
         </legend>
         <Field label="CEP" hint={buscandoCep ? "Buscando endereço…" : "Preenche rua, bairro e cidade automaticamente."} optional>
           {(id) => (
-            <input id={id} {...field("cep", formatCep)} onBlur={preencherPorCep} inputMode="numeric" placeholder="00000-000" className={`${inputClass} w-40 font-mono`} />
+            <input id={id} autoComplete="off" {...field("cep", formatCep)} onBlur={preencherPorCep} inputMode="numeric" placeholder="00000-000" className={`${inputClass} w-40 font-mono`} />
           )}
         </Field>
         <div className="grid grid-cols-[1fr_96px] gap-4">
