@@ -96,6 +96,14 @@ export function LibraryProvider({ children }) {
         run(() => exemplarService.createExemplar(obra.id), (ex) => `Exemplar ${ex.numeroInventario} adicionado.`),
       deleteExemplar: (exemplar) =>
         run(() => exemplarService.deleteExemplar(exemplar.id), `Exemplar ${exemplar.numeroInventario} removido.`),
+      importObras: (lista) =>
+        run(
+          () => obraService.importObras(lista),
+          (res) => {
+            const d = res?.data || res;
+            return `${d.criadas || 0} ${d.criadas === 1 ? "obra adicionada" : "obras adicionadas"}, ${d.atualizadas || 0} atualizadas (${d.exemplaresCriados || 0} exemplares no total).`;
+          },
+        ),
 
       saveLeitor: (dados, id) =>
         run(
