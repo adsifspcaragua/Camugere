@@ -1,5 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
-import { BookOpen, ChevronRight, Download, Pencil, Plus, Trash2 } from "lucide-react";
+import { BookOpen, ChevronRight, Download, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import ImportAcervoModal from "../features/ImportAcervoModal.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
 import { useConfirm } from "../context/ConfirmContext.jsx";
 import PageHeader from "../components/ui/PageHeader.jsx";
@@ -60,6 +61,7 @@ export default function AcervoPage({ search, onAddObra, onEditObra }) {
   const confirm = useConfirm();
   const [filter, setFilter] = useState("todas");
   const [expanded, setExpanded] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const enriched = useMemo(
     () => obras.map((o) => ({ ...o, total: o.exemplares.length, disponiveis: o.exemplares.filter((e) => e.disponivel).length })),
@@ -93,6 +95,9 @@ export default function AcervoPage({ search, onAddObra, onEditObra }) {
         description={`${plural(obras.length, "obra")} · ${plural(enriched.reduce((n, o) => n + o.total, 0), "exemplar", "exemplares")}`}
         actions={
           <>
+            <Button variant="secondary" icon={Upload} onClick={() => setImportOpen(true)}>
+              Importar CSV
+            </Button>
             <Button variant="secondary" icon={Download} onClick={() => exportCsv(visible)}>
               Exportar CSV
             </Button>
@@ -176,6 +181,8 @@ export default function AcervoPage({ search, onAddObra, onEditObra }) {
           </table>
         )}
       </Panel>
+
+      <ImportAcervoModal open={importOpen} onClose={() => setImportOpen(false)} />
     </>
   );
 }

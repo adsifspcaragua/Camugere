@@ -30,3 +30,13 @@ export const createObraSchema = base.extend({
 export const updateObraSchema = base
   .extend({ numeroPaginas: z.coerce.number().int().min(0), ativa: z.boolean() })
   .partial();
+
+export const importObraSchema = z.object({
+  obras: z
+    .array(
+      base.extend({
+        numExemplares: z.coerce.number().int().min(1).default(1),
+      }),
+    )
+    .min(1, 'A lista de obras para importar não pode estar vazia.'),
+});

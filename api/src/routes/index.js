@@ -23,7 +23,7 @@ import { createUsuarioSchema, updateUsuarioSchema } from "../schemas/usuarioSche
 import { createLeitorSchema, suspensaoSchema, updateLeitorSchema } from "../schemas/leitorSchema.js";
 import { autorSchema, updateAutorSchema } from "../schemas/autorSchema.js";
 import { createCddSchema, updateCddSchema } from "../schemas/cddSchema.js";
-import { createObraSchema, updateObraSchema } from "../schemas/obraSchema.js";
+import { createObraSchema, importObraSchema, updateObraSchema } from "../schemas/obraSchema.js";
 import { createExemplarSchema, updateExemplarSchema } from "../schemas/exemplarSchema.js";
 import { createEmprestimoSchema, renovarEmprestimoSchema, updateEmprestimoSchema } from "../schemas/emprestimoSchema.js";
 import { bibliotecarioSchema, obraAutorSchema } from "../schemas/vinculoSchema.js";
@@ -104,6 +104,14 @@ obraController.atualizar = asyncHandler(async (req, res) => {
 });
 
 export const obraRouter = crudRouter(obraController, { createSchema: createObraSchema, updateSchema: updateObraSchema });
+obraRouter.post(
+  "/import",
+  validateBody(importObraSchema),
+  asyncHandler(async (req, res) => {
+    const data = await obraService.importarEmLote(req.body.obras);
+    res.json({ message: "Importação concluída.", data });
+  }),
+);
 
 // ---------- Exemplar ----------
 const exemplarController = crudController(exemplarService, { singular: "Exemplar", plural: "Exemplares" });
