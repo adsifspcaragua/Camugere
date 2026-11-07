@@ -7,6 +7,7 @@ import { ConfirmProvider } from "./context/ConfirmContext.jsx";
 import { useHotkeys } from "./hooks/useHotkeys.js";
 import Sidebar from "./components/layout/Sidebar.jsx";
 import Topbar from "./components/layout/Topbar.jsx";
+import Footer from "./components/layout/Footer.jsx";
 import Spinner from "./components/ui/Spinner.jsx";
 import Button from "./components/ui/Button.jsx";
 import ConnectionBanner from "./components/ConnectionBanner.jsx";
@@ -76,12 +77,13 @@ function Workspace() {
   return (
     <div className="min-h-screen">
       <Sidebar page={page} onNavigate={navigate} overdue={stats.atrasados} open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <div className="lg:pl-72">
+      <div className="flex min-h-screen flex-col lg:pl-80">
         <ConnectionBanner onRetry={reload} />
         <Topbar
           bell={<NotificationBell onNavigate={navigate} onOpenLeitor={(id) => open("leitorDetalhe", id)} />}
           ref={searchRef} search={search} onSearch={onSearch} onOpenMenu={() => setMenuOpen(true)} onNewLoan={() => open("loan")} onReturn={() => open("return")} />
-        <main className="mx-auto max-w-[1360px] px-4 py-8 sm:px-8">{loading ? <Spinner label="Carregando acervo" /> : pages[page]}</main>
+        <main className="mx-auto w-full max-w-[1360px] flex-1 px-4 py-8 sm:px-8">{loading ? <Spinner label="Carregando acervo" /> : pages[page]}</main>
+        <Footer />
       </div>
 
       <NewLoanDrawer open={is("loan")} onClose={close} initialObra={drawer?.payload} />
