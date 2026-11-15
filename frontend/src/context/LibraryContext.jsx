@@ -127,10 +127,12 @@ export function LibraryProvider({ children }) {
       createLoan: (dados) =>
         run(
           () => emprestimoService.createEmprestimo(dados),
-          (emp) =>
-            emp.emailNotification?.enviado
-              ? `Empréstimo registrado. Comprovante enviado para ${emp.emailNotification.emailDestino}.`
-              : "Empréstimo registrado.",
+          (emp) => {
+            const email = emp.emailNotification;
+            if (email?.enviado) return `Empréstimo registrado. Comprovante enviado para ${email.emailDestino}.`;
+            const motivo = !email || email.desativado ? null : email.motivo || "falha no envio do e-mail";
+            return motivo ? `Empréstimo registrado, mas o comprovante não foi enviado: ${motivo.replace(/\.$/, "")}.` : "Empréstimo registrado.";
+          },
         ),
       returnLoan: (loan) =>
         run(

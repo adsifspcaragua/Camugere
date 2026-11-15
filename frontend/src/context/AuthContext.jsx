@@ -39,19 +39,28 @@ export function AuthProvider({ children }) {
     if (getToken()) loadProfile();
   }, [logout, loadProfile]);
 
-  const login = useCallback(
-    async (email, senha) => {
-      setToken(await authService.login(email, senha));
+  // Abre a sessão com um token já emitido (ex.: logo após configurar o primeiro acesso).
+  const entrarComToken = useCallback(
+    async (token) => {
+      setToken(token);
       setExitReason(null);
       await loadProfile();
     },
     [loadProfile],
   );
 
+  const login = useCallback(async (email, senha) => entrarComToken(await authService.login(email, senha)), [entrarComToken]);
+
+  // Trocar a senha encerra as outras sessões; esta continua com o token novo devolvido pela API.
+  const alterarSenha = useCallback(async (senhaAtual, novaSenha) => {
+    const { token } = await authService.alterarSenha(senhaAtual, novaSenha);
+    setToken(token);
+  }, []);
+
   const signOut = useCallback(() => logout(null), [logout]);
   const value = useMemo(
-    () => ({ user, status, exitReason, login, logout: signOut, retry }),
-    [user, status, exitReason, login, signOut, retry],
+    () => ({ user, status, exitReason, login, entrarComToken, alterarSenha, logout: signOut, retry }),
+    [user, status, exitReason, login, entrarComToken, alterarSenha, signOut, retry],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

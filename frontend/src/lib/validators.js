@@ -101,6 +101,26 @@ export function validateBibliotecario(v) {
   });
 }
 
+const confirmacaoError = (confirmacao, senha) =>
+  first(required(confirmacao, "Repita a senha para confirmar."), confirmacao !== senha && "As senhas não conferem. Digite a mesma senha nos dois campos.") || undefined;
+
+/** Nova senha + confirmação (redefinição por link ou por um colega). */
+export function validateNovaSenha(v) {
+  return clean({ novaSenha: senhaError(v.novaSenha), confirmacao: confirmacaoError(v.confirmacao, v.novaSenha) });
+}
+
+export function validateAlterarSenha(v) {
+  return clean({
+    senhaAtual: required(v.senhaAtual, "Informe a sua senha atual."),
+    novaSenha: first(senhaError(v.novaSenha), v.novaSenha && v.novaSenha === v.senhaAtual && "A nova senha precisa ser diferente da atual.") || undefined,
+    confirmacao: confirmacaoError(v.confirmacao, v.novaSenha),
+  });
+}
+
+export function validateEmail(v) {
+  return clean({ email: emailError(v.email) });
+}
+
 export function validateCdd(v, { editing = false, existente } = {}) {
   const codigo = normalizarCodigo(v.id);
   return clean({

@@ -1,4 +1,5 @@
-const BASE_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/$/, "");
+// Em produção o site é servido pela própria API (mesmo endereço): VITE_API_URL vazio = caminhos relativos.
+const BASE_URL = (import.meta.env.VITE_API_URL ?? "http://localhost:3000").replace(/\/$/, "");
 export const TOKEN_KEY = "camugere:token";
 
 export class ApiError extends Error {

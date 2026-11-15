@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Trash2, UserPlus } from "lucide-react";
+import { KeyRound, Trash2, UserPlus } from "lucide-react";
 import { Panel, PanelHeader } from "../components/ui/Panel.jsx";
 import Button from "../components/ui/Button.jsx";
 import Avatar from "../components/ui/Avatar.jsx";
@@ -12,6 +12,7 @@ import { useConfirm } from "../context/ConfirmContext.jsx";
 import { useForm } from "../hooks/useForm.js";
 import { useGuardedClose } from "../hooks/useGuardedClose.js";
 import { fieldErrorsFromApi, validateBibliotecario } from "../lib/validators.js";
+import { AlterarSenhaDrawer, SenhaColegaDrawer } from "./SenhaDrawers.jsx";
 import { cadastrarBibliotecario, listBibliotecarios, removerBibliotecario } from "../services/bibliotecarioService.js";
 
 function NovoBibliotecario({ onClose, onCreated }) {
@@ -72,6 +73,8 @@ export default function EquipePanel() {
   const confirm = useConfirm();
   const [equipe, setEquipe] = useState([]);
   const [adding, setAdding] = useState(false);
+  // null | "eu" | bibliotecário cuja senha será redefinida
+  const [senhaDe, setSenhaDe] = useState(null);
 
   const carregar = useCallback(() => listBibliotecarios().then(setEquipe).catch((e) => toast.error(e.message)), [toast]);
   useEffect(() => {
@@ -93,7 +96,7 @@ export default function EquipePanel() {
     <Panel>
       <PanelHeader
         title="Equipe da biblioteca"
-        description="Pessoas com acesso ao sistema."
+        description="Pessoas com acesso ao sistema. Quem esquecer a senha pode recebê-la nova aqui."
         actions={
           <Button variant="secondary" size="sm" icon={UserPlus} onClick={() => setAdding(true)}>
             Adicionar
@@ -111,15 +114,25 @@ export default function EquipePanel() {
                 <p className="wrap-anywhere text-xs text-ink-muted">{b.usuario.email}</p>
               </div>
               {voce ? (
-                <Badge tone="forest" dot={false}>Você</Badge>
+                <>
+                  <Badge tone="forest" dot={false}>Você</Badge>
+                  <Button variant="secondary" size="sm" icon={KeyRound} onClick={() => setSenhaDe("eu")}>
+                    Alterar minha senha
+                  </Button>
+                </>
               ) : (
-                <Button variant="ghost" size="icon" icon={Trash2} onClick={() => remover(b)} aria-label={`Remover acesso de ${b.usuario.nome}`} />
+                <>
+                  <Button variant="ghost" size="icon" icon={KeyRound} onClick={() => setSenhaDe(b)} aria-label={`Definir nova senha para ${b.usuario.nome}`} tooltip="Definir nova senha" />
+                  <Button variant="ghost" size="icon" icon={Trash2} onClick={() => remover(b)} aria-label={`Remover acesso de ${b.usuario.nome}`} />
+                </>
               )}
             </li>
           );
         })}
       </ul>
       {adding && <NovoBibliotecario onClose={() => setAdding(false)} onCreated={carregar} />}
+      {senhaDe === "eu" && <AlterarSenhaDrawer onClose={() => setSenhaDe(null)} />}
+      {senhaDe && senhaDe !== "eu" && <SenhaColegaDrawer bibliotecario={senhaDe} onClose={() => setSenhaDe(null)} />}
     </Panel>
   );
 }

@@ -37,7 +37,11 @@ export default function LembretesPanel() {
       <PanelHeader title="Lembretes de devolução" description="E-mail automático enviado ao leitor antes do vencimento." />
       <div className="flex flex-wrap items-center gap-4 px-6 py-5 text-sm">
         <div className="min-w-0 flex-[1_1_20rem] text-ink-soft">
-          {status ? (
+          {status && !status.emailConfigurado ? (
+            <p className="rounded-md border border-warn/30 bg-warn-soft px-4 py-3 font-medium text-warn">
+              O envio de e-mail não está configurado neste computador: comprovantes e lembretes não serão enviados. Peça ao responsável técnico para preencher os dados de SMTP no arquivo <code className="font-mono">.env</code> da API.
+            </p>
+          ) : status ? (
             <>
               <p>
                 Enviados <strong className="font-semibold text-ink">{status.diasAntes} dia(s) antes</strong> do prazo, {status.automatico ? "verificando de hora em hora." : "envio automático desligado no servidor."}
@@ -50,7 +54,7 @@ export default function LembretesPanel() {
             <p className="text-ink-muted">Não foi possível consultar o status dos lembretes.</p>
           )}
         </div>
-        <Button variant="secondary" size="sm" icon={Send} onClick={enviarAgora} loading={sending}>
+        <Button variant="secondary" size="sm" icon={Send} onClick={enviarAgora} loading={sending} disabled={status && !status.emailConfigurado}>
           Enviar pendentes agora
         </Button>
       </div>
