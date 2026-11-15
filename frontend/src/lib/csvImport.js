@@ -89,6 +89,7 @@ const FIELD_MAP = {
   titulo: ["titulo", "title", "nome", "obra", "livro"],
   autor: ["autoria", "autor", "autores", "writers", "author", "escritor", "escritores"],
   cdd: ["classification", "classificacao", "cdd", "subject"],
+  cddDescricao: ["assuntocdd", "descricaocdd", "cdddescricao", "assunto"],
   isbn: ["isbn", "issn"],
   exemplares: ["exemplares", "exemplar", "total", "quantidade", "qtd", "copias"],
   editora: ["editora", "publisher"],
@@ -225,6 +226,7 @@ export function parseAcervoCsv(csvText) {
       subtitulo: item.subtitulo || null,
       autor: autor || null,
       cdd: cdd || null,
+      cddDescricao: cdd ? item.cddDescricao || null : null,
       isbn: isbn || null,
       editora: item.editora || null,
       anoPublicacao: ano,
@@ -250,7 +252,10 @@ export function parseAcervoCsv(csvText) {
       existente.numExemplares += item.numExemplares;
       // Preenche campos que possam estar vazios na linha anterior
       if (!existente.autor && item.autor) existente.autor = item.autor;
-      if (!existente.cdd && item.cdd) existente.cdd = item.cdd;
+      if (!existente.cdd && item.cdd) {
+        existente.cdd = item.cdd;
+        existente.cddDescricao = item.cddDescricao;
+      }
       if (!existente.editora && item.editora) existente.editora = item.editora;
       if (!existente.anoPublicacao && item.anoPublicacao) existente.anoPublicacao = item.anoPublicacao;
       if (!existente.numeroPaginas && item.numeroPaginas) existente.numeroPaginas = item.numeroPaginas;

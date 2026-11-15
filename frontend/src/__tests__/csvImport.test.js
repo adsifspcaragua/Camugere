@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanAno, cleanAutor, cleanCdd, cleanIsbn, parseAcervoCsv, parseRawCsv } from "../lib/csvImport.js";
+import { cleanAno, cleanAutor, cleanCdd, cleanIsbn, parseAcervoCsv } from "../lib/csvImport.js";
 
 describe("csvImport", () => {
   it("faz parse de formato de exportação nativo do Camugere", () => {

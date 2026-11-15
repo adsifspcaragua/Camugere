@@ -3,7 +3,10 @@
  * Brasil API (ISBNs brasileiros), OpenLibrary (ISBN e título, capas verificadas) e Google Books.
  * Nenhuma delas exige chave de API.
  */
-import { sugerirCdd } from "../lib/cdd.js";
+
+// O CDD é classificado manualmente: as fontes só entregam pistas (`assunto`, `idioma`, `dewey`),
+// que o formulário cruza com os CDDs já cadastrados — nada aqui cria classificação.
+const textoAssunto = (...partes) => partes.filter(Boolean).join(" ");
 
 const onlyIsbn = (v = "") => v.replace(/[^0-9Xx]/g, "").toUpperCase();
 export const pareceIsbn = (texto) => [10, 13].includes(onlyIsbn(texto).length) && /^[\d\s-]+[Xx]?$/.test(texto.trim());
@@ -13,8 +16,6 @@ const httpsCapa = (url) => url?.replace(/^http:/, "https:").replace("&edge=curl"
 function deGoogle(item) {
   const v = item.volumeInfo ?? {};
   const isbn = v.industryIdentifiers?.find((i) => i.type === "ISBN_13")?.identifier ?? v.industryIdentifiers?.find((i) => i.type === "ISBN_10")?.identifier ?? "";
-  const assunto = v.categories?.[0] ?? "";
-  const cdd = sugerirCdd([assunto, v.title, v.description].join(" "), v.language);
   return {
     fonte: "Google Books",
     isbn,
@@ -27,8 +28,9 @@ function deGoogle(item) {
     numeroPaginas: v.pageCount ? String(v.pageCount) : "",
     resumo: v.description ?? "",
     capaUrl: httpsCapa(v.imageLinks?.thumbnail),
-    cdd: cdd?.codigo ?? "",
-    cddDescricao: cdd?.descricao ?? assunto,
+    assunto: textoAssunto(v.categories?.[0], v.title, v.description),
+    idioma: v.language ?? "",
+    dewey: "",
   };
 }
 
@@ -44,7 +46,6 @@ async function brasilApi(isbn) {
   const response = await fetch(`https://brasilapi.com.br/api/isbn/v1/${isbn}`);
   if (!response.ok) return null;
   const d = await response.json();
-  const cdd = sugerirCdd([d.subjects?.join(" "), d.title, d.synopsis].join(" "), "pt");
   return {
     fonte: "Brasil API",
     isbn,
@@ -57,8 +58,9 @@ async function brasilApi(isbn) {
     numeroPaginas: d.page_count ? String(d.page_count) : "",
     resumo: d.synopsis ?? "",
     capaUrl: d.cover_url || "",
-    cdd: cdd?.codigo ?? "",
-    cddDescricao: cdd?.descricao ?? d.subjects?.[0] ?? "",
+    assunto: textoAssunto(d.subjects?.join(" "), d.title, d.synopsis),
+    idioma: "pt",
+    dewey: "",
   };
 }
 
@@ -69,7 +71,6 @@ async function openLibraryIsbn(isbn) {
   const d = data[`ISBN:${isbn}`];
   if (!d) return null;
   const assuntos = (d.subjects ?? []).map((s) => s.name ?? s).join(" ");
-  const cdd = sugerirCdd([assuntos, d.title].join(" "), "pt");
   const dewey = d.classifications?.dewey_decimal_class?.[0]?.replace(/[^0-9.]/g, "") ?? "";
   const anoMatch = String(d.publish_date ?? "").match(/\b(1[5-9]\d{2}|20\d{2})\b/);
   return {
@@ -84,8 +85,9 @@ async function openLibraryIsbn(isbn) {
     numeroPaginas: d.number_of_pages ? String(d.number_of_pages) : "",
     resumo: d.excerpts?.[0]?.text ?? "",
     capaUrl: httpsCapa(d.cover?.large || d.cover?.medium),
-    cdd: cdd?.codigo || dewey || "",
-    cddDescricao: cdd?.descricao || d.subjects?.[0]?.name || "",
+    assunto: textoAssunto(assuntos, d.title),
+    idioma: "pt",
+    dewey,
   };
 }
 
@@ -99,7 +101,6 @@ async function openLibrarySearch(texto, max = 6) {
     .map((d) => {
       const isbn = d.isbn?.find((i) => i.startsWith("97885") || i.startsWith("97865")) ?? d.isbn?.[0] ?? "";
       const assuntos = (d.subject ?? []).slice(0, 6).join(" ");
-      const cdd = sugerirCdd([assuntos, d.title].join(" "), "pt");
       const dewey = d.ddc?.[0]?.replace(/[^0-9.]/g, "") ?? "";
       return {
         fonte: "OpenLibrary",
@@ -113,8 +114,9 @@ async function openLibrarySearch(texto, max = 6) {
         numeroPaginas: d.number_of_pages_median ? String(d.number_of_pages_median) : "",
         resumo: "",
         capaUrl: d.cover_i ? `https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg` : "",
-        cdd: cdd?.codigo || dewey || "",
-        cddDescricao: cdd?.descricao || d.subject?.[0] || "",
+        assunto: textoAssunto(assuntos, d.title),
+        idioma: "pt",
+        dewey,
       };
     });
 }

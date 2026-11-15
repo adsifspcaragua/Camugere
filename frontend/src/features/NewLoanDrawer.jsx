@@ -11,6 +11,7 @@ import { addDays, daysBetween } from "../lib/loans.js";
 import { formatDate, matches } from "../lib/format.js";
 import { loadSettings } from "../services/settings.js";
 import { useGuardedClose } from "../hooks/useGuardedClose.js";
+import { validateEmprestimo } from "../lib/validators.js";
 
 const toInputDate = (date) => date.toLocaleDateString("sv-SE"); // AAAA-MM-DD no fuso local
 
@@ -56,22 +57,31 @@ function LoanForm({ onClose, initialObra }) {
   const [devolucao, setDevolucao] = useState(() => toInputDate(addDays(today, settings.prazoPadrao)));
   const [enviarEmail, setEnviarEmail] = useState(settings.enviarEmailPadrao);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
 
   const dias = daysBetween(today, new Date(`${devolucao}T12:00:00`));
   const requestClose = useGuardedClose(onClose, Boolean(leitor || (exemplar && !initialObra)));
   const suspenso = leitor?.suspensao;
   const valid = leitor && !suspenso && exemplar && dias >= 1;
+  const clear = (campo) => setErrors((e) => ({ ...e, [campo]: undefined }));
 
   const filterLeitor = useCallback((l, q) => matches(q, l.nome, l.email, l.cpf), []);
   const filterExemplar = useCallback((e, q) => matches(q, e.obra.titulo, e.obra.autor, e.numeroInventario), []);
 
   const submit = async () => {
-    if (!valid) return;
+    setFormError("");
+    const found = validateEmprestimo({ leitor, exemplar, dias });
+    setErrors(found);
+    if (Object.keys(found).length) return setFormError("Confira os campos destacados em vermelho.");
     setSaving(true);
     try {
       await createLoan({ id_leitor: leitor.id, id_exemplar: exemplar.id, diasLocacao: dias, enviarNotificacao: enviarEmail });
       onClose();
-    } catch {
+    } catch (error) {
+      // 409: o exemplar foi emprestado por outra pessoa ou o leitor foi suspenso nesse meio-tempo.
+      if (error.status === 409) setErrors({ exemplar: error.message });
+      else setFormError(error.message);
       setSaving(false);
     }
   };
@@ -81,6 +91,7 @@ function LoanForm({ onClose, initialObra }) {
       open
       onClose={requestClose}
       onSubmit={submit}
+      error={formError}
       title="Novo empréstimo"
       description="Registre a saída de um exemplar do acervo."
       footer={
@@ -88,23 +99,27 @@ function LoanForm({ onClose, initialObra }) {
           <Button variant="ghost" onClick={requestClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!valid} loading={saving}>
+          <Button type="submit" loading={saving}>
             Registrar empréstimo
           </Button>
         </>
       }
     >
-      <Field label="Leitor">
+      <Field label="Leitor" error={errors.leitor}>
         {(id) => (
           <Autocomplete
             id={id}
+            invalid={Boolean(errors.leitor)}
             items={leitores}
             filter={filterLeitor}
             getKey={(l) => l.id}
             getLabel={(l) => l.nome}
             renderItem={(l) => <LeitorOption leitor={l} />}
             value={leitor}
-            onChange={setLeitor}
+            onChange={(l) => {
+              setLeitor(l);
+              clear("leitor");
+            }}
             placeholder="Nome, e-mail ou CPF"
             emptyMessage="Nenhum leitor encontrado. Cadastre-o na página Leitores."
           />
@@ -117,26 +132,30 @@ function LoanForm({ onClose, initialObra }) {
         </p>
       )}
 
-      <Field label="Exemplar" hint={`${disponiveis.length} exemplares disponíveis para empréstimo.`}>
+      <Field label="Exemplar" error={errors.exemplar} hint={`${disponiveis.length} exemplares disponíveis para empréstimo.`}>
         {(id) => (
           <Autocomplete
             id={id}
+            invalid={Boolean(errors.exemplar)}
             items={disponiveis}
             filter={filterExemplar}
             getKey={(e) => e.id}
             getLabel={(e) => e.obra.titulo}
             renderItem={(e) => <ExemplarOption item={e} />}
             value={exemplar}
-            onChange={setExemplar}
+            onChange={(e) => {
+              setExemplar(e);
+              clear("exemplar");
+            }}
             placeholder="Título, autor ou nº de inventário"
             emptyMessage="Nenhum exemplar disponível com esse termo."
           />
         )}
       </Field>
 
-      <Field label="Devolver até" hint={dias >= 1 ? `${dias} dias de empréstimo` : "Escolha uma data futura."}>
+      <Field label="Devolver até" error={errors.devolucao} hint={Number.isFinite(dias) && dias >= 1 ? `${dias} dias de empréstimo` : "Escolha uma data futura."}>
         {(id) => (
-          <input id={id} autoComplete="off" type="date" value={devolucao} min={toInputDate(addDays(today, 1))} onChange={(e) => setDevolucao(e.target.value)} className={inputClass} required />
+          <input id={id} autoComplete="off" type="date" value={devolucao} min={toInputDate(addDays(today, 1))} onChange={(e) => { setDevolucao(e.target.value); clear("devolucao"); }} aria-invalid={Boolean(errors.devolucao)} aria-describedby={errors.devolucao ? `${id}-error` : undefined} className={inputClass} required />
         )}
       </Field>
 

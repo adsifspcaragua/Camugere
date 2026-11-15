@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, ChevronDown, ImagePlus, Minus, Plus, Sparkles, Trash2 } from "lucide-react";
 import Drawer from "../components/ui/Drawer.jsx";
 import Button from "../components/ui/Button.jsx";
 import Cover from "../components/ui/Cover.jsx";
-import { Field, TextArea, TextField, inputClass } from "../components/ui/Field.jsx";
+import { Field, TextArea, TextField, inputClass, inputProps } from "../components/ui/Field.jsx";
+import CddField from "./CddField.jsx";
+import { statusCdd, sugerirCdd, sugerirCddParaLivro } from "../lib/cdd.js";
 import { useLibrary } from "../context/LibraryContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { useForm } from "../hooks/useForm.js";
 import { useGuardedClose } from "../hooks/useGuardedClose.js";
 import { buscarPorIsbn, buscarPorTitulo, pareceIsbn } from "../services/catalogoService.js";
 import { MAX_CAPA_BYTES, uploadCapa, uploadCapaUrl } from "../services/capaService.js";
+import { fieldErrorsFromApi, isValidIsbn, validateImagem, validateObra } from "../lib/validators.js";
 
 const EMPTY = {
   isbn: "",
@@ -47,11 +50,13 @@ function BuscaCatalogo({ onFill }) {
   const [termo, setTermo] = useState("");
   const [resultados, setResultados] = useState([]);
   const [buscando, setBuscando] = useState(false);
+  const [semResultado, setSemResultado] = useState(false);
   const ultimo = useRef("");
 
   useEffect(() => {
     const texto = termo.trim();
     if (texto.length < 3) return;
+    setSemResultado(false);
     const isbn = pareceIsbn(texto);
     const timer = setTimeout(
       async () => {
@@ -66,7 +71,10 @@ function BuscaCatalogo({ onFill }) {
             setTermo("");
           } else {
             const lista = await buscarPorTitulo(texto);
-            if (ultimo.current === texto) setResultados(lista);
+            if (ultimo.current === texto) {
+              setResultados(lista);
+              setSemResultado(lista.length === 0);
+            }
           }
         } catch (error) {
           if (ultimo.current === texto) toast.error(error.message);
@@ -91,7 +99,10 @@ function BuscaCatalogo({ onFill }) {
           onChange={(e) => {
             const val = e.target.value;
             setTermo(val);
-            if (val.trim().length < 3) setResultados([]);
+            if (val.trim().length < 3) {
+              setResultados([]);
+              setSemResultado(false);
+            }
           }}
           placeholder="Bipe ou digite o ISBN, ou escreva o título"
           autoComplete="off"
@@ -99,7 +110,13 @@ function BuscaCatalogo({ onFill }) {
         />
         {buscando && <span className="absolute top-1/2 right-3 -translate-y-1/2 text-xs text-ink-muted">Buscando…</span>}
       </div>
-      <p className="mt-2 text-xs text-ink-muted">Capa, autoria, editora, ano, páginas, sinopse e uma sugestão de CDD vêm prontos. Depois é só revisar.</p>
+      <p className="mt-2 text-xs text-ink-muted">Capa, autoria, editora, ano, páginas, sinopse e uma sugestão de CDD (entre os já cadastrados) vêm prontos. Depois é só revisar.</p>
+
+      {semResultado && !buscando && (
+        <p role="status" className="mt-3 text-sm font-semibold text-warn">
+          Nenhuma obra encontrada para “{termo.trim()}”. Tente outro trecho do título, busque pelo ISBN ou preencha os campos abaixo manualmente.
+        </p>
+      )}
 
       {resultados.length > 0 && (
         <ul className="mt-3 max-h-72 divide-y divide-line overflow-y-auto rounded-lg border-[1.5px] border-line bg-panel scrollbar-thin">
@@ -139,7 +156,8 @@ function CoverPicker({ value, title, onChange }) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
-    if (file.size > MAX_CAPA_BYTES) return toast.error("A imagem deve ter no máximo 5 MB.");
+    const problema = validateImagem(file, MAX_CAPA_BYTES);
+    if (problema) return toast.error(problema);
     setUploading(true);
     try {
       onChange(await uploadCapa(file));
@@ -165,18 +183,30 @@ function CoverPicker({ value, title, onChange }) {
 }
 
 function ObraForm({ obra, onClose }) {
-  const { saveObra } = useLibrary();
+  const { saveObra, cdds } = useLibrary();
   const toast = useToast();
   const editing = Boolean(obra);
-  const { values, set, field, dirty } = useForm(editing ? fromObra(obra) : EMPTY);
+  const validator = (v) => {
+    const cdd = statusCdd(cdds, v.cdd, v.cddDescricao);
+    return validateObra(v, { cddIncompleto: cdd.tipo === "incompleto" ? cdd.mensagem : undefined });
+  };
+  const { values, set, field, dirty, errors, setError, validate, applyServerErrors } = useForm(editing ? fromObra(obra) : EMPTY, validator);
   const requestClose = useGuardedClose(onClose, dirty);
   const [quantidade, setQuantidade] = useState(1);
   const [saving, setSaving] = useState(false);
   const [detalhes, setDetalhes] = useState(true);
   const [buscandoIsbnCampo, setBuscandoIsbnCampo] = useState(false);
   const [baixandoCapaUrl, setBaixandoCapaUrl] = useState(false);
+  const [formError, setFormError] = useState("");
 
-  const valid = values.titulo.trim() && values.autor.trim();
+  // Sugestão manual: só entre os CDDs cadastrados, a partir do título e da sinopse.
+  const sugestaoCdd = useMemo(() => sugerirCdd(`${values.titulo} ${values.resumo}`, cdds), [values.titulo, values.resumo, cdds]);
+
+  // `preencher` precisa ser estável (a busca depende dela), então lê o CDD atual por ref.
+  const cddAtual = useRef({ cdds, cdd: values.cdd });
+  useEffect(() => {
+    cddAtual.current = { cdds, cdd: values.cdd };
+  });
 
   const internalizarUrlSeRemota = useCallback(
     async (urlStr) => {
@@ -198,9 +228,14 @@ function ObraForm({ obra, onClose }) {
 
   const preencher = useCallback(
     (livro) => {
-      set(Object.fromEntries(Object.entries(livro).filter(([k, v]) => k in EMPTY && v)));
+      const { cdds: cadastrados, cdd: cddAtualValor } = cddAtual.current;
+      const sugerido = cddAtualValor.trim() ? null : sugerirCddParaLivro(livro, cadastrados);
+      set({
+        ...Object.fromEntries(Object.entries(livro).filter(([k, v]) => k in EMPTY && v)),
+        ...(sugerido && { cdd: sugerido.id, cddDescricao: sugerido.descricao }),
+      });
       setDetalhes(true);
-      toast.info(`Dados preenchidos (${livro.fonte}). Confira antes de salvar.`);
+      toast.info(`Dados preenchidos (${livro.fonte}).${sugerido ? ` CDD ${sugerido.id} sugerido.` : ""} Confira antes de salvar.`);
       if (livro.capaUrl) internalizarUrlSeRemota(livro.capaUrl);
     },
     [set, toast, internalizarUrlSeRemota],
@@ -209,25 +244,35 @@ function ObraForm({ obra, onClose }) {
   const buscarPeloCampoIsbn = async () => {
     const raw = values.isbn?.trim();
     if (!raw) return;
+    if (!isValidIsbn(raw)) return setError({ isbn: "ISBN inválido. Use 10 ou 13 números (confira os dígitos no verso do livro)." });
     setBuscandoIsbnCampo(true);
     try {
       const livro = await buscarPorIsbn(raw);
       preencher(livro);
     } catch (error) {
-      toast.error(error.message);
+      setError({ isbn: error.message });
     } finally {
       setBuscandoIsbnCampo(false);
     }
   };
 
   const submit = async () => {
-    if (!valid) return;
+    setFormError("");
+    if (!validate()) {
+      // Campos escondidos na seção recolhida precisam aparecer para a pessoa ver o erro.
+      setDetalhes(true);
+      return setFormError("Confira os campos destacados em vermelho.");
+    }
     setSaving(true);
     try {
       const payload = toPayload(values);
       await saveObra(editing ? payload : { ...payload, numExemplares: quantidade }, obra?.id);
       onClose();
-    } catch {
+    } catch (error) {
+      const porCampo = fieldErrorsFromApi(error);
+      if (!Object.keys(porCampo).length && error.status === 409 && /isbn/i.test(error.message)) porCampo.isbn = error.message;
+      if (!applyServerErrors(porCampo)) setFormError(error.message);
+      else setDetalhes(true);
       setSaving(false);
     }
   };
@@ -237,6 +282,7 @@ function ObraForm({ obra, onClose }) {
       open
       onClose={requestClose}
       onSubmit={submit}
+      error={formError}
       title={editing ? "Editar obra" : "Nova obra"}
       description={editing ? obra.titulo : "Comece pela busca. O resto se preenche sozinho."}
       footer={
@@ -249,7 +295,7 @@ function ObraForm({ obra, onClose }) {
               <span>{quantidade === 1 ? "exemplar" : "exemplares"}</span>
             </div>
           )}
-          <Button type="submit" disabled={!valid} loading={saving}>
+          <Button type="submit" loading={saving}>
             {editing ? "Salvar" : "Adicionar ao acervo"}
           </Button>
         </>
@@ -260,7 +306,7 @@ function ObraForm({ obra, onClose }) {
       <div className="grid gap-5 sm:grid-cols-[96px_1fr]">
         <CoverPicker value={values.capaUrl} title={values.titulo} onChange={(capaUrl) => set({ capaUrl })} />
         <div className="min-w-0 space-y-4">
-          <TextField label="Título" {...field("titulo")} required />
+          <TextField label="Título" {...field("titulo")} maxLength={200} required />
           <TextField label="Autoria" {...field("autor")} hint="Vários autores: separe por vírgula." placeholder="Carolina Maria de Jesus" required />
           <TextField
             label="URL da capa"
@@ -273,10 +319,7 @@ function ObraForm({ obra, onClose }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-[120px_1fr] gap-4">
-        <TextField label="CDD" {...field("cdd")} placeholder="869.3" />
-        <TextField label="Assunto" {...field("cddDescricao")} placeholder="Literatura brasileira — ficção" />
-      </div>
+      <CddField cdds={cdds} codigo={values.cdd} descricao={values.cddDescricao} onChange={set} sugestao={sugestaoCdd} />
 
       <button type="button" onClick={() => setDetalhes((d) => !d)} aria-expanded={detalhes} className="flex min-h-12 w-full items-center justify-between border-t border-line pt-4 text-sm font-semibold text-ink-soft hover:text-ink">
         <span className="flex items-center gap-2">
@@ -287,10 +330,10 @@ function ObraForm({ obra, onClose }) {
 
       {detalhes && (
         <div className="space-y-4">
-          <Field label="ISBN" optional>
+          <Field label="ISBN" error={errors.isbn} optional>
             {(id) => (
               <div className="flex gap-2">
-                <input id={id} autoComplete="off" {...field("isbn")} inputMode="numeric" placeholder="9788535914849" className={`${inputClass} flex-1 font-mono`} />
+                <input id={id} autoComplete="off" {...inputProps(field("isbn"))} aria-invalid={Boolean(errors.isbn)} aria-describedby={errors.isbn ? `${id}-error` : undefined} inputMode="numeric" placeholder="9788535914849" className={`${inputClass} flex-1 font-mono`} />
                 <Button variant="secondary" size="sm" onClick={buscarPeloCampoIsbn} loading={buscandoIsbnCampo} disabled={!values.isbn?.trim()}>
                   Buscar ISBN
                 </Button>
@@ -301,7 +344,7 @@ function ObraForm({ obra, onClose }) {
           <div className="grid grid-cols-2 gap-4">
             <TextField label="Editora" {...field("editora")} optional />
             <TextField label="Local" {...field("localPublicacao")} optional />
-            <TextField label="Ano" {...field("anoPublicacao")} inputMode="numeric" optional />
+            <TextField label="Ano" {...field("anoPublicacao")} inputMode="numeric" maxLength={4} placeholder="2020" optional />
             <TextField label="Páginas" {...field("numeroPaginas")} inputMode="numeric" optional />
           </div>
           <TextArea label="Sinopse" {...field("resumo")} rows={4} optional />

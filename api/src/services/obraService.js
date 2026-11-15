@@ -1,5 +1,6 @@
 import { prisma } from "../lib/prisma.js";
-import { conflict, notFound } from "../lib/httpError.js";
+import { badRequest, conflict, notFound } from "../lib/httpError.js";
+import { mesmaDescricao, normalizarCodigo } from "../lib/cdd.js";
 import { exemplarSelect } from "./selects.js";
 import { formatarNomeAutor, parseAutores } from "./autorService.js";
 import { criarParaObra } from "./exemplarService.js";
@@ -22,15 +23,32 @@ export function formatarObra(obra) {
   };
 }
 
-const vincularCdd = (codigo, descricao) =>
-  codigo && {
-    cdd: {
-      connectOrCreate: {
-        where: { id: codigo },
-        create: { id: codigo, descricao: descricao || "Geral" },
-      },
-    },
-  };
+/**
+ * Resolve o CDD informado contra os CDDs cadastrados (a catalogação é manual, feita pela bibliotecária).
+ * - cadastrado: devolve { id }; descrição divergente é recusada no modo estrito (a edição é na página de CDDs),
+ *   exceto quando o CDD ainda está sem descrição — aí a informada completa o cadastro;
+ * - novo com descrição: cadastra e devolve { id };
+ * - novo sem descrição: erro no modo estrito; na importação cadastra mesmo assim (descrição vazia, a completar
+ *   na página de CDDs) e devolve { id, semDescricao: true }.
+ */
+async function resolverCdd(tx, codigoBruto, descricao, { estrito = true } = {}) {
+  const codigo = normalizarCodigo(codigoBruto);
+  if (!codigo) return null;
+  const existente = await tx.cdd.findUnique({ where: { id: codigo } });
+  if (existente) {
+    if (!existente.descricao && descricao) {
+      await tx.cdd.update({ where: { id: codigo }, data: { descricao } });
+    } else if (estrito && descricao && !mesmaDescricao(descricao, existente.descricao)) {
+      throw conflict(`O CDD ${codigo} já está cadastrado como “${existente.descricao}”. Para mudar a descrição, edite-o na página de CDDs.`);
+    }
+    return { id: codigo };
+  }
+  if (!descricao && estrito) throw badRequest(`O CDD ${codigo} não está cadastrado. Informe a descrição para cadastrá-lo.`);
+  await tx.cdd.create({ data: { id: codigo, descricao: descricao || "" } });
+  return { id: codigo, semDescricao: !descricao };
+}
+
+const vinculoCdd = (resolvido) => (resolvido?.id ? { cdd: { connect: { id: resolvido.id } } } : {});
 
 async function garantirAutores(tx, texto) {
   const lista = parseAutores(texto);
@@ -65,10 +83,11 @@ export async function criar({ autor, cdd, cddDescricao, numExemplares, ...dados 
   }
   const obra = await prisma.$transaction(async (tx) => {
     const vinculosAutores = await garantirAutores(tx, autor);
+    const cddResolvido = await resolverCdd(tx, cdd, cddDescricao);
     const criada = await tx.obra.create({
       data: {
         ...dados,
-        ...vincularCdd(cdd, cddDescricao),
+        ...vinculoCdd(cddResolvido),
         autores: { create: vinculosAutores },
       },
     });
@@ -85,11 +104,12 @@ export async function atualizar(id, { autor, cdd, cddDescricao, ...dados }) {
   }
   const obra = await prisma.$transaction(async (tx) => {
     const vinculosAutores = autor !== undefined ? await garantirAutores(tx, autor) : undefined;
+    const cddResolvido = cdd ? await resolverCdd(tx, cdd, cddDescricao) : null;
     return tx.obra.update({
       where: { id },
       data: {
         ...dados,
-        ...vincularCdd(cdd, cddDescricao),
+        ...vinculoCdd(cddResolvido),
         ...(cdd === null && { cdd: { disconnect: true } }),
         ...(vinculosAutores !== undefined && { autores: { deleteMany: {}, create: vinculosAutores } }),
       },
@@ -110,6 +130,7 @@ export async function importarEmLote(itens) {
   let atualizadas = 0;
   let exemplaresCriados = 0;
   const erros = [];
+  const cddsSemDescricao = new Set();
 
   for (let i = 0; i < itens.length; i++) {
     const item = itens[i];
@@ -121,6 +142,7 @@ export async function importarEmLote(itens) {
       continue;
     }
 
+    const pendentes = [];
     try {
       let obraExistente = null;
       if (dados.isbn) {
@@ -150,14 +172,16 @@ export async function importarEmLote(itens) {
           if (!obraExistente.capaUrl && dados.capaUrl) atualizacao.capaUrl = dados.capaUrl;
 
           const vinculosAutores = (!obraExistente.autores.length && autor) ? await garantirAutores(tx, autor) : undefined;
-          const vinculoCdd = (!obraExistente.id_cdd && cdd) ? vincularCdd(cdd, cddDescricao) : undefined;
+          const cddResolvido = !obraExistente.id_cdd ? await resolverCdd(tx, cdd, cddDescricao, { estrito: false }) : null;
+          if (cddResolvido?.semDescricao) pendentes.push(cddResolvido.id);
+          const vinculo = vinculoCdd(cddResolvido);
 
-          if (Object.keys(atualizacao).length > 0 || vinculosAutores || vinculoCdd) {
+          if (Object.keys(atualizacao).length > 0 || vinculosAutores || vinculo.cdd) {
             await tx.obra.update({
               where: { id: obraExistente.id },
               data: {
                 ...atualizacao,
-                ...(vinculoCdd ? vinculoCdd : {}),
+                ...vinculo,
                 ...(vinculosAutores ? { autores: { create: vinculosAutores } } : {}),
               },
             });
@@ -169,11 +193,13 @@ export async function importarEmLote(itens) {
       } else {
         await prisma.$transaction(async (tx) => {
           const vinculosAutores = await garantirAutores(tx, autor);
+          const cddResolvido = await resolverCdd(tx, cdd, cddDescricao, { estrito: false });
+          if (cddResolvido?.semDescricao) pendentes.push(cddResolvido.id);
           const criada = await tx.obra.create({
             data: {
               ...dados,
               titulo: dados.titulo.trim(),
-              ...vincularCdd(cdd, cddDescricao),
+              ...vinculoCdd(cddResolvido),
               autores: { create: vinculosAutores },
             },
           });
@@ -183,6 +209,7 @@ export async function importarEmLote(itens) {
         criadas++;
         exemplaresCriados += qtdExemplares;
       }
+      pendentes.forEach((codigo) => cddsSemDescricao.add(codigo));
     } catch (err) {
       erros.push({ linha: i + 1, titulo: dados.titulo, erro: err.message });
     }
@@ -193,6 +220,7 @@ export async function importarEmLote(itens) {
     atualizadas,
     exemplaresCriados,
     totalProcessadas: criadas + atualizadas,
+    cddsSemDescricao: [...cddsSemDescricao].sort(),
     erros,
   };
 }

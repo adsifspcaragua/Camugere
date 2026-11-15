@@ -30,16 +30,18 @@ function ReturnForm({ onClose, initialLoan }) {
   const ativos = useMemo(() => loans.filter((l) => !l.devolvido).sort((a, b) => a.dataPrevista - b.dataPrevista), [loans]);
   const [loan, setLoan] = useState(initialLoan ?? null);
   const [saving, setSaving] = useState(false);
+  const [erro, setErro] = useState("");
 
   const filter = useCallback((l, q) => matches(q, l.obra.titulo, l.leitor.nome, l.exemplar.numeroInventario), []);
 
   const submit = async () => {
-    if (!loan) return;
+    if (!loan) return setErro("Escolha o empréstimo que está sendo devolvido.");
     setSaving(true);
     try {
       await returnLoan(loan);
       onClose();
-    } catch {
+    } catch (error) {
+      setErro(error.message);
       setSaving(false);
     }
   };
@@ -56,23 +58,27 @@ function ReturnForm({ onClose, initialLoan }) {
           <Button variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!loan} loading={saving}>
+          <Button type="submit" loading={saving}>
             Confirmar devolução
           </Button>
         </>
       }
     >
-      <Field label="Empréstimo" hint={`${ativos.length} exemplares fora da biblioteca.`}>
+      <Field label="Empréstimo" error={erro} hint={`${ativos.length} exemplares fora da biblioteca.`}>
         {(id) => (
           <Autocomplete
             id={id}
+            invalid={Boolean(erro)}
             items={ativos}
             filter={filter}
             getKey={(l) => l.id}
             getLabel={(l) => l.obra.titulo}
             renderItem={(l) => <LoanOption loan={l} />}
             value={loan}
-            onChange={setLoan}
+            onChange={(l) => {
+              setLoan(l);
+              setErro("");
+            }}
             placeholder="Nº de inventário, título ou leitor"
             emptyMessage="Nenhum empréstimo ativo encontrado."
           />

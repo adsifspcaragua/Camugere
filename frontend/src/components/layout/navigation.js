@@ -1,4 +1,4 @@
-import { ArrowLeftRight, BarChart3, BookOpen, LayoutDashboard, Settings, Users } from "lucide-react";
+import { ArrowLeftRight, BarChart3, BookOpen, LayoutDashboard, Settings, Tags, Users } from "lucide-react";
 
 // Agrupado pelo que a bibliotecária faz: atender no balcão, cuidar do acervo, acompanhar.
 export const NAV_GROUPS = [
@@ -14,6 +14,7 @@ export const NAV_GROUPS = [
     label: "Biblioteca",
     items: [
       { id: "acervo", label: "Acervo", icon: BookOpen },
+      { id: "cdd", label: "Classificação (CDD)", icon: Tags },
       { id: "relatorios", label: "Relatórios", icon: BarChart3 },
       { id: "configuracoes", label: "Configurações", icon: Settings },
     ],

@@ -19,7 +19,7 @@ describe("API", () => {
   });
 
   it("aceita o header legado jwt_token", async () => {
-    prismaMock.cdd.findMany.mockResolvedValue([{ id: "869.3", descricao: "Ficção" }]);
+    prismaMock.cdd.findMany.mockResolvedValue([{ id: "869.3", descricao: "Ficção", _count: { obras: 0 } }]);
     const res = await request(app).get("/cdd/list").set("jwt_token", token);
     expect(res.status).toBe(200);
     expect(res.body.data).toHaveLength(1);
