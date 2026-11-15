@@ -1,7 +1,7 @@
 import { prisma } from "../lib/prisma.js";
 import { emprestimoSelect } from "./selects.js";
 import { dataPrevistaDevolucao } from "../utils/dates.js";
-import { enviarLembreteDevolucao } from "./emailService.js";
+import { emailConfigurado, enviarLembreteDevolucao } from "./emailService.js";
 
 export const DIAS_ANTES = Number(process.env.LEMBRETE_DIAS_ANTES || 2);
 
@@ -47,6 +47,10 @@ const UMA_HORA = 60 * 60 * 1000;
 /** Verifica de hora em hora (e na inicialização). Desligue com LEMBRETES_AUTOMATICOS=false. */
 export function agendarLembretes() {
   if (process.env.LEMBRETES_AUTOMATICOS === "false") return null;
+  if (!emailConfigurado()) {
+    console.info("[lembretes] envio automático desligado: e-mail (SMTP) não configurado.");
+    return null;
+  }
   const executar = () =>
     enviarLembretes()
       .then((r) => r.enviados && console.info(`[lembretes] ${r.enviados} lembrete(s) enviado(s).`))

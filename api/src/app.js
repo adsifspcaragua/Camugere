@@ -24,7 +24,12 @@ app.use(cors({ origin: env.corsOrigin }));
 app.use(express.json({ limit: "1mb" }));
 app.use("/uploads", express.static(UPLOADS_DIR, { maxAge: "7d" }));
 
-app.get("/", (_req, res) => res.json({ message: "API Biblioteca Camugerê", status: "ok" }));
+const status = (_req, res) => res.json({ message: "API Biblioteca Camugerê", status: "ok" });
+app.get("/status", status);
+
+// Em produção a API também entrega o site (frontend/dist): basta abrir http://localhost:3000.
+if (env.frontendDir) app.use(express.static(env.frontendDir, { index: "index.html" }));
+else app.get("/", status);
 
 // Rotas públicas
 app.use(authRouter);

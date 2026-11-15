@@ -17,9 +17,11 @@ import * as emprestimoService from "../services/emprestimoService.js";
 import * as obraAutorService from "../services/obraAutorService.js";
 import * as suspensaoService from "../services/suspensaoService.js";
 import * as lembreteService from "../services/lembreteService.js";
+import * as acessoService from "../services/acessoService.js";
+import { emailConfigurado } from "../services/emailService.js";
 import { internalizarCapa } from "../services/capaService.js";
 
-import { createUsuarioSchema, updateUsuarioSchema } from "../schemas/usuarioSchema.js";
+import { createUsuarioSchema, novaSenhaSchema, updateUsuarioSchema } from "../schemas/usuarioSchema.js";
 import { createLeitorSchema, suspensaoSchema, updateLeitorSchema } from "../schemas/leitorSchema.js";
 import { autorSchema, updateAutorSchema } from "../schemas/autorSchema.js";
 import { createCddSchema, updateCddSchema } from "../schemas/cddSchema.js";
@@ -70,6 +72,11 @@ bibliotecarioRouter.post(
   "/cadastrar",
   validateBody(createUsuarioSchema),
   asyncHandler(async (req, res) => created(res, "Bibliotecário cadastrado.", await bibliotecarioService.cadastrar(req.body))),
+);
+bibliotecarioRouter.patch(
+  "/:id/senha",
+  validateBody(novaSenhaSchema),
+  asyncHandler(async (req, res) => ok(res, "Senha redefinida.", await acessoService.redefinirSenhaDeColega(parseId(req.params.id), req.body, req.auth))),
 );
 
 export const autorRouter = crudRouter(crudController(autorService, { singular: "Autor", plural: "Autores" }), {
@@ -143,7 +150,12 @@ emprestimoRouter.get(
   "/lembretes",
   asyncHandler(async (_req, res) => {
     const pendentes = await lembreteService.listarPendentes();
-    ok(res, "Lembretes pendentes.", { diasAntes: lembreteService.DIAS_ANTES, automatico: process.env.LEMBRETES_AUTOMATICOS !== "false", pendentes: pendentes.length });
+    ok(res, "Lembretes pendentes.", {
+      diasAntes: lembreteService.DIAS_ANTES,
+      automatico: process.env.LEMBRETES_AUTOMATICOS !== "false",
+      emailConfigurado: emailConfigurado(),
+      pendentes: pendentes.length,
+    });
   }),
 );
 emprestimoRouter.post("/lembretes/enviar", asyncHandler(async (_req, res) => ok(res, "Lembretes processados.", await lembreteService.enviarLembretes())));

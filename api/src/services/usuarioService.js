@@ -26,7 +26,8 @@ export async function criar({ nome, email, senha }) {
 export async function atualizar(id, { senha, ...dados }) {
   return prisma.usuario.update({
     where: { id },
-    data: { ...dados, ...(senha && { hash: await hashSenha(senha) }) },
+    // Trocar a senha encerra as sessões abertas com a senha antiga.
+    data: { ...dados, ...(senha && { hash: await hashSenha(senha), versaoToken: { increment: 1 } }) },
     select: usuarioPublico,
   });
 }
@@ -46,11 +47,16 @@ export async function autenticar({ email, senha }) {
   const bibliotecario = usuario.bibliotecarios[0];
   if (!bibliotecario) throw forbidden("Este usuário não possui perfil de bibliotecário.");
 
-  const token = jwt.sign({ id: usuario.id, id_bibliotecario: bibliotecario.id }, env.jwtSecret, {
-    expiresIn: env.jwtExpiresIn,
-  });
+  const token = emitirToken(usuario, bibliotecario);
 
   return { token, usuario: { id: usuario.id, nome: usuario.nome, email: usuario.email }, bibliotecario };
+}
+
+/** JWT da sessão. `v` acompanha a versão do usuário: trocar a senha invalida os tokens antigos. */
+export function emitirToken(usuario, bibliotecario) {
+  return jwt.sign({ id: usuario.id, id_bibliotecario: bibliotecario.id, v: usuario.versaoToken ?? 0 }, env.jwtSecret, {
+    expiresIn: env.jwtExpiresIn,
+  });
 }
 
 export function validarToken(token) {

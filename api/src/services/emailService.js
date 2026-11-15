@@ -3,10 +3,18 @@ import { dataPrevistaDevolucao, formatarDataBR } from "../utils/dates.js";
 
 let transporter = null;
 
+const smtpConfigurado = () => Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+// Caixa de teste do Ethereal: só quando pedida explicitamente (desenvolvimento).
+const modoTeste = () => process.env.EMAIL_TESTE === "true";
+
+/** Há como enviar e-mail? Sem SMTP (nem modo de teste), os envios são recusados com aviso. */
+export const emailConfigurado = () => smtpConfigurado() || modoTeste();
+export const EMAIL_NAO_CONFIGURADO = "O envio de e-mail não está configurado neste computador.";
+
 async function criarTransporter() {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_SECURE } = process.env;
 
-  if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+  if (smtpConfigurado()) {
     const port = Number(SMTP_PORT || 587);
     return nodemailer.createTransport({
       host: SMTP_HOST,
@@ -16,7 +24,7 @@ async function criarTransporter() {
     });
   }
 
-  // Sem SMTP configurado, usa uma caixa de teste do Ethereal (apenas desenvolvimento).
+  // EMAIL_TESTE=true: caixa de teste do Ethereal (apenas desenvolvimento).
   const conta = await nodemailer.createTestAccount();
   return nodemailer.createTransport({
     host: "smtp.ethereal.email",
@@ -28,6 +36,16 @@ async function criarTransporter() {
 async function getTransporter() {
   transporter ??= await criarTransporter();
   return transporter;
+}
+
+async function despachar(mensagem) {
+  const info = await (await getTransporter()).sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER || '"Biblioteca Camugerê" <no-reply@camugere.org>',
+    ...mensagem,
+  });
+  const previewUrl = nodemailer.getTestMessageUrl(info) || null;
+  if (previewUrl) console.info(`[e-mail] Prévia: ${previewUrl}`);
+  return previewUrl;
 }
 
 const escapeHtml = (valor) =>
@@ -78,20 +96,12 @@ function dadosDoEmprestimo(emprestimo) {
 async function enviar(emprestimo, { titulo, intro, assunto }) {
   const usuario = emprestimo.leitor?.usuario;
   if (!usuario?.email) return { enviado: false, motivo: "Leitor sem e-mail cadastrado." };
+  if (!emailConfigurado()) return { enviado: false, motivo: EMAIL_NAO_CONFIGURADO };
 
   const dados = { ...dadosDoEmprestimo(emprestimo), titulo, intro };
   const { html, texto } = montarConteudo(dados);
 
-  const info = await (await getTransporter()).sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER || '"Biblioteca Camugerê" <no-reply@camugere.org>',
-    to: usuario.email,
-    subject: assunto(dados),
-    text: texto,
-    html,
-  });
-
-  const previewUrl = nodemailer.getTestMessageUrl(info) || null;
-  if (previewUrl) console.info(`[e-mail] Prévia: ${previewUrl}`);
+  const previewUrl = await despachar({ to: usuario.email, subject: assunto(dados), text: texto, html });
 
   return { enviado: true, emailDestino: usuario.email, dataDevolucaoPrevista: dados.dataPrevista, previewUrl };
 }
@@ -109,3 +119,28 @@ export const enviarLembreteDevolucao = (emprestimo) =>
     intro: "O prazo do seu empréstimo está chegando ao fim. Se precisar de mais tempo, fale com a biblioteca para renovar.",
     assunto: (d) => `Lembrete: devolva "${d.tituloObra}" até ${d.dataPrevista}`,
   });
+
+/** E-mail com o link de redefinição de senha. Lança erro se o e-mail não estiver configurado. */
+export async function enviarRedefinicaoSenha({ nome, email, link, validadeMin }) {
+  if (!emailConfigurado()) throw new Error(EMAIL_NAO_CONFIGURADO);
+  const html = `
+  <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1f1d1a;border:1px solid #e4dfd4">
+    <div style="background:#1f3a2e;color:#f6f2ea;padding:24px 28px">
+      <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8">Biblioteca Camugerê</div>
+      <div style="font-size:22px;margin-top:4px">Redefinição de senha</div>
+    </div>
+    <div style="padding:28px;font-family:Arial,sans-serif;font-size:15px;line-height:1.55">
+      <p style="margin-top:0">Olá, <strong>${escapeHtml(nome)}</strong>.</p>
+      <p>Recebemos um pedido para redefinir a sua senha de acesso ao sistema da biblioteca.</p>
+      <p style="text-align:center;margin:28px 0"><a href="${escapeHtml(link)}" style="background:#1f3a2e;color:#f6f2ea;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600">Criar nova senha</a></p>
+      <p style="color:#6b6358;font-size:13px">O link vale por ${validadeMin} minutos e só pode ser usado uma vez. Se você não pediu a troca, ignore este e-mail: sua senha continua a mesma.</p>
+    </div>
+  </div>`;
+  const text = `Olá, ${nome}.
+
+Para criar uma nova senha de acesso ao sistema da biblioteca, abra o link abaixo (válido por ${validadeMin} minutos):
+${link}
+
+Se você não pediu a troca, ignore este e-mail.`;
+  await despachar({ to: email, subject: "Biblioteca Camugerê — redefinição de senha", text, html });
+}

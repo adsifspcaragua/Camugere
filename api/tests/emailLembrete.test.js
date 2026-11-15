@@ -55,6 +55,32 @@ describe("emailService", () => {
     expect(r).toMatchObject({ enviado: true, emailDestino: "ana@x.com", dataDevolucaoPrevista: "15/05/2026", previewUrl: null });
   });
 
+  it("sem SMTP nem modo de teste, não envia e explica o motivo", async () => {
+    const host = process.env.SMTP_HOST;
+    delete process.env.SMTP_HOST;
+    try {
+      expect(email.emailConfigurado()).toBe(false);
+      await expect(email.enviarEmailEmprestimo(emprestimo())).resolves.toEqual({ enviado: false, motivo: email.EMAIL_NAO_CONFIGURADO });
+      await expect(email.enviarRedefinicaoSenha({ nome: "A", email: "a@x.com", link: "http://x", validadeMin: 30 })).rejects.toThrow(/não está configurado/);
+      expect(lembretes.agendarLembretes()).toBeNull();
+      process.env.EMAIL_TESTE = "true";
+      expect(email.emailConfigurado()).toBe(true);
+    } finally {
+      process.env.SMTP_HOST = host;
+      delete process.env.EMAIL_TESTE;
+    }
+    expect(sendMail).not.toHaveBeenCalled();
+  });
+
+  it("e-mail de redefinição traz o link e escapa o nome", async () => {
+    await email.enviarRedefinicaoSenha({ nome: "Ana <i>", email: "ana@x.com", link: "http://localhost:3000/?redefinir=abc", validadeMin: 30 });
+    const msg = sendMail.mock.calls[0][0];
+    expect(msg.to).toBe("ana@x.com");
+    expect(msg.html).toContain("http://localhost:3000/?redefinir=abc");
+    expect(msg.html).toContain("Ana &lt;i&gt;");
+    expect(msg.text).toContain("30 minutos");
+  });
+
   it("não envia para leitor sem e-mail", async () => {
     const r = await email.enviarLembreteDevolucao(emprestimo({ leitor: { usuario: { nome: "Ana", email: null } } }));
     expect(r).toEqual({ enviado: false, motivo: "Leitor sem e-mail cadastrado." });
