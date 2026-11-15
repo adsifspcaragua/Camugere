@@ -16,10 +16,20 @@ export function errorHandler(error, _req, res, _next) {
     return res.status(error.status).json({ message: error.message, details: error.details });
   }
 
+  if (error?.code === "P2002") {
+    const alvo = [error.meta?.target].flat().join(",");
+    const campo = /cpf/i.test(alvo) ? "CPF" : /email/i.test(alvo) ? "e-mail" : /isbn/i.test(alvo) ? "ISBN" : null;
+    if (campo) return res.status(409).json({ message: `Já existe um registro com este ${campo}. Confira o valor informado.` });
+  }
+
   const prismaError = PRISMA_ERRORS[error?.code];
   if (prismaError) {
     const [status, message] = prismaError;
     return res.status(status).json({ message });
+  }
+
+  if (error?.type === "entity.too.large") {
+    return res.status(413).json({ message: "Os dados enviados são grandes demais. Envie em partes menores." });
   }
 
   if (error?.type === "entity.parse.failed") {

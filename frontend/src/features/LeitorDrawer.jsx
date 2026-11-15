@@ -2,13 +2,13 @@ import { useState } from "react";
 import { MapPin } from "lucide-react";
 import Drawer from "../components/ui/Drawer.jsx";
 import Button from "../components/ui/Button.jsx";
-import { Field, TextField, inputClass } from "../components/ui/Field.jsx";
+import { Field, TextField, inputClass, inputProps } from "../components/ui/Field.jsx";
 import { useLibrary } from "../context/LibraryContext.jsx";
-import { useToast } from "../context/ToastContext.jsx";
 import { useForm } from "../hooks/useForm.js";
 import { useGuardedClose } from "../hooks/useGuardedClose.js";
 import { formatCep, formatCpf, formatPhone, onlyDigits } from "../lib/format.js";
 import { buscarCep } from "../services/cepService.js";
+import { fieldErrorsFromApi, validateLeitor } from "../lib/validators.js";
 
 const ENDERECO = ["logradouro", "numero", "complemento", "bairro", "cidade", "uf"];
 const blankToNull = (v) => (String(v ?? "").trim() === "" ? null : String(v).trim());
@@ -26,30 +26,31 @@ function initialValues(leitor) {
 
 function LeitorForm({ leitor, onClose }) {
   const { saveLeitor } = useLibrary();
-  const toast = useToast();
   const editing = Boolean(leitor);
-  const { values, set, field, dirty } = useForm(initialValues(leitor));
+  const { values, set, field, dirty, errors, setError, validate, applyServerErrors } = useForm(initialValues(leitor), validateLeitor);
   const requestClose = useGuardedClose(onClose, dirty);
   const [saving, setSaving] = useState(false);
   const [buscandoCep, setBuscandoCep] = useState(false);
-
-  const valid = values.nome.trim().length >= 2 && values.email.includes("@") && onlyDigits(values.cpf).length === 11;
+  const [formError, setFormError] = useState("");
 
   const preencherPorCep = async () => {
     const cep = onlyDigits(values.cep);
-    if (cep.length !== 8) return;
+    if (!cep) return;
+    if (cep.length !== 8) return setError({ cep: "O CEP tem 8 números. Ex.: 20040-020." });
     setBuscandoCep(true);
     try {
       set(await buscarCep(cep));
     } catch (error) {
-      toast.error(error.message);
+      // Falha na consulta não impede o cadastro: a pessoa pode digitar o endereço à mão.
+      setError({ cep: `${error.message} Você pode preencher o endereço manualmente.` });
     } finally {
       setBuscandoCep(false);
     }
   };
 
   const submit = async () => {
-    if (!valid) return;
+    setFormError("");
+    if (!validate()) return setFormError("Confira os campos destacados em vermelho.");
     setSaving(true);
     try {
       await saveLeitor(
@@ -64,7 +65,11 @@ function LeitorForm({ leitor, onClose }) {
         leitor?.id,
       );
       onClose();
-    } catch {
+    } catch (error) {
+      // O aviso geral já foi mostrado; aqui destacamos o campo que a API recusou.
+      const porCampo = fieldErrorsFromApi(error);
+      if (!porCampo.cpf && /cpf/i.test(error.message)) porCampo.cpf = error.message;
+      if (!applyServerErrors(porCampo)) setFormError(error.message);
       setSaving(false);
     }
   };
@@ -74,6 +79,7 @@ function LeitorForm({ leitor, onClose }) {
       open
       onClose={requestClose}
       onSubmit={submit}
+      error={formError}
       title={editing ? "Editar leitor" : "Novo leitor"}
       description="O e-mail é usado para enviar comprovantes e lembretes de devolução."
       footer={
@@ -81,26 +87,26 @@ function LeitorForm({ leitor, onClose }) {
           <Button variant="ghost" onClick={requestClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!valid} loading={saving}>
+          <Button type="submit" loading={saving}>
             {editing ? "Salvar alterações" : "Cadastrar leitor"}
           </Button>
         </>
       }
     >
-      <TextField label="Nome completo" {...field("nome")} autoComplete="off" required />
+      <TextField label="Nome completo" {...field("nome")} autoComplete="off" maxLength={80} required />
       <TextField label="E-mail" type="email" {...field("email")} autoComplete="off" required />
       <div className="grid grid-cols-2 gap-4">
-        <TextField label="CPF" {...field("cpf", formatCpf)} inputMode="numeric" placeholder="000.000.000-00" required />
-        <TextField label="Telefone" {...field("telefone", formatPhone)} inputMode="tel" placeholder="(21) 99999-0000" optional />
+        <TextField label="CPF" {...field("cpf", formatCpf)} inputMode="numeric" maxLength={14} placeholder="000.000.000-00" required />
+        <TextField label="Telefone" {...field("telefone", formatPhone)} inputMode="tel" maxLength={15} placeholder="(21) 99999-0000" optional />
       </div>
 
       <fieldset className="space-y-4 border-t border-line pt-5">
         <legend className="flex items-center gap-2 pr-2 text-xs font-semibold tracking-wider text-ink-muted uppercase">
           <MapPin size={13} /> Endereço
         </legend>
-        <Field label="CEP" hint={buscandoCep ? "Buscando endereço…" : "Preenche rua, bairro e cidade automaticamente."} optional>
+        <Field label="CEP" error={errors.cep} hint={buscandoCep ? "Buscando endereço…" : "Preenche rua, bairro e cidade automaticamente."} optional>
           {(id) => (
-            <input id={id} autoComplete="off" {...field("cep", formatCep)} onBlur={preencherPorCep} inputMode="numeric" placeholder="00000-000" className={`${inputClass} w-40 font-mono`} />
+            <input id={id} autoComplete="off" {...inputProps(field("cep", formatCep))} aria-invalid={Boolean(errors.cep)} aria-describedby={errors.cep ? `${id}-error` : undefined} onBlur={preencherPorCep} inputMode="numeric" placeholder="00000-000" className={`${inputClass} w-40 font-mono`} />
           )}
         </Field>
         <div className="grid grid-cols-[1fr_96px] gap-4">

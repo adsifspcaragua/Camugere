@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 /** Painel lateral para formulários. O conteúdo só é montado quando aberto (estado sempre limpo). */
-export default function Drawer({ open, onClose, title, description, footer, onSubmit, children }) {
+export default function Drawer({ open, onClose, title, description, footer, onSubmit, error, children }) {
   const titleId = useId();
   const panelRef = useRef(null);
   const closeRef = useRef(onClose);
@@ -55,13 +55,24 @@ export default function Drawer({ open, onClose, title, description, footer, onSu
           className="flex min-h-0 flex-1 flex-col"
           autoComplete="off"
           {...(onSubmit && {
+            // noValidate: as mensagens são nossas (em português e dizendo como corrigir), não as do navegador.
+            noValidate: true,
             onSubmit: (e) => {
               e.preventDefault();
               onSubmit();
+              // Depois de renderizar os erros, leva o foco ao primeiro campo com problema.
+              setTimeout(() => panelRef.current?.querySelector('[aria-invalid="true"]')?.focus(), 0);
             },
           })}
         >
-          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6 scrollbar-thin">{children}</div>
+          <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6 scrollbar-thin">
+            {error && (
+              <div role="alert" className="rounded-md border-[1.5px] border-danger/40 bg-danger-soft px-4 py-3 text-sm font-semibold text-danger">
+                {error}
+              </div>
+            )}
+            {children}
+          </div>
           {footer && <footer className="flex flex-wrap justify-end gap-3 border-t border-line bg-sunken px-6 py-4">{footer}</footer>}
         </Body>
       </aside>

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { normalizeLoan, summarize } from "../lib/loans.js";
 import { useToast } from "./ToastContext.jsx";
 import * as obraService from "../services/obraService.js";
+import * as cddService from "../services/cddService.js";
 import * as exemplarService from "../services/exemplarService.js";
 import * as leitorService from "../services/leitorService.js";
 import * as emprestimoService from "../services/emprestimoService.js";
@@ -27,19 +28,22 @@ const normalizeLeitor = (l) => ({
 export function LibraryProvider({ children }) {
   const toast = useToast();
   const [obras, setObras] = useState([]);
+  const [cdds, setCdds] = useState([]);
   const [leitores, setLeitores] = useState([]);
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const reload = useCallback(async () => {
     try {
-      const [o, l, e] = await Promise.all([
+      const [o, c, l, e] = await Promise.all([
         obraService.listObras(),
+        cddService.listCdds(),
         leitorService.listLeitores(),
         emprestimoService.listEmprestimos(),
       ]);
       const today = new Date();
       setObras(o);
+      setCdds(c);
       setLeitores(l.map(normalizeLeitor));
       setLoans(e.map((raw) => normalizeLoan(raw, today)));
     } catch (error) {
@@ -96,6 +100,12 @@ export function LibraryProvider({ children }) {
         run(() => exemplarService.createExemplar(obra.id), (ex) => `Exemplar ${ex.numeroInventario} adicionado.`),
       deleteExemplar: (exemplar) =>
         run(() => exemplarService.deleteExemplar(exemplar.id), `Exemplar ${exemplar.numeroInventario} removido.`),
+      saveCdd: (dados, id) =>
+        run(
+          () => (id ? cddService.updateCdd(id, { descricao: dados.descricao }) : cddService.createCdd(dados)),
+          id ? `CDD ${id} atualizado.` : `CDD ${dados.id} cadastrado.`,
+        ),
+      deleteCdd: (cdd) => run(() => cddService.deleteCdd(cdd.id), `CDD ${cdd.id} removido.`),
       importObras: (lista) =>
         run(
           () => obraService.importObras(lista),
@@ -142,8 +152,8 @@ export function LibraryProvider({ children }) {
   const stats = useMemo(() => summarize(obras, loans), [obras, loans]);
 
   const value = useMemo(
-    () => ({ obras, leitores, loans, stats, loading, ...actions }),
-    [obras, leitores, loans, stats, loading, actions],
+    () => ({ obras, cdds, leitores, loans, stats, loading, ...actions }),
+    [obras, cdds, leitores, loans, stats, loading, actions],
   );
   return <LibraryContext.Provider value={value}>{children}</LibraryContext.Provider>;
 }

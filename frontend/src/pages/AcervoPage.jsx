@@ -19,8 +19,8 @@ const FILTERS = {
 };
 
 function exportCsv(obras) {
-  const rows = [["Título", "Autoria", "CDD", "ISBN", "Exemplares", "Disponíveis"]];
-  obras.forEach((o) => rows.push([o.titulo, o.autor, o.cdd, o.isbn, o.total, o.disponiveis]));
+  const rows = [["Título", "Autoria", "CDD", "Assunto CDD", "ISBN", "Exemplares", "Disponíveis"]];
+  obras.forEach((o) => rows.push([o.titulo, o.autor, o.cdd, o.cddDescricao, o.isbn, o.total, o.disponiveis]));
   downloadFile(toCsv(rows), `acervo-camugere-${new Date().toISOString().slice(0, 10)}.csv`);
 }
 

@@ -3,22 +3,38 @@ import { ArrowRight, BookOpen, Sparkles, Users } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import Footer from "../components/layout/Footer.jsx";
+import { validateLogin } from "../lib/validators.js";
 
 export default function LoginPage() {
   const { login, exitReason } = useAuth();
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  const checkField = (name) => () => {
+    const found = validateLogin({ email, senha })[name];
+    setFieldErrors((f) => ({ ...f, [name]: found }));
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+    const found = validateLogin({ email, senha });
+    setFieldErrors(found);
+    if (Object.keys(found).length) {
+      document.getElementById(found.email ? "login-email" : "login-senha")?.focus();
+      return;
+    }
     setLoading(true);
     try {
       await login(email.trim(), senha);
     } catch (err) {
-      setError(err.message);
+      if (err.status === 401) setError("E-mail ou senha incorretos. Confira os dados e tente de novo.");
+      else if (err.status === 0) setError(err.message);
+      else if (err.status === 400) setError("Não foi possível entrar com os dados informados. Confira o e-mail e a senha.");
+      else setError(err.message);
       setLoading(false);
     }
   };
@@ -126,7 +142,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={submit} className="space-y-6">
+              <form onSubmit={submit} noValidate className="space-y-6">
                 <div className="space-y-2">
                   <label
                     htmlFor="login-email"
@@ -138,13 +154,24 @@ export default function LoginPage() {
                     id="login-email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setFieldErrors((f) => ({ ...f, email: undefined }));
+                    }}
+                    onBlur={checkField("email")}
+                    aria-invalid={Boolean(fieldErrors.email)}
+                    aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
                     autoComplete="username"
                     placeholder="exemplo: admin@camugere.org"
                     required
                     autoFocus
-                    className="h-14 w-full rounded-xl border-2 border-line bg-sunken px-4 text-base sm:text-lg text-ink placeholder:text-ink-muted/60 transition-all hover:border-field focus:border-forest focus:bg-panel focus:outline-none"
+                    className="h-14 w-full rounded-xl border-2 border-line bg-sunken px-4 text-base sm:text-lg text-ink placeholder:text-ink-muted/60 transition-all hover:border-field focus:border-forest focus:bg-panel focus:outline-none aria-[invalid=true]:border-danger"
                   />
+                  {fieldErrors.email && (
+                    <p id="login-email-error" role="alert" className="text-sm font-semibold text-danger">
+                      {fieldErrors.email}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -158,12 +185,23 @@ export default function LoginPage() {
                     id="login-senha"
                     type="password"
                     value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
+                    onChange={(e) => {
+                      setSenha(e.target.value);
+                      setFieldErrors((f) => ({ ...f, senha: undefined }));
+                    }}
+                    onBlur={checkField("senha")}
+                    aria-invalid={Boolean(fieldErrors.senha)}
+                    aria-describedby={fieldErrors.senha ? "login-senha-error" : undefined}
                     autoComplete="current-password"
                     placeholder="Digite sua senha"
                     required
-                    className="h-14 w-full rounded-xl border-2 border-line bg-sunken px-4 text-base sm:text-lg text-ink placeholder:text-ink-muted/60 transition-all hover:border-field focus:border-forest focus:bg-panel focus:outline-none"
+                    className="h-14 w-full rounded-xl border-2 border-line bg-sunken px-4 text-base sm:text-lg text-ink placeholder:text-ink-muted/60 transition-all hover:border-field focus:border-forest focus:bg-panel focus:outline-none aria-[invalid=true]:border-danger"
                   />
+                  {fieldErrors.senha && (
+                    <p id="login-senha-error" role="alert" className="text-sm font-semibold text-danger">
+                      {fieldErrors.senha}
+                    </p>
+                  )}
                 </div>
 
                 {error && (

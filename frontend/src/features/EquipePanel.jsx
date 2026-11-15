@@ -11,20 +11,19 @@ import { useToast } from "../context/ToastContext.jsx";
 import { useConfirm } from "../context/ConfirmContext.jsx";
 import { useForm } from "../hooks/useForm.js";
 import { useGuardedClose } from "../hooks/useGuardedClose.js";
+import { fieldErrorsFromApi, validateBibliotecario } from "../lib/validators.js";
 import { cadastrarBibliotecario, listBibliotecarios, removerBibliotecario } from "../services/bibliotecarioService.js";
 
 function NovoBibliotecario({ onClose, onCreated }) {
   const toast = useToast();
-  const { values, field, dirty } = useForm({ nome: "", email: "", senha: "", confirmacao: "" });
+  const { values, field, dirty, validate, applyServerErrors, setError } = useForm({ nome: "", email: "", senha: "", confirmacao: "" }, validateBibliotecario);
   const requestClose = useGuardedClose(onClose, dirty);
   const [saving, setSaving] = useState(false);
-
-  const senhaCurta = values.senha && values.senha.length < 6;
-  const naoConfere = values.confirmacao && values.confirmacao !== values.senha;
-  const valid = values.nome.trim().length >= 2 && values.email.includes("@") && values.senha.length >= 6 && values.senha === values.confirmacao;
+  const [formError, setFormError] = useState("");
 
   const submit = async () => {
-    if (!valid) return;
+    setFormError("");
+    if (!validate()) return setFormError("Confira os campos destacados em vermelho.");
     setSaving(true);
     try {
       await cadastrarBibliotecario({ nome: values.nome.trim(), email: values.email.trim(), senha: values.senha });
@@ -32,7 +31,10 @@ function NovoBibliotecario({ onClose, onCreated }) {
       onCreated();
       onClose();
     } catch (error) {
-      toast.error(error.message);
+      if (!applyServerErrors(fieldErrorsFromApi(error))) {
+        if (error.status === 409) setError({ email: "Este e-mail já tem acesso ou cadastro no sistema." });
+        setFormError(error.message);
+      }
       setSaving(false);
     }
   };
@@ -42,6 +44,7 @@ function NovoBibliotecario({ onClose, onCreated }) {
       open
       onClose={requestClose}
       onSubmit={submit}
+      error={formError}
       title="Novo bibliotecário"
       description="A pessoa entra no sistema com este e-mail e senha."
       footer={
@@ -49,7 +52,7 @@ function NovoBibliotecario({ onClose, onCreated }) {
           <Button variant="ghost" onClick={requestClose}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={!valid} loading={saving}>
+          <Button type="submit" loading={saving}>
             Dar acesso
           </Button>
         </>
@@ -57,8 +60,8 @@ function NovoBibliotecario({ onClose, onCreated }) {
     >
       <TextField label="Nome" {...field("nome")} autoComplete="off" required />
       <TextField label="E-mail" type="email" {...field("email")} autoComplete="off" required />
-      <TextField label="Senha inicial" type="password" {...field("senha")} autoComplete="new-password" error={senhaCurta && "Use ao menos 6 caracteres."} required />
-      <TextField label="Confirme a senha" type="password" {...field("confirmacao")} autoComplete="new-password" error={naoConfere && "As senhas não conferem."} required />
+      <TextField label="Senha inicial" type="password" {...field("senha")} autoComplete="new-password" hint="Mínimo de 6 caracteres." required />
+      <TextField label="Confirme a senha" type="password" {...field("confirmacao")} autoComplete="new-password" required />
     </Drawer>
   );
 }

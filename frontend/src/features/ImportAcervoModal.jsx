@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Upload, FileText, CheckCircle2, AlertCircle, X, ArrowRight, BookOpen } from "lucide-react";
+import { Upload, FileText, CheckCircle2, AlertCircle, X, ArrowRight } from "lucide-react";
 import Modal from "../components/ui/Modal.jsx";
 import Button from "../components/ui/Button.jsx";
 import Spinner from "../components/ui/Spinner.jsx";
@@ -7,6 +7,9 @@ import Badge from "../components/ui/Badge.jsx";
 import { parseAcervoCsv } from "../lib/csvImport.js";
 import { useLibrary } from "../context/LibraryContext.jsx";
 import { plural } from "../lib/format.js";
+
+// A API aceita até 1 MB por requisição.
+const MAX_CSV_BYTES = 1024 * 1024;
 
 export default function ImportAcervoModal({ open, onClose }) {
   const { importObras, reload } = useLibrary();
@@ -36,8 +39,22 @@ export default function ImportAcervoModal({ open, onClose }) {
 
   const processFile = (selectedFile) => {
     if (!selectedFile) return;
-    if (!selectedFile.name.endsWith(".csv") && selectedFile.type !== "text/csv") {
-      setParsingError("Selecione um arquivo no formato CSV (.csv).");
+    if (!/\.csv$/i.test(selectedFile.name) && selectedFile.type !== "text/csv") {
+      setFile(null);
+      setParsedObras([]);
+      setParsingError("Esse arquivo não é um CSV. Na planilha, use “Salvar como” e escolha o formato CSV (.csv).");
+      return;
+    }
+    if (selectedFile.size === 0) {
+      setFile(null);
+      setParsedObras([]);
+      setParsingError("O arquivo está vazio. Escolha uma planilha com os dados do acervo.");
+      return;
+    }
+    if (selectedFile.size > MAX_CSV_BYTES) {
+      setFile(null);
+      setParsedObras([]);
+      setParsingError(`O arquivo tem ${(selectedFile.size / 1024 / 1024).toFixed(1)} MB; o limite é 1 MB. Divida a planilha em partes menores.`);
       return;
     }
 
@@ -57,12 +74,13 @@ export default function ImportAcervoModal({ open, onClose }) {
           setParsedObras(obras);
         }
       } catch (err) {
-        setParsingError(`Erro ao processar o CSV: ${err.message}`);
+        setParsingError(`Não foi possível ler o CSV: ${err.message}. Confira se o arquivo segue o modelo de colunas (título, autor, ISBN…).`);
         setParsedObras([]);
       }
     };
     reader.onerror = () => {
-      setParsingError("Falha ao ler o arquivo selecionado.");
+      setParsedObras([]);
+      setParsingError("Não foi possível ler o arquivo. Feche-o em outros programas e tente de novo.");
     };
     reader.readAsText(selectedFile, "UTF-8");
   };
@@ -90,7 +108,7 @@ export default function ImportAcervoModal({ open, onClose }) {
       setResult(data);
       await reload();
     } catch (err) {
-      setParsingError(err.message || "Erro ao importar as obras.");
+      setParsingError(`${err.message || "Erro ao importar as obras."} Corrija o que for indicado e tente importar de novo.`);
     } finally {
       setLoading(false);
     }
@@ -149,6 +167,14 @@ export default function ImportAcervoModal({ open, onClose }) {
               </div>
             </div>
 
+            {result.cddsSemDescricao?.length > 0 && (
+              <div className="mt-3 p-3 rounded-md bg-warn-soft/40 border border-warn/20 text-xs text-ink-soft">
+                <p className="font-semibold text-ink mb-1">CDDs criados sem assunto ({result.cddsSemDescricao.length}):</p>
+                <p className="font-mono break-words">{result.cddsSemDescricao.join(", ")}</p>
+                <p className="mt-1">Eles já estão vinculados às obras. Complete o assunto de cada um em Classificação (CDD).</p>
+              </div>
+            )}
+
             {result.erros && result.erros.length > 0 && (
               <div className="mt-3 p-3 rounded-md bg-warn-soft/40 border border-warn/20 text-xs text-ink-soft">
                 <p className="font-semibold text-ink mb-1">Avisos ({result.erros.length}):</p>
@@ -193,7 +219,7 @@ export default function ImportAcervoModal({ open, onClose }) {
                   Arraste e solte o arquivo CSV aqui ou clique para selecionar
                 </p>
                 <p className="text-xs text-ink-muted mt-1 text-center">
-                  Formatos aceitos: CSV Camugere (Título, Autoria, CDD, ISBN...) ou legado (title, writers...)
+                  Formatos aceitos: CSV Camugere (Título, Autoria, CDD, Assunto CDD, ISBN...) ou legado (title, writers...). CDDs novos são cadastrados na hora; sem a coluna de assunto, ficam para completar em Classificação (CDD).
                 </p>
               </div>
             ) : (

@@ -11,6 +11,7 @@ import { useLibrary } from "../context/LibraryContext.jsx";
 import { useToast } from "../context/ToastContext.jsx";
 import { formatCpf, formatDate, formatEndereco, formatPhone } from "../lib/format.js";
 import { loanStatus, normalizeLoan } from "../lib/loans.js";
+import { validateSuspensao } from "../lib/validators.js";
 import { listEmprestimosDoLeitor, listSuspensoes } from "../services/leitorService.js";
 
 const DURACOES = [
@@ -32,21 +33,26 @@ function SuspensaoForm({ leitor, onDone }) {
   const [motivo, setMotivo] = useState("");
   const [dias, setDias] = useState("15");
   const [saving, setSaving] = useState(false);
+  const [erro, setErro] = useState("");
+
+  const check = (valor = motivo) => setErro(validateSuspensao({ motivo: valor }).motivo ?? "");
 
   const submit = async () => {
-    if (motivo.trim().length < 3) return;
+    const found = validateSuspensao({ motivo }).motivo;
+    if (found) return setErro(found);
     setSaving(true);
     try {
       await suspendLeitor(leitor, { motivo: motivo.trim(), dias: dias ? Number(dias) : null });
       onDone();
-    } catch {
+    } catch (error) {
+      setErro(error.message);
       setSaving(false);
     }
   };
 
   return (
     <div className="space-y-4 rounded-md border-[1.5px] border-danger/40 bg-danger-soft p-5">
-      <TextArea label="Motivo da suspensão" value={motivo} onChange={(e) => setMotivo(e.target.value)} rows={2} placeholder="Atraso de mais de 30 dias na devolução de…" />
+      <TextArea label="Motivo da suspensão" value={motivo} error={erro} maxLength={500} onBlur={() => check()} onChange={(e) => { setMotivo(e.target.value); if (erro) setErro(""); }} rows={2} placeholder="Atraso de mais de 30 dias na devolução de…" />
       <Field label="Duração">
         {(id) => (
           <select id={id} value={dias} onChange={(e) => setDias(e.target.value)} className={inputClass}>
@@ -60,7 +66,7 @@ function SuspensaoForm({ leitor, onDone }) {
         <Button variant="ghost" size="sm" onClick={onDone}>
           Cancelar
         </Button>
-        <Button variant="danger" size="sm" icon={Ban} onClick={submit} loading={saving} disabled={motivo.trim().length < 3}>
+        <Button variant="danger" size="sm" icon={Ban} onClick={submit} loading={saving}>
           Suspender leitor
         </Button>
       </div>

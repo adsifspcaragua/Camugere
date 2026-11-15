@@ -7,7 +7,7 @@ import { inputClass } from "./ui/Field.jsx";
  * - items: lista completa; filter(item, query) decide o que aparece
  * - renderItem(item): conteúdo de cada opção; getLabel(item): texto do item selecionado
  */
-export default function Autocomplete({ id, items, filter, renderItem, getKey, getLabel, value, onChange, placeholder, emptyMessage = "Nada encontrado.", limit = 8 }) {
+export default function Autocomplete({ id, items, filter, renderItem, getKey, getLabel, value, onChange, placeholder, emptyMessage = "Nada encontrado.", limit = 8, invalid = false }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -70,6 +70,8 @@ export default function Autocomplete({ id, items, filter, renderItem, getKey, ge
         placeholder={placeholder}
         autoComplete="off"
         role="combobox"
+        aria-invalid={invalid}
+        aria-describedby={invalid ? `${id}-error` : undefined}
         aria-expanded={open}
         aria-controls={listId}
         aria-activedescendant={open && results[active] ? `${listId}-${active}` : undefined}

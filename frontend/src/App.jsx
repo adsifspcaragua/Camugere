@@ -21,6 +21,7 @@ import LeitorDetalheDrawer from "./features/LeitorDetalheDrawer.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import DashboardPage from "./pages/DashboardPage.jsx";
 import AcervoPage from "./pages/AcervoPage.jsx";
+import CddPage from "./pages/CddPage.jsx";
 import EmprestimosPage from "./pages/EmprestimosPage.jsx";
 import LeitoresPage from "./pages/LeitoresPage.jsx";
 import RelatoriosPage from "./pages/RelatoriosPage.jsx";
@@ -68,6 +69,7 @@ function Workspace() {
   const pages = {
     inicio: <DashboardPage onNavigate={navigate} onNewLoan={() => open("loan")} onReturn={() => open("return")} onNewLeitor={() => open("leitor")} onNewObra={() => open("obra")} />,
     acervo: <AcervoPage search={search} onAddObra={() => open("obra")} onEditObra={(obra) => open("obra", obra)} />,
+    cdd: <CddPage onEditObra={(obra) => open("obra", obra)} />,
     emprestimos: <EmprestimosPage onNewLoan={() => open("loan")} />,
     leitores: <LeitoresPage onAddLeitor={() => open("leitor")} onEditLeitor={(l) => open("leitor", l)} onOpenLeitor={(l) => open("leitorDetalhe", l.id)} />,
     relatorios: <RelatoriosPage />,
