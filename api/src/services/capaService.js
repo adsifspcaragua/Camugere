@@ -41,8 +41,17 @@ function ipPrivado(ip) {
     );
   }
   const v = ip.toLowerCase();
-  if (v.startsWith("::ffff:")) return ipPrivado(v.slice(7));
-  return v === "::1" || v === "::" || v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe80");
+  if (v.startsWith("::ffff:")) {
+    // IPv4 mapeado: o parser de URL normaliza "::ffff:127.0.0.1" para "::ffff:7f00:1".
+    const resto = v.slice(7);
+    if (net.isIPv4(resto)) return ipPrivado(resto);
+    const hex = /^([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(resto);
+    if (!hex) return true;
+    const [alto, baixo] = [parseInt(hex[1], 16), parseInt(hex[2], 16)];
+    return ipPrivado(`${alto >> 8}.${alto & 255}.${baixo >> 8}.${baixo & 255}`);
+  }
+  // "::" no início cobre ::, ::1 e IPv4 compatível (::7f00:1); 64:ff9b:: é tradução NAT64 para IPv4.
+  return v.startsWith("::") || v.startsWith("64:ff9b:") || v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe80");
 }
 
 // Proteção contra SSRF: só http/https e apenas hosts que resolvem para IPs públicos

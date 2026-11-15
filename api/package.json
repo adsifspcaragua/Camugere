@@ -37,6 +37,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "testPathIgnorePatterns": ["/node_modules/", "<rootDir>/.stryker-tmp/"],
     "collectCoverageFrom": [
       "src/**/*.js",
       "!src/server.js",
