@@ -74,7 +74,7 @@ export async function redefinirSenhaDeColega(id_bibliotecario, { novaSenha }, { 
  * quais e-mails têm acesso. Sem e-mail configurado, avisa para pedir ajuda a um colega.
  */
 export async function solicitarRedefinicao({ email }) {
-  if (!emailConfigurado()) return { emailConfigurado: false };
+  if (!(await emailConfigurado())) return { emailConfigurado: false };
 
   const usuario = await prisma.usuario.findUnique({
     where: { email },

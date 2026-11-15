@@ -13,7 +13,7 @@ const prismaMock = {
 };
 const enviarEmailEmprestimo = jest.fn();
 jest.unstable_mockModule("../src/lib/prisma.js", () => ({ prisma: prismaMock }));
-jest.unstable_mockModule("../src/services/emailService.js", () => ({ enviarEmailEmprestimo, enviarLembreteDevolucao: jest.fn() }));
+jest.unstable_mockModule("../src/services/emailService.js", () => ({ enviarEmailEmprestimo, enviarLembreteDevolucao: jest.fn(), explicarFalhaSmtp: (e) => `falha: ${e.message}` }));
 
 const service = await import("../src/services/emprestimoService.js");
 
@@ -79,7 +79,7 @@ describe("criar empréstimo", () => {
     enviarEmailEmprestimo.mockRejectedValue(new Error("SMTP fora"));
     const r = await service.criar(dados);
     expect(r.id).toBe(99);
-    expect(r.emailNotification).toEqual({ enviado: false, erro: "SMTP fora" });
+    expect(r.emailNotification).toEqual({ enviado: false, motivo: "falha: SMTP fora" });
     spy.mockRestore();
   });
 });

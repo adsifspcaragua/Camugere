@@ -24,6 +24,18 @@ model Usuario {
   redefinicoesSenha RedefinicaoSenha[]
 }
 
+// Servidor de e-mail configurado pela tela (linha única, id = 1). A senha fica cifrada.
+model ConfiguracaoEmail {
+  id            Int      @id @default(1)
+  host          String   @db.VarChar(255)
+  porta         Int
+  seguro        Boolean  @default(false)
+  usuario       String   @db.VarChar(255)
+  senhaCifrada  String   @db.Text
+  nomeRemetente String?  @db.VarChar(100)
+  atualizadoEm  DateTime @updatedAt
+}
+
 // Pedido de "esqueci minha senha": guarda só o hash do token enviado por e-mail.
 model RedefinicaoSenha {
   id         Int       @id @default(autoincrement())

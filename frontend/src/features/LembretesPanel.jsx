@@ -39,7 +39,7 @@ export default function LembretesPanel() {
         <div className="min-w-0 flex-[1_1_20rem] text-ink-soft">
           {status && !status.emailConfigurado ? (
             <p className="rounded-md border border-warn/30 bg-warn-soft px-4 py-3 font-medium text-warn">
-              O envio de e-mail não está configurado neste computador: comprovantes e lembretes não serão enviados. Peça ao responsável técnico para preencher os dados de SMTP no arquivo <code className="font-mono">.env</code> da API.
+              O envio de e-mail não está configurado: os lembretes não serão enviados. Configure em “E-mail da biblioteca”, acima.
             </p>
           ) : status ? (
             <>

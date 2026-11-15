@@ -43,7 +43,6 @@ Abra `api/.env` num editor de texto e preencha:
 | --- | --- |
 | `DATABASE_URL` | `mysql://camugere:troque-esta-senha@localhost:3306/camugere` (usuário e senha do passo 2) |
 | `JWT_SECRET` | Uma frase longa e aleatória, só deste computador. Para gerar: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
-| `SMTP_*` | Dados do e-mail que envia comprovantes, lembretes e links de "esqueci minha senha" (veja [E-mail](#e-mail)) |
 
 ### 4. Preparar o sistema
 
@@ -60,7 +59,8 @@ O comando instala as dependências, cria as tabelas no banco vazio e gera o site
 1. Dê dois cliques em **`iniciar-camugere.bat`**, na pasta raiz. A janela preta é o sistema rodando: deixe-a aberta.
 2. O navegador abre em http://localhost:3000 com a tela **Primeiro acesso**.
 3. Informe nome, e-mail e senha de quem vai administrar a biblioteca. Essa tela só aparece enquanto não existe nenhuma conta.
-4. As outras pessoas da equipe são adicionadas depois, em **Configurações › Equipe da biblioteca**.
+4. Em **Configurações › E-mail da biblioteca**, configure a conta de e-mail (veja [E-mail](#e-mail)).
+5. As outras pessoas da equipe são adicionadas em **Configurações › Equipe da biblioteca**.
 
 ### Iniciar junto com o Windows (opcional)
 
@@ -84,19 +84,17 @@ Trocar ou redefinir a senha encerra as sessões abertas com a senha antiga.
 
 ## E-mail
 
-O sistema envia três tipos de e-mail: comprovante de empréstimo, lembrete de devolução e link de redefinição de senha. Para isso, preencha no `api/.env`:
+O sistema envia três tipos de e-mail: comprovante de empréstimo, lembrete de devolução e link de "esqueci minha senha". A própria equipe configura em **Configurações › E-mail da biblioteca**:
 
-```ini
-SMTP_HOST="smtp.gmail.com"
-SMTP_PORT="587"
-SMTP_USER="biblioteca@gmail.com"
-SMTP_PASS="senha-de-app"
-SMTP_FROM="Biblioteca Camugerê <biblioteca@gmail.com>"
-```
+1. Clique em **Configurar** e escolha o provedor (**Gmail** ou **Outro provedor**).
+2. Informe o e-mail da biblioteca e a **senha de app**. No Gmail, ela é gerada em [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), com a verificação em duas etapas ativada. A tela explica o passo a passo.
+3. Salve e clique em **Enviar e-mail de teste**. O teste chega no e-mail de quem está logado. Se der erro, a tela explica o motivo (senha errada, servidor não encontrado etc.).
 
-No Gmail, `SMTP_PASS` é uma [senha de app](https://myaccount.google.com/apppasswords), não a senha normal da conta. Depois de alterar o `.env`, feche e abra o sistema de novo.
+A senha fica guardada cifrada no banco, com uma chave derivada do `JWT_SECRET`. Ela nunca é mostrada de novo. Se o `JWT_SECRET` for trocado, basta salvar a senha outra vez.
 
-Sem SMTP configurado, o sistema funciona normalmente, mas não envia e-mails. A tela de Configurações avisa, e o empréstimo informa que o comprovante não foi enviado.
+Sem e-mail configurado, o sistema funciona normalmente, mas não envia e-mails: Configurações avisa, e o empréstimo informa que o comprovante não foi enviado.
+
+**Alternativa pelo arquivo:** as variáveis `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` e `SMTP_FROM` no `api/.env` também funcionam. A configuração feita na tela tem prioridade.
 
 Os lembretes saem automaticamente para empréstimos que vencem nos próximos `LEMBRETE_DIAS_ANTES` dias (padrão: 2), uma vez por prazo. Para desligar, use `LEMBRETES_AUTOMATICOS=false`.
 
@@ -193,6 +191,8 @@ src/
 | POST | `/bibliotecario/cadastrar` | `{ nome, email, senha }` cria um novo acesso |
 | PATCH | `/bibliotecario/:id/senha` | `{ novaSenha }` define a senha de um colega |
 | GET / POST | `/emprestimo/lembretes`, `/emprestimo/lembretes/enviar` | status e envio manual dos lembretes |
+| GET / PUT / DELETE | `/configuracao/email` | servidor de e-mail (a senha nunca é devolvida) |
+| POST | `/configuracao/email/teste` | envia um e-mail de teste para quem está logado |
 
 ### Testes
 

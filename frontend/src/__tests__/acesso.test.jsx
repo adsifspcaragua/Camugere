@@ -183,3 +183,74 @@ describe("senha na área logada", () => {
     expect(screen.getByRole("button", { name: /Enviar pendentes agora/ })).toBeDisabled();
   });
 });
+
+describe("e-mail da biblioteca (Configurações)", () => {
+  const abrirConfiguracoes = async () => {
+    localStorage.setItem(TOKEN_KEY, "tk");
+    render(<App />);
+    const nav = await screen.findByRole("navigation", { name: "Principal" });
+    fireEvent.click(within(nav).getByRole("button", { name: /Configurações/ }));
+    return screen.findByRole("heading", { name: "E-mail da biblioteca" });
+  };
+
+  it("configura o Gmail com senha de app e atualiza o status", async () => {
+    let salvo = { configurado: false, origem: null, nomeRemetente: "Biblioteca Camugerê", senhaDefinida: false };
+    rotas["GET /configuracao/email"] = () => json(200, { data: salvo });
+    rotas["PUT /configuracao/email"] = (b) => {
+      salvo = { configurado: true, origem: "tela", host: b.host, porta: b.porta, usuario: b.usuario, nomeRemetente: b.nomeRemetente, senhaDefinida: true };
+      return json(200, { data: salvo });
+    };
+    await abrirConfiguracoes();
+    expect(await screen.findByText("Não configurado")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Configurar" }));
+    const gaveta = await screen.findByRole("dialog", { name: "Configurar e-mail" });
+    expect(within(gaveta).getByRole("link", { name: /apppasswords/ })).toHaveAttribute("href", "https://myaccount.google.com/apppasswords");
+    fireEvent.change(within(gaveta).getByLabelText("E-mail da conta"), { target: { value: "biblioteca@gmail.com" } });
+    fireEvent.change(within(gaveta).getByLabelText("Senha de app"), { target: { value: "abcdefghijklmnop" } });
+    fireEvent.click(within(gaveta).getByRole("button", { name: "Salvar" }));
+
+    await screen.findByText(/E-mail configurado/);
+    expect(chamadas.find((c) => c.method === "PUT").body).toEqual({
+      host: "smtp.gmail.com", porta: 587, seguro: false, usuario: "biblioteca@gmail.com", senha: "abcdefghijklmnop", nomeRemetente: "Biblioteca Camugerê",
+    });
+    expect(await screen.findByText("biblioteca@gmail.com")).toBeInTheDocument();
+  });
+
+  it("outro provedor exige servidor e porta; senha em branco mantém a salva", async () => {
+    rotas["GET /configuracao/email"] = () =>
+      json(200, { data: { configurado: true, origem: "tela", host: "smtp.meuprovedor.com", porta: 465, seguro: true, usuario: "bib@meuprovedor.com", nomeRemetente: "Biblioteca", senhaDefinida: true } });
+    rotas["PUT /configuracao/email"] = (b) => json(200, { data: { configurado: true, origem: "tela", ...b } });
+    await abrirConfiguracoes();
+    fireEvent.click(await screen.findByRole("button", { name: "Alterar" }));
+    const gaveta = await screen.findByRole("dialog", { name: "Configurar e-mail" });
+    expect(within(gaveta).getByLabelText("Provedor")).toHaveValue("outro");
+    fireEvent.change(within(gaveta).getByLabelText("Servidor SMTP"), { target: { value: "" } });
+    fireEvent.click(within(gaveta).getByRole("button", { name: "Salvar" }));
+    expect(await within(gaveta).findByText(/Informe o servidor SMTP/)).toBeInTheDocument();
+
+    fireEvent.change(within(gaveta).getByLabelText("Servidor SMTP"), { target: { value: "smtp.novo.com" } });
+    fireEvent.click(within(gaveta).getByRole("button", { name: "Salvar" }));
+    await screen.findByText(/E-mail configurado/);
+    expect(chamadas.find((c) => c.method === "PUT").body).toMatchObject({ host: "smtp.novo.com", porta: 465, seguro: true, senha: "" });
+  });
+
+  it("envia e-mail de teste e mostra a explicação quando falha", async () => {
+    rotas["GET /configuracao/email"] = () => json(200, { data: { configurado: true, origem: "tela", host: "smtp.gmail.com", porta: 587, usuario: "b@gmail.com", senhaDefinida: true } });
+    rotas["POST /configuracao/email/teste"] = () => json(200, { message: "E-mail de teste enviado para maria@bib.org." });
+    await abrirConfiguracoes();
+    fireEvent.click(await screen.findByRole("button", { name: /Enviar e-mail de teste/ }));
+    expect(await screen.findByText("E-mail de teste enviado para maria@bib.org.")).toBeInTheDocument();
+
+    rotas["POST /configuracao/email/teste"] = () => json(400, { message: "O servidor recusou o e-mail ou a senha." });
+    fireEvent.click(screen.getByRole("button", { name: /Enviar e-mail de teste/ }));
+    expect(await screen.findByText("O servidor recusou o e-mail ou a senha.")).toBeInTheDocument();
+  });
+
+  it("configuração vinda do .env aparece como configurada, sem botão de remover", async () => {
+    rotas["GET /configuracao/email"] = () => json(200, { data: { configurado: true, origem: "env", host: "smtp.env", porta: 587, usuario: "env@x.org", senhaDefinida: true } });
+    await abrirConfiguracoes();
+    expect(await screen.findByText(/Definido no arquivo/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remover" })).not.toBeInTheDocument();
+  });
+});

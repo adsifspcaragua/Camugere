@@ -24,6 +24,8 @@ jest.unstable_mockModule("../src/services/emailService.js", () => ({
   enviarRedefinicaoSenha: email.enviarRedefinicaoSenha,
   enviarEmailEmprestimo: jest.fn(),
   enviarLembreteDevolucao: jest.fn(),
+  enviarTeste: jest.fn(),
+  explicarFalhaSmtp: (e) => e.message,
 }));
 
 const acesso = await import("../src/services/acessoService.js");

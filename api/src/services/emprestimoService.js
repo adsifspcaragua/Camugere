@@ -2,7 +2,7 @@ import { prisma } from "../lib/prisma.js";
 import { conflict, notFound } from "../lib/httpError.js";
 import { emprestimoSelect } from "./selects.js";
 import { isAtrasado } from "../utils/dates.js";
-import { enviarEmailEmprestimo } from "./emailService.js";
+import { enviarEmailEmprestimo, explicarFalhaSmtp } from "./emailService.js";
 import { buscarAtiva } from "./suspensaoService.js";
 import { formatarDataBR } from "../utils/dates.js";
 
@@ -37,7 +37,7 @@ async function notificar(emprestimo, enviar) {
     return await enviarEmailEmprestimo(emprestimo);
   } catch (error) {
     console.warn("Falha ao enviar e-mail do empréstimo:", error.message);
-    return { enviado: false, erro: error.message };
+    return { enviado: false, motivo: explicarFalhaSmtp(error) };
   }
 }
 

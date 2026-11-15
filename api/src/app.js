@@ -10,6 +10,7 @@ import {
   autorRouter,
   bibliotecarioRouter,
   cddRouter,
+  configuracaoRouter,
   emprestimoRouter,
   exemplarRouter,
   leitorRouter,
@@ -46,6 +47,7 @@ app.use("/exemplar", exemplarRouter);
 app.use("/emprestimo", emprestimoRouter);
 app.use("/obraautor", obraAutorRouter);
 app.use("/upload", uploadRouter);
+app.use("/configuracao", configuracaoRouter);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

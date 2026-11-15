@@ -6,6 +6,7 @@ import { Panel, PanelHeader } from "../components/ui/Panel.jsx";
 import { loadSettings, saveSettings } from "../services/settings.js";
 import EquipePanel from "../features/EquipePanel.jsx";
 import LembretesPanel from "../features/LembretesPanel.jsx";
+import EmailPanel from "../features/EmailPanel.jsx";
 
 function Row({ title, description, children }) {
   return (
@@ -86,6 +87,8 @@ function AparenciaPanel() {
 
 export default function ConfiguracoesPage() {
   const [settings, setSettings] = useState(loadSettings);
+  // Recarrega o painel de lembretes quando a configuração de e-mail muda.
+  const [versaoEmail, setVersaoEmail] = useState(0);
 
   // Salva a cada mudança: sem botão "Salvar" para esquecer de apertar.
   const update = (patch) =>
@@ -120,7 +123,8 @@ export default function ConfiguracoesPage() {
 
         <div className="space-y-5">
           <EquipePanel />
-          <LembretesPanel />
+          <EmailPanel onChange={() => setVersaoEmail((v) => v + 1)} />
+          <LembretesPanel key={versaoEmail} />
         </div>
       </div>
     </>

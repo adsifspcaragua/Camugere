@@ -224,7 +224,7 @@ export function EsqueciCard({ onVoltar }) {
             </Aviso>
           ) : (
             <Aviso tom="alerta">
-              O envio de e-mail não está configurado neste computador, então não é possível mandar o link. Peça a outra pessoa da equipe para definir uma nova senha
+              O envio de e-mail ainda não foi configurado no sistema, então não é possível mandar o link. Peça a outra pessoa da equipe para definir uma nova senha
               para você em <strong>Configurações › Equipe da biblioteca</strong>.
             </Aviso>
           )}

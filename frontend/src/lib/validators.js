@@ -121,6 +121,18 @@ export function validateEmail(v) {
   return clean({ email: emailError(v.email) });
 }
 
+export function validateConfigEmail(v, { senhaDefinida = false } = {}) {
+  const outro = v.provedor === "outro";
+  const porta = Number(v.porta);
+  return clean({
+    host: outro ? required(v.host, "Informe o servidor SMTP do seu provedor.") : undefined,
+    porta: outro && !(porta >= 1 && porta <= 65535) ? "Informe a porta (geralmente 587 ou 465)." : undefined,
+    usuario: emailError(v.usuario),
+    senha: !senhaDefinida ? required(v.senha, "Informe a senha.") : undefined,
+    nomeRemetente: maxLen(v.nomeRemetente, 100, "O nome"),
+  });
+}
+
 export function validateCdd(v, { editing = false, existente } = {}) {
   const codigo = normalizarCodigo(v.id);
   return clean({
