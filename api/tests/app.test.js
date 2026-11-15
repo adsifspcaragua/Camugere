@@ -2,6 +2,7 @@ import { jest } from "@jest/globals";
 import jwt from "jsonwebtoken";
 
 const prismaMock = {
+  bibliotecario: { findFirst: jest.fn().mockResolvedValue({ id: 1 }) },
   cdd: { findMany: jest.fn() },
   emprestimo: { findUnique: jest.fn() },
 };
