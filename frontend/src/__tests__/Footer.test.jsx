@@ -1,12 +1,25 @@
 import { render, screen } from "@testing-library/react";
 import Footer from "../components/layout/Footer.jsx";
 
+const EXPECTED_MEMBERS = [
+  "Tiago Vieira",
+  "Lucas Perrota",
+  "Rafael Tomaz",
+  "Matheus Manfredini",
+  "Vitor de Oliveira",
+];
+
 describe("Footer", () => {
-  it("renderiza o nome do desenvolvedor Tiago Vieira e os links corretos", () => {
+  it("renderiza todos os integrantes, os links do Tiago Vieira e os direitos autorais", () => {
     render(<Footer />);
 
-    expect(screen.getByText("Tiago Vieira")).toBeInTheDocument();
     expect(screen.getByText(/Desenvolvido por/i)).toBeInTheDocument();
+    for (const member of EXPECTED_MEMBERS) {
+      expect(screen.getByText(member)).toBeInTheDocument();
+    }
+    expect(
+      screen.getByText(/Camugerê — Projeto de Extensão 3\. Todos os direitos reservados\./i)
+    ).toBeInTheDocument();
 
     const githubLink = screen.getByRole("link", { name: /github de tiago vieira/i });
     expect(githubLink).toHaveAttribute("href", "https://github.com/sapopianista");
@@ -19,10 +32,15 @@ describe("Footer", () => {
     expect(linkedinLink).toHaveAttribute("rel", "noopener noreferrer");
   });
 
-  it("renderiza em modo compacto sem o nome do sistema", () => {
+  it("renderiza em modo compacto sem o nome do sistema, mantendo integrantes e direitos autorais", () => {
     render(<Footer compact />);
 
-    expect(screen.getByText("Tiago Vieira")).toBeInTheDocument();
+    for (const member of EXPECTED_MEMBERS) {
+      expect(screen.getByText(member)).toBeInTheDocument();
+    }
     expect(screen.queryByText(/Sistema de Gestão da Biblioteca Comunitária/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/Camugerê — Projeto de Extensão 3\. Todos os direitos reservados\./i)
+    ).toBeInTheDocument();
   });
 });

@@ -28,51 +28,123 @@ export function LinkedinIcon({ className = "size-4" }) {
   );
 }
 
+// Para adicionar redes sociais aos demais integrantes, preencha `github` e/ou `linkedin`.
+export const TEAM_MEMBERS = [
+  {
+    name: "Tiago Vieira",
+    github: "https://github.com/sapopianista",
+    linkedin: "https://www.linkedin.com/in/tiagovieira167/",
+  },
+  { name: "Lucas Perrota" },
+  { name: "Rafael Tomaz" },
+  { name: "Matheus Manfredini" },
+  { name: "Vitor de Oliveira" },
+];
+
+function MemberSocialLinks({ member }) {
+  if (!member.github && !member.linkedin) return null;
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {member.github && (
+        <a
+          href={member.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`GitHub de ${member.name} (abre em nova aba)`}
+          title={`GitHub: ${member.name}`}
+          className="inline-flex size-7 items-center justify-center rounded-md border border-line bg-panel text-ink shadow-2xs transition-colors hover:border-ink hover:bg-sunken focus-visible:outline-2 focus-visible:outline-forest"
+        >
+          <GithubIcon className="size-4" />
+        </a>
+      )}
+      {member.linkedin && (
+        <a
+          href={member.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`LinkedIn de ${member.name} (abre em nova aba)`}
+          title={`LinkedIn: ${member.name}`}
+          className="inline-flex size-7 items-center justify-center rounded-md border border-line bg-panel text-[#0A66C2] shadow-2xs transition-colors hover:border-[#0A66C2] hover:bg-sky-50/70 dark:hover:bg-[#0A66C2]/20 focus-visible:outline-2 focus-visible:outline-[#0A66C2]"
+        >
+          <LinkedinIcon className="size-4" />
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default function Footer({ compact = false, className = "" }) {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer
-      className={`mt-auto border-t border-line bg-panel/80 py-5 transition-colors ${className}`}
+      className={`mt-auto border-t border-line bg-panel/90 py-5 transition-colors ${className}`}
     >
       <div
-        className={`mx-auto flex flex-col items-center gap-4 px-4 sm:px-8 ${
-          compact
-            ? "justify-center text-center"
-            : "max-w-[1360px] justify-between text-center sm:flex-row sm:text-left"
+        className={`mx-auto flex flex-col gap-4 px-4 sm:px-8 ${
+          compact ? "items-center text-center" : "max-w-[1360px]"
         }`}
       >
-        {!compact && (
-          <p className="text-sm font-medium text-ink-muted">
-            <span className="font-bold text-ink">Camugerê</span> • Sistema de Gestão da Biblioteca Comunitária
-          </p>
-        )}
+        <div
+          className={`flex flex-col gap-4 ${
+            compact
+              ? "items-center justify-center text-center"
+              : "justify-between text-center lg:flex-row lg:items-center lg:text-left"
+          }`}
+        >
+          {!compact && (
+            <div className="flex shrink-0 flex-col gap-0.5">
+              <p className="text-sm font-medium text-ink-muted">
+                <span className="font-bold text-ink">Camugerê</span> • Sistema de Gestão da Biblioteca Comunitária
+              </p>
+              <p className="text-xs text-ink-soft">
+                Projeto de Extensão 3
+              </p>
+            </div>
+          )}
 
-        <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-ink-soft">
-          <span className="font-medium text-ink-muted">Desenvolvido por</span>
-          <span className="font-bold text-ink">Tiago Vieira</span>
-          <div className="flex items-center gap-2">
-            <a
-              href="https://github.com/sapopianista"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub de Tiago Vieira (abre em nova aba)"
-              title="GitHub: Tiago Vieira (@sapopianista)"
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-panel px-3 text-xs font-semibold text-ink shadow-xs transition-all hover:border-ink hover:bg-sunken focus-visible:outline-2 focus-visible:outline-forest"
+          <div
+            className={`flex flex-col gap-2 ${
+              compact ? "items-center" : "items-center lg:items-end"
+            }`}
+          >
+            <span className="text-xs font-medium text-ink-muted">
+              Desenvolvido por
+            </span>
+            <ul
+              className={`flex flex-wrap items-center gap-2 ${
+                compact ? "justify-center" : "justify-center lg:justify-end"
+              }`}
             >
-              <GithubIcon className="size-4.5" />
-              <span>GitHub</span>
-            </a>
-            <a
-              href="https://www.linkedin.com/in/tiagovieira167/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn de Tiago Vieira (abre em nova aba)"
-              title="LinkedIn: Tiago Vieira"
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-line bg-panel px-3 text-xs font-semibold text-ink shadow-xs transition-all hover:border-[#0A66C2] hover:bg-sky-50/70 hover:text-[#0A66C2] dark:hover:bg-[#0A66C2]/20 focus-visible:outline-2 focus-visible:outline-[#0A66C2]"
-            >
-              <LinkedinIcon className="size-4.5 text-[#0A66C2]" />
-              <span>LinkedIn</span>
-            </a>
+              {TEAM_MEMBERS.map((member) => (
+                <li
+                  key={member.name}
+                  className="inline-flex items-center gap-2 rounded-lg border border-line bg-sunken/60 px-3 py-1.5 text-xs"
+                >
+                  <span className="font-semibold text-ink">{member.name}</span>
+                  <MemberSocialLinks member={member} />
+                </li>
+              ))}
+            </ul>
           </div>
+        </div>
+
+        <div
+          className={`flex flex-col items-center gap-2 border-t border-line/80 pt-3 text-xs text-ink-muted ${
+            compact
+              ? "w-full justify-center text-center"
+              : "justify-between text-center sm:flex-row sm:text-left"
+          }`}
+        >
+          <p>
+            © {currentYear} Camugerê — Projeto de Extensão 3. Todos os direitos reservados.
+          </p>
+          {!compact && (
+            <p className="text-ink-soft">
+              Uso acadêmico e comunitário
+            </p>
+          )}
         </div>
       </div>
     </footer>
