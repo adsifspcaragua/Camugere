@@ -1,0 +1,4 @@
+# Scripts do Windows precisam de CRLF para rodar no computador da biblioteca.
+*.bat text eol=crlf
+*.vbs text eol=crlf
+*.ico binary
