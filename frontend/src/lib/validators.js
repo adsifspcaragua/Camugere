@@ -133,6 +133,18 @@ export function validateConfigEmail(v, { senhaDefinida = false } = {}) {
   });
 }
 
+export function validateConfigBackup(v) {
+  const manter = Number(v.manter);
+  const pasta = String(v.pastaCopia ?? "").trim();
+  return clean({
+    dias: v.automatico && !v.dias.length ? "Escolha pelo menos um dia da semana." : undefined,
+    horario: !/^([01]\d|2[0-3]):[0-5]\d$/.test(v.horario ?? "") ? "Informe o horário (ex.: 17:00)." : undefined,
+    pastaCopia:
+      pasta && !/^([A-Za-z]:[\\/]|\\\\|\/)/.test(pasta) ? "Informe o caminho completo da pasta, por exemplo E:\\Backup Camugere." : maxLen(pasta, 500, "O caminho"),
+    manter: !(Number.isInteger(manter) && manter >= 1 && manter <= 100) ? "Informe um número de 1 a 100." : undefined,
+  });
+}
+
 export function validateCdd(v, { editing = false, existente } = {}) {
   const codigo = normalizarCodigo(v.id);
   return clean({

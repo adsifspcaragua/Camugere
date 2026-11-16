@@ -107,19 +107,20 @@ export default function EquipePanel() {
         {equipe.map((b) => {
           const voce = b.usuario.id === user?.id;
           return (
-            <li key={b.id} className="flex min-h-16 items-center gap-3 px-6 py-3">
+            <li key={b.id} className="flex min-h-16 flex-wrap items-center gap-3 px-6 py-3">
               <Avatar name={b.usuario.nome} size="sm" />
-              <div className="min-w-0 flex-1">
+              {/* Base de 10rem: em tela estreita, os botões descem para a linha de baixo em vez de alargar a página. */}
+              <div className="min-w-0 flex-[1_1_10rem]">
                 <p className="break-words text-sm font-semibold text-ink">{b.usuario.nome}</p>
                 <p className="wrap-anywhere text-xs text-ink-muted">{b.usuario.email}</p>
               </div>
               {voce ? (
-                <>
+                <div className="flex items-center gap-3">
                   <Badge tone="forest" dot={false}>Você</Badge>
                   <Button variant="secondary" size="sm" icon={KeyRound} onClick={() => setSenhaDe("eu")}>
                     Alterar minha senha
                   </Button>
-                </>
+                </div>
               ) : (
                 <>
                   <Button variant="ghost" size="icon" icon={KeyRound} onClick={() => setSenhaDe(b)} aria-label={`Definir nova senha para ${b.usuario.nome}`} tooltip="Definir nova senha" />

@@ -1,8 +1,8 @@
 // Cópia de segurança: banco (mysqldump) + capas enviadas (api/uploads).
-// Uso: backup-camugere.bat na pasta raiz, ou "npm run backup" na pasta api.
-// Opcional no api/.env:
+// Uso: Configurações › Backup (agendado ou "Fazer backup agora"), backup-camugere.bat na pasta raiz
+// ou "npm run backup" na pasta api. A pasta extra e a quantidade guardada vêm da tela; sem ela, do api/.env:
 //   BACKUP_COPIA_PARA  pasta extra que recebe uma cópia (pen drive, Google Drive etc.)
-//   BACKUP_MANTER      quantos backups guardar na pasta backups (padrão 10)
+//   BACKUP_MANTER      quantos backups guardar (padrão 10)
 //   MYSQLDUMP          caminho do mysqldump.exe, se não for encontrado sozinho
 import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 
 const API_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const PREFIXO = "camugere-";
+export const PASTA_BACKUPS = path.resolve(API_DIR, "../backups");
 const NOME = /^camugere-\d{4}-\d{2}-\d{2}_\d{2}h\d{2}(-\d+)?$/;
 
 export function lerConexao(databaseUrl) {
@@ -123,7 +124,31 @@ function tamanho(bytes) {
   return bytes > 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`;
 }
 
-export async function fazerBackup({ env = process.env, pastaBase = path.resolve(API_DIR, "../backups"), log = console.log } = {}) {
+/** Backups guardados numa pasta, do mais novo para o mais antigo. */
+export function listarBackups(pasta = PASTA_BACKUPS) {
+  return listarPasta(pasta)
+    .filter((n) => NOME.test(n))
+    .sort()
+    .reverse()
+    .map((nome) => {
+      const sql = listarPasta(path.join(pasta, nome)).find((f) => f.endsWith(".sql"));
+      let bytes = 0;
+      try {
+        bytes = sql ? fs.statSync(path.join(pasta, nome, sql)).size : 0;
+      } catch {
+        /* apagado no meio da leitura */
+      }
+      return { nome, bytes };
+    });
+}
+
+export async function fazerBackup({
+  env = process.env,
+  pastaBase = PASTA_BACKUPS,
+  pastaCopia = env.BACKUP_COPIA_PARA,
+  manter = env.BACKUP_MANTER,
+  log = console.log,
+} = {}) {
   const conexao = lerConexao(env.DATABASE_URL);
   const exe = acharMysqldump({ env });
   fs.mkdirSync(pastaBase, { recursive: true });
@@ -148,33 +173,45 @@ export async function fazerBackup({ env = process.env, pastaBase = path.resolve(
     throw e;
   }
 
-  const manter = Math.max(1, Number(env.BACKUP_MANTER) || 10);
+  manter = Math.max(1, Number(manter) || 10);
   const apagados = limparAntigos(pastaBase, manter);
   if (apagados.length) log(`Backups antigos apagados (mantendo os ${manter} mais recentes): ${apagados.length}`);
 
   let copia = null;
-  if (env.BACKUP_COPIA_PARA) {
+  let avisoCopia = null;
+  if (pastaCopia) {
     try {
-      copia = path.join(env.BACKUP_COPIA_PARA, path.basename(destino));
+      fs.mkdirSync(pastaCopia, { recursive: true });
+      copia = path.join(pastaCopia, path.basename(destino));
       fs.cpSync(destino, copia, { recursive: true });
+      limparAntigos(pastaCopia, manter);
       log(`Cópia extra em: ${copia}`);
     } catch (e) {
       copia = null;
-      log(`ATENÇÃO: não deu para copiar para ${env.BACKUP_COPIA_PARA} (${e.code || e.message}). O pen drive está conectado?`);
+      avisoCopia = `Não deu para copiar para ${pastaCopia} (${e.code || e.message}). O pen drive está conectado?`;
+      log(`ATENÇÃO: ${avisoCopia}`);
     }
   }
-  return { destino, copia };
+  return { destino, copia, avisoCopia };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Uso direto (atalho ou npm run backup): usa a configuração da tela e registra o resultado em Configurações › Backup.
+async function main() {
   dotenv.config({ path: path.join(API_DIR, ".env"), quiet: true });
-  fazerBackup()
-    .then(({ destino, copia }) => {
-      console.log(`\nBackup concluído em:\n  ${destino}`);
-      if (!copia) console.log("\nLembre de copiar essa pasta para fora deste computador (pen drive ou nuvem).");
-    })
-    .catch((e) => {
-      console.error(`\nO backup NÃO foi feito: ${e.message}`);
-      process.exitCode = 1;
-    });
+  const { executarBackup } = await import("../services/backupService.js");
+  const { prisma } = await import("../lib/prisma.js");
+  try {
+    const { destino, copia } = await executarBackup({ origem: "atalho", log: console.log });
+    console.log(`\nBackup concluído em:\n  ${destino}`);
+    if (!copia) console.log("\nLembre de copiar essa pasta para fora deste computador (pen drive ou nuvem).");
+  } catch (e) {
+    // Erros do serviço já vêm como "O backup não foi feito: ..."
+    const msg = e.status ? e.message.replace("não foi feito", "NÃO foi feito") : `O backup NÃO foi feito: ${e.message}`;
+    console.error(`\n${msg}`);
+    process.exitCode = 1;
+  } finally {
+    await prisma.$disconnect();
+  }
 }
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

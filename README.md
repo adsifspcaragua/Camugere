@@ -61,17 +61,17 @@ O comando instala as dependências, cria as tabelas no banco vazio e gera o site
 3. Informe nome, e-mail e senha de quem vai administrar a biblioteca. Essa tela só aparece enquanto não existe nenhuma conta.
 4. Em **Configurações › E-mail da biblioteca**, configure a conta de e-mail (veja [E-mail](#e-mail)).
 5. As outras pessoas da equipe são adicionadas em **Configurações › Equipe da biblioteca**.
-6. Rode o `backup-camugere.bat` uma vez para conferir. Se quiser a cópia automática para o Google Drive ou para um pen drive, veja [Backup](#backup).
+6. Em **Configurações › Backup**, ligue o backup automático, informe a pasta da cópia extra (Google Drive ou pen drive) e clique em **Fazer backup agora** para conferir. Veja [Backup](#backup).
 
-### Iniciar junto com o Windows (opcional)
+### Iniciar junto com o Windows (recomendado)
 
-Aperte `Win + R`, digite `shell:startup` e crie nessa pasta um atalho para o `iniciar-camugere.bat`.
+Aperte `Win + R`, digite `shell:startup` e crie nessa pasta um atalho para o `iniciar-camugere.bat`. Assim o sistema já está aberto quando alguém liga o computador, e o backup automático acontece mesmo que ninguém abra o sistema.
 
 ## Uso diário
 
 - **Abrir o sistema:** `iniciar-camugere.bat`, ou acesse http://localhost:3000 se ele já estiver aberto.
 - **Fechar:** feche a janela preta do sistema.
-- **Backup:** `backup-camugere.bat`, toda semana (veja [Backup](#backup)).
+- **Backup:** automático, nos dias e no horário de Configurações › Backup. Confira lá se o último deu certo (veja [Backup](#backup)).
 - **Trocar a própria senha:** Configurações › Equipe da biblioteca › Alterar minha senha.
 
 ### Esqueci minha senha
@@ -102,18 +102,24 @@ Os lembretes saem automaticamente para empréstimos que vencem nos próximos `LE
 
 ## Backup
 
-Dê dois cliques em **`backup-camugere.bat`**, na pasta raiz. Faça isso pelo menos uma vez por semana. O backup cria a pasta `backups\camugere-AAAA-MM-DD_HHhMM`, com o banco (`camugere.sql`) e as capas (`uploads`). A pasta `backups` guarda os 10 mais recentes e apaga os mais antigos.
+Cada backup cria a pasta `backups\camugere-AAAA-MM-DD_HHhMM`, ao lado da pasta `api`, com o banco (`camugere.sql`) e as capas (`uploads`). Os backups mais antigos são apagados: ficam só os 10 mais recentes, ou a quantidade definida na tela.
 
-**Guarde uma cópia fora deste computador.** Se o computador quebrar, os backups dentro dele se perdem junto. Há duas formas:
+Tudo é configurado em **Configurações › Backup**:
 
-- Copie a pasta do backup para um pen drive.
-- Coloque no `api/.env` uma pasta que recebe uma cópia automática a cada backup. Pode ser o pen drive ou uma pasta do Google Drive para computador. Se o pen drive não estiver conectado, o backup é feito mesmo assim e só avisa.
+| Opção | O que faz |
+| --- | --- |
+| **Backup automático** | Dias da semana e horário. O sistema precisa estar aberto. Se estiver fechado no horário, o backup é feito assim que ele abrir. Se falhar, tenta de novo depois de 1 hora. |
+| **Copiar também para** | Pasta que recebe uma cópia de cada backup: um pen drive ou uma pasta do Google Drive para computador. Se ela não estiver acessível, o backup é feito mesmo assim e a tela avisa. |
+| **Quantos backups guardar** | Vale para a pasta `backups` e para a pasta da cópia. |
+| **Fazer backup agora** | Faz um backup na hora. |
 
-  ```
-  BACKUP_COPIA_PARA="G:\Meu Drive\Backup Camugere"
-  ```
+A tela mostra quando foi o último backup, se deu certo e o motivo quando não deu. Também mostra os backups guardados e o próximo horário.
 
-Também no `api/.env`, `BACKUP_MANTER=20` muda quantos backups ficam na pasta `backups`. Se o programa não encontrar o MySQL, informe o caminho em `MYSQLDUMP`.
+**Guarde uma cópia fora deste computador.** Se o computador quebrar, os backups dentro dele se perdem junto. A forma mais simples é a pasta do Google Drive para computador em "Copiar também para": cada backup vai para a nuvem sozinho.
+
+**Pelo atalho:** dar dois cliques em **`backup-camugere.bat`**, na pasta raiz, faz um backup na hora com a mesma configuração, mesmo com o sistema fechado. O resultado também aparece na tela.
+
+**Pelo arquivo:** sem configuração na tela, valem `BACKUP_COPIA_PARA` e `BACKUP_MANTER` do `api/.env`. Se o MySQL não for encontrado, informe o caminho do `mysqldump.exe` em `MYSQLDUMP`.
 
 Para restaurar, com o sistema fechado:
 
@@ -209,6 +215,8 @@ src/
 | GET / POST | `/emprestimo/lembretes`, `/emprestimo/lembretes/enviar` | status e envio manual dos lembretes |
 | GET / PUT / DELETE | `/configuracao/email` | servidor de e-mail (a senha nunca é devolvida) |
 | POST | `/configuracao/email/teste` | envia um e-mail de teste para quem está logado |
+| GET / PUT | `/configuracao/backup` | agenda, pasta extra, último resultado e backups guardados |
+| POST | `/configuracao/backup/executar` | faz um backup agora |
 
 ### Testes
 

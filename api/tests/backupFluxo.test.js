@@ -74,7 +74,8 @@ it("copia para BACKUP_COPIA_PARA e só avisa se o destino não existir", async (
   fs.writeFileSync(arquivo, "x");
   const r = await fazerBackup({ env: env({ BACKUP_COPIA_PARA: arquivo }), pastaBase: path.join(dir, "b2"), log });
   expect(r.copia).toBeNull();
-  expect(log).toHaveBeenCalledWith(expect.stringMatching(/ATENÇÃO: não deu para copiar/));
+  expect(log).toHaveBeenCalledWith(expect.stringMatching(/ATENÇÃO: Não deu para copiar/));
+  expect(r.avisoCopia).toMatch(/pen drive está conectado/);
   expect(fs.existsSync(path.join(r.destino, "camugere.sql"))).toBe(true);
 });
 

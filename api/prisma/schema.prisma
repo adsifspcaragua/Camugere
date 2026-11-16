@@ -217,3 +217,20 @@ model Comentario {
   id_leitor Int
   leitor    Leitor @relation(fields: [id_leitor], references: [id], onDelete: Cascade)
 }
+
+// Backup automático configurado pela tela de Configurações (linha única) + resultado do último backup.
+model ConfiguracaoBackup {
+  id              Int       @id @default(1)
+  automatico      Boolean   @default(false)
+  diasSemana      String    @default("5") @db.VarChar(20) // 0 = domingo ... 6 = sábado, separados por vírgula
+  horario         String    @default("17:00") @db.VarChar(5)
+  agendaDesde     DateTime? // horários anteriores a este momento não contam como "perdidos"
+  pastaCopia      String?   @db.VarChar(500)
+  manter          Int       @default(10)
+  ultimoEm        DateTime?
+  ultimoOk        Boolean?
+  ultimaMensagem  String?   @db.VarChar(1000)
+  ultimoDestino   String?   @db.VarChar(500)
+  ultimoSucessoEm DateTime?
+  atualizadoEm    DateTime  @updatedAt
+}
