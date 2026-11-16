@@ -70,6 +70,7 @@ Aperte `Win + R`, digite `shell:startup` e crie nessa pasta um atalho para o `in
 
 - **Abrir o sistema:** `iniciar-camugere.bat`, ou acesse http://localhost:3000 se ele já estiver aberto.
 - **Fechar:** feche a janela preta do sistema.
+- **Backup:** `backup-camugere.bat`, toda semana (veja [Backup](#backup)).
 - **Trocar a própria senha:** Configurações › Equipe da biblioteca › Alterar minha senha.
 
 ### Esqueci minha senha
@@ -100,19 +101,26 @@ Os lembretes saem automaticamente para empréstimos que vencem nos próximos `LE
 
 ## Backup
 
-Os dados ficam no MySQL. Faça uma cópia regularmente, por exemplo toda semana, e guarde-a fora deste computador (pen drive ou nuvem):
+Dê dois cliques em **`backup-camugere.bat`**, na pasta raiz. Faça isso pelo menos uma vez por semana. O backup cria a pasta `backups\camugere-AAAA-MM-DD_HHhMM`, com o banco (`camugere.sql`) e as capas (`uploads`). A pasta `backups` guarda os 10 mais recentes e apaga os mais antigos.
+
+**Guarde uma cópia fora deste computador.** Se o computador quebrar, os backups dentro dele se perdem junto. Há duas formas:
+
+- Copie a pasta do backup para um pen drive.
+- Coloque no `api/.env` uma pasta que recebe uma cópia automática a cada backup. Pode ser o pen drive ou uma pasta do Google Drive para computador. Se o pen drive não estiver conectado, o backup é feito mesmo assim e só avisa.
+
+  ```
+  BACKUP_COPIA_PARA="G:\Meu Drive\Backup Camugere"
+  ```
+
+Também no `api/.env`, `BACKUP_MANTER=20` muda quantos backups ficam na pasta `backups`. Se o programa não encontrar o MySQL, informe o caminho em `MYSQLDUMP`.
+
+Para restaurar num banco vazio, use o terminal do MySQL (MySQL Command Line Client) ou o MySQL Workbench (Server › Data Import). O arquivo de cada backup é o `camugere.sql`:
 
 ```bash
-mysqldump -u camugere -p camugere > backup-camugere-AAAA-MM-DD.sql
+mysql -u camugere -p camugere < "backups\camugere-AAAA-MM-DD_HHhMM\camugere.sql"
 ```
 
-As capas enviadas ficam em `api/uploads/`. Copie essa pasta junto com o backup.
-
-Para restaurar num banco vazio:
-
-```bash
-mysql -u camugere -p camugere < backup-camugere-AAAA-MM-DD.sql
-```
+Depois, copie a pasta `uploads` do backup para `api\uploads`.
 
 ## Atualizar o sistema
 
@@ -159,7 +167,7 @@ src/
   services/           regras de negócio e acesso ao banco
   controllers/        fábrica CRUD que conecta rota -> service
   routes/             definição das rotas
-  cli/                comandos de manutenção (redefinir senha)
+  cli/                comandos de manutenção (redefinir senha, backup)
 ```
 
 - **Erros:** viram respostas consistentes. `400` validação, `401` sem token ou sessão encerrada, `404` não encontrado, `409` conflito (ex.: exemplar já emprestado), `429` tentativas demais.
