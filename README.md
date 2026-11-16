@@ -61,6 +61,7 @@ O comando instala as dependências, cria as tabelas no banco vazio e gera o site
 3. Informe nome, e-mail e senha de quem vai administrar a biblioteca. Essa tela só aparece enquanto não existe nenhuma conta.
 4. Em **Configurações › E-mail da biblioteca**, configure a conta de e-mail (veja [E-mail](#e-mail)).
 5. As outras pessoas da equipe são adicionadas em **Configurações › Equipe da biblioteca**.
+6. Rode o `backup-camugere.bat` uma vez para conferir. Se quiser a cópia automática para o Google Drive ou para um pen drive, veja [Backup](#backup).
 
 ### Iniciar junto com o Windows (opcional)
 
@@ -114,13 +115,20 @@ Dê dois cliques em **`backup-camugere.bat`**, na pasta raiz. Faça isso pelo me
 
 Também no `api/.env`, `BACKUP_MANTER=20` muda quantos backups ficam na pasta `backups`. Se o programa não encontrar o MySQL, informe o caminho em `MYSQLDUMP`.
 
-Para restaurar num banco vazio, use o terminal do MySQL (MySQL Command Line Client) ou o MySQL Workbench (Server › Data Import). O arquivo de cada backup é o `camugere.sql`:
+Para restaurar, com o sistema fechado:
 
-```bash
-mysql -u camugere -p camugere < "backups\camugere-AAAA-MM-DD_HHhMM\camugere.sql"
-```
+1. Abra o **MySQL Command Line Client**, no menu Iniciar, e digite a senha do `root`.
+2. Rode os comandos abaixo, trocando o caminho pelo do backup. Use barras `/`.
 
-Depois, copie a pasta `uploads` do backup para `api\uploads`.
+   ```sql
+   DROP DATABASE camugere;
+   CREATE DATABASE camugere CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   USE camugere;
+   SOURCE C:/Camugere/backups/camugere-AAAA-MM-DD_HHhMM/camugere.sql
+   ```
+
+   Os comandos apagam os dados atuais e põem os do backup no lugar. O usuário `camugere` continua com acesso.
+3. Copie a pasta `uploads` do backup para `api\uploads`.
 
 ## Atualizar o sistema
 
