@@ -17,6 +17,8 @@ import * as emprestimoService from "../services/emprestimoService.js";
 import * as obraAutorService from "../services/obraAutorService.js";
 import * as suspensaoService from "../services/suspensaoService.js";
 import * as lembreteService from "../services/lembreteService.js";
+import * as backupService from "../services/backupService.js";
+import { configBackupSchema } from "../schemas/configBackupSchema.js";
 import * as acessoService from "../services/acessoService.js";
 import { emailConfigurado, enviarTeste } from "../services/emailService.js";
 import * as configEmailService from "../services/configEmailService.js";
@@ -215,5 +217,20 @@ configuracaoRouter.post(
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
+  }),
+);
+
+// ---------- Backup (Configurações › Backup) ----------
+configuracaoRouter.get("/backup", asyncHandler(async (_req, res) => ok(res, "Configuração de backup.", await backupService.obterParaTela())));
+configuracaoRouter.put(
+  "/backup",
+  validateBody(configBackupSchema),
+  asyncHandler(async (req, res) => ok(res, "Configuração de backup salva.", await backupService.salvar(req.body))),
+);
+configuracaoRouter.post(
+  "/backup/executar",
+  asyncHandler(async (_req, res) => {
+    const r = await backupService.executarBackup({ origem: "tela" });
+    ok(res, r.avisoCopia ? `Backup feito, mas sem a cópia extra. ${r.avisoCopia}` : "Backup concluído.", await backupService.obterParaTela());
   }),
 );

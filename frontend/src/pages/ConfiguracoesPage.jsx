@@ -7,6 +7,8 @@ import { loadSettings, saveSettings } from "../services/settings.js";
 import EquipePanel from "../features/EquipePanel.jsx";
 import LembretesPanel from "../features/LembretesPanel.jsx";
 import EmailPanel from "../features/EmailPanel.jsx";
+import BackupPanel from "../features/BackupPanel.jsx";
+import Switch from "../components/ui/Switch.jsx";
 
 function Row({ title, description, children }) {
   return (
@@ -32,21 +34,6 @@ function Stepper({ value, onChange, label }) {
         +
       </button>
     </div>
-  );
-}
-
-function Switch({ checked, onChange, label }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={`relative h-8 w-14 rounded-full border-2 transition-colors ${checked ? "border-forest bg-forest" : "border-field bg-sunken"}`}
-    >
-      <span className={`absolute top-0.5 size-6 rounded-full shadow transition-all ${checked ? "left-[26px] bg-on-forest" : "left-0.5 bg-ink-muted"}`} />
-    </button>
   );
 }
 
@@ -118,6 +105,7 @@ export default function ConfiguracoesPage() {
               </Row>
             </div>
           </Panel>
+          <BackupPanel />
           <AparenciaPanel />
         </div>
 

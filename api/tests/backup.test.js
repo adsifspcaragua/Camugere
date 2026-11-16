@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { acharMysqldump, lerConexao, limparAntigos, nomeDoBackup } from "../src/cli/backup.js";
+import { acharMysqldump, lerConexao, limparAntigos, listarBackups, nomeDoBackup } from "../src/cli/backup.js";
 
 describe("lerConexao", () => {
   it("extrai os dados do DATABASE_URL, com senha codificada", () => {
@@ -65,5 +65,17 @@ describe("limparAntigos", () => {
 
   it("pasta inexistente não é erro", () => {
     expect(limparAntigos(path.join(dir, "nada"), 3)).toEqual([]);
+  });
+
+  it("listarBackups: do mais novo para o mais antigo, com o tamanho do .sql", () => {
+    fs.mkdirSync(path.join(dir, "camugere-2026-01-01_10h00"));
+    fs.writeFileSync(path.join(dir, "camugere-2026-01-01_10h00", "camugere.sql"), "x".repeat(10));
+    fs.mkdirSync(path.join(dir, "camugere-2026-01-02_10h00"));
+    fs.mkdirSync(path.join(dir, "outra"));
+    expect(listarBackups(dir)).toEqual([
+      { nome: "camugere-2026-01-02_10h00", bytes: 0 },
+      { nome: "camugere-2026-01-01_10h00", bytes: 10 },
+    ]);
+    expect(listarBackups(path.join(dir, "nada"))).toEqual([]);
   });
 });
