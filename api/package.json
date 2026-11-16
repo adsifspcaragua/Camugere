@@ -16,7 +16,8 @@
     "db:reset": "prisma migrate reset",
     "seed:demo": "node src/seed.js",
     "db:deploy": "prisma migrate deploy && prisma generate",
-    "redefinir-senha": "node src/cli/redefinirSenha.js"
+    "redefinir-senha": "node src/cli/redefinirSenha.js",
+    "backup": "node src/cli/backup.js"
   },
   "dependencies": {
     "@prisma/client": "6.5",
