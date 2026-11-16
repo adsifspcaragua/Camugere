@@ -56,21 +56,25 @@ O comando instala as dependências, cria as tabelas no banco vazio e gera o site
 
 ### 5. Primeiro acesso
 
-1. Dê dois cliques em **`iniciar-camugere.bat`**, na pasta raiz. A janela preta é o sistema rodando: deixe-a aberta.
+1. Dê dois cliques em **`iniciar-camugere.vbs`**, na pasta raiz. O sistema roda escondido (sem janela) e o navegador abre sozinho.
 2. O navegador abre em http://localhost:3000 com a tela **Primeiro acesso**.
 3. Informe nome, e-mail e senha de quem vai administrar a biblioteca. Essa tela só aparece enquanto não existe nenhuma conta.
 4. Em **Configurações › E-mail da biblioteca**, configure a conta de e-mail (veja [E-mail](#e-mail)).
 5. As outras pessoas da equipe são adicionadas em **Configurações › Equipe da biblioteca**.
 6. Em **Configurações › Backup**, ligue o backup automático, informe a pasta da cópia extra (Google Drive ou pen drive) e clique em **Fazer backup agora** para conferir. Veja [Backup](#backup).
 
+### Atalhos na Área de Trabalho
+
+Dê dois cliques em **`criar-atalhos.bat`**. Ele cria **Biblioteca Camugere** (livro laranja, abre o sistema), **Backup Camugere** (seta para baixo, faz o backup na hora) e **Parar Camugere** (quadrado, desliga o sistema). Se mudar a pasta de lugar, rode de novo.
+
 ### Iniciar junto com o Windows (recomendado)
 
-Aperte `Win + R`, digite `shell:startup` e crie nessa pasta um atalho para o `iniciar-camugere.bat`. Assim o sistema já está aberto quando alguém liga o computador, e o backup automático acontece mesmo que ninguém abra o sistema.
+Aperte `Win + R`, digite `shell:startup` e crie nessa pasta um atalho para o `iniciar-camugere.vbs` (abre sem janela; o navegador abre junto). Assim o sistema já está aberto quando alguém liga o computador, e o backup automático acontece mesmo que ninguém abra o sistema.
 
 ## Uso diário
 
-- **Abrir o sistema:** `iniciar-camugere.bat`, ou acesse http://localhost:3000 se ele já estiver aberto.
-- **Fechar:** feche a janela preta do sistema.
+- **Abrir o sistema:** `iniciar-camugere.vbs` (ou o atalho da Área de Trabalho), ou acesse http://localhost:3000 se ele já estiver aberto.
+- **Fechar:** só é preciso para reiniciar ou desligar o PC com calma: use `parar-camugere.bat` (atalho **Parar Camugere**). Fechar o navegador não desliga o sistema. Se algo falhar ao abrir, veja `camugere.log`. O `iniciar-camugere.bat` continua existindo e mostra a janela preta, útil para diagnosticar.
 - **Backup:** automático, nos dias e no horário de Configurações › Backup. Confira lá se o último deu certo (veja [Backup](#backup)).
 - **Trocar a própria senha:** Configurações › Equipe da biblioteca › Alterar minha senha.
 
