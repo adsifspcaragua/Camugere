@@ -6,7 +6,7 @@ const nodemailerMock = {
   createTestAccount: jest.fn(),
   getTestMessageUrl: jest.fn(() => false),
 };
-const prismaMock = { emprestimo: { findMany: jest.fn(), update: jest.fn() } };
+const prismaMock = { emprestimo: { findMany: jest.fn(), update: jest.fn() }, configuracaoEmail: { findUnique: jest.fn().mockResolvedValue(null) } };
 jest.unstable_mockModule("nodemailer", () => ({ default: nodemailerMock }));
 jest.unstable_mockModule("../src/lib/prisma.js", () => ({ prisma: prismaMock }));
 
@@ -17,6 +17,7 @@ process.env.SMTP_PORT = "465";
 
 const email = await import("../src/services/emailService.js");
 const lembretes = await import("../src/services/lembreteService.js");
+const config = await import("../src/services/configEmailService.js");
 
 const emprestimo = (extra = {}) => ({
   id: 1,
@@ -53,6 +54,34 @@ describe("emailService", () => {
     expect(msg.html).not.toContain("<b>");
     expect(msg.text).toContain("Devolver até: 15/05/2026");
     expect(r).toMatchObject({ enviado: true, emailDestino: "ana@x.com", dataDevolucaoPrevista: "15/05/2026", previewUrl: null });
+  });
+
+  it("sem SMTP nem modo de teste, não envia e explica o motivo", async () => {
+    const host = process.env.SMTP_HOST;
+    delete process.env.SMTP_HOST;
+    config.invalidarParaTeste();
+    try {
+      await expect(email.emailConfigurado()).resolves.toBe(false);
+      await expect(email.enviarEmailEmprestimo(emprestimo())).resolves.toEqual({ enviado: false, motivo: email.EMAIL_NAO_CONFIGURADO });
+      await expect(email.enviarRedefinicaoSenha({ nome: "A", email: "a@x.com", link: "http://x", validadeMin: 30 })).rejects.toThrow(/não está configurado/);
+      await expect(email.enviarTeste("a@x.com")).rejects.toThrow(/não está configurado/);
+      process.env.EMAIL_TESTE = "true";
+      await expect(email.emailConfigurado()).resolves.toBe(true);
+    } finally {
+      process.env.SMTP_HOST = host;
+      delete process.env.EMAIL_TESTE;
+      config.invalidarParaTeste();
+    }
+    expect(sendMail).not.toHaveBeenCalled();
+  });
+
+  it("e-mail de redefinição traz o link e escapa o nome", async () => {
+    await email.enviarRedefinicaoSenha({ nome: "Ana <i>", email: "ana@x.com", link: "http://localhost:3000/?redefinir=abc", validadeMin: 30 });
+    const msg = sendMail.mock.calls[0][0];
+    expect(msg.to).toBe("ana@x.com");
+    expect(msg.html).toContain("http://localhost:3000/?redefinir=abc");
+    expect(msg.html).toContain("Ana &lt;i&gt;");
+    expect(msg.text).toContain("30 minutos");
   });
 
   it("não envia para leitor sem e-mail", async () => {

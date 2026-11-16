@@ -101,6 +101,38 @@ export function validateBibliotecario(v) {
   });
 }
 
+const confirmacaoError = (confirmacao, senha) =>
+  first(required(confirmacao, "Repita a senha para confirmar."), confirmacao !== senha && "As senhas não conferem. Digite a mesma senha nos dois campos.") || undefined;
+
+/** Nova senha + confirmação (redefinição por link ou por um colega). */
+export function validateNovaSenha(v) {
+  return clean({ novaSenha: senhaError(v.novaSenha), confirmacao: confirmacaoError(v.confirmacao, v.novaSenha) });
+}
+
+export function validateAlterarSenha(v) {
+  return clean({
+    senhaAtual: required(v.senhaAtual, "Informe a sua senha atual."),
+    novaSenha: first(senhaError(v.novaSenha), v.novaSenha && v.novaSenha === v.senhaAtual && "A nova senha precisa ser diferente da atual.") || undefined,
+    confirmacao: confirmacaoError(v.confirmacao, v.novaSenha),
+  });
+}
+
+export function validateEmail(v) {
+  return clean({ email: emailError(v.email) });
+}
+
+export function validateConfigEmail(v, { senhaDefinida = false } = {}) {
+  const outro = v.provedor === "outro";
+  const porta = Number(v.porta);
+  return clean({
+    host: outro ? required(v.host, "Informe o servidor SMTP do seu provedor.") : undefined,
+    porta: outro && !(porta >= 1 && porta <= 65535) ? "Informe a porta (geralmente 587 ou 465)." : undefined,
+    usuario: emailError(v.usuario),
+    senha: !senhaDefinida ? required(v.senha, "Informe a senha.") : undefined,
+    nomeRemetente: maxLen(v.nomeRemetente, 100, "O nome"),
+  });
+}
+
 export function validateCdd(v, { editing = false, existente } = {}) {
   const codigo = normalizarCodigo(v.id);
   return clean({

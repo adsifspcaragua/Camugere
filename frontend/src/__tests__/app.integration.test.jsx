@@ -185,6 +185,19 @@ describe("App: fluxo de empréstimo", () => {
     expect(screen.queryByRole("dialog", { name: "Novo empréstimo" })).not.toBeInTheDocument();
   });
 
+  it("avisa quando o comprovante não pôde ser enviado", async () => {
+    sobrescritas["POST /emprestimo/create"] = () =>
+      json(201, { data: { id: 200, emailNotification: { enviado: false, motivo: "O envio de e-mail não está configurado neste computador." } } });
+    await entrarAutenticado();
+    fireEvent.keyDown(document, { key: "n" });
+    const gaveta = await screen.findByRole("dialog", { name: "Novo empréstimo" });
+    const [leitor, exemplar] = within(gaveta).getAllByRole("combobox");
+    escolher(leitor, "Ana", "Ana Souza");
+    escolher(exemplar, "0001-01", "Dom Casmurro");
+    fireEvent.click(within(gaveta).getByRole("button", { name: "Registrar empréstimo" }));
+    await screen.findByText("Empréstimo registrado, mas o comprovante não foi enviado: O envio de e-mail não está configurado neste computador.");
+  });
+
   it("bloqueia leitor suspenso antes de chamar a API", async () => {
     await entrarAutenticado();
     fireEvent.keyDown(document, { key: "n" });

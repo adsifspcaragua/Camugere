@@ -4,6 +4,7 @@ import path from "path";
 import jwt from "jsonwebtoken";
 
 const prismaMock = {
+  configuracaoEmail: { findUnique: jest.fn().mockResolvedValue(null) },
   bibliotecario: { findFirst: jest.fn(), findUnique: jest.fn(), count: jest.fn() },
   leitor: { findUnique: jest.fn() },
   suspensao: { findFirst: jest.fn(), create: jest.fn() },

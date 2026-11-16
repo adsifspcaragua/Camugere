@@ -17,9 +17,14 @@ import * as emprestimoService from "../services/emprestimoService.js";
 import * as obraAutorService from "../services/obraAutorService.js";
 import * as suspensaoService from "../services/suspensaoService.js";
 import * as lembreteService from "../services/lembreteService.js";
+import * as acessoService from "../services/acessoService.js";
+import { emailConfigurado, enviarTeste } from "../services/emailService.js";
+import * as configEmailService from "../services/configEmailService.js";
+import { configEmailSchema } from "../schemas/configEmailSchema.js";
+import { prisma } from "../lib/prisma.js";
 import { internalizarCapa } from "../services/capaService.js";
 
-import { createUsuarioSchema, updateUsuarioSchema } from "../schemas/usuarioSchema.js";
+import { createUsuarioSchema, novaSenhaSchema, updateUsuarioSchema } from "../schemas/usuarioSchema.js";
 import { createLeitorSchema, suspensaoSchema, updateLeitorSchema } from "../schemas/leitorSchema.js";
 import { autorSchema, updateAutorSchema } from "../schemas/autorSchema.js";
 import { createCddSchema, updateCddSchema } from "../schemas/cddSchema.js";
@@ -70,6 +75,11 @@ bibliotecarioRouter.post(
   "/cadastrar",
   validateBody(createUsuarioSchema),
   asyncHandler(async (req, res) => created(res, "Bibliotecário cadastrado.", await bibliotecarioService.cadastrar(req.body))),
+);
+bibliotecarioRouter.patch(
+  "/:id/senha",
+  validateBody(novaSenhaSchema),
+  asyncHandler(async (req, res) => ok(res, "Senha redefinida.", await acessoService.redefinirSenhaDeColega(parseId(req.params.id), req.body, req.auth))),
 );
 
 export const autorRouter = crudRouter(crudController(autorService, { singular: "Autor", plural: "Autores" }), {
@@ -143,7 +153,12 @@ emprestimoRouter.get(
   "/lembretes",
   asyncHandler(async (_req, res) => {
     const pendentes = await lembreteService.listarPendentes();
-    ok(res, "Lembretes pendentes.", { diasAntes: lembreteService.DIAS_ANTES, automatico: process.env.LEMBRETES_AUTOMATICOS !== "false", pendentes: pendentes.length });
+    ok(res, "Lembretes pendentes.", {
+      diasAntes: lembreteService.DIAS_ANTES,
+      automatico: process.env.LEMBRETES_AUTOMATICOS !== "false",
+      emailConfigurado: await emailConfigurado(),
+      pendentes: pendentes.length,
+    });
   }),
 );
 emprestimoRouter.post("/lembretes/enviar", asyncHandler(async (_req, res) => ok(res, "Lembretes processados.", await lembreteService.enviarLembretes())));
@@ -180,4 +195,25 @@ obraAutorRouter.delete(
   asyncHandler(async (req, res) =>
     ok(res, "Vínculo removido.", await obraAutorService.remover(parseId(req.params.id_obra, "id_obra"), parseId(req.params.id_autor, "id_autor"))),
   ),
+);
+
+// ---------- Configuração do e-mail (Configurações › E-mail da biblioteca) ----------
+export const configuracaoRouter = express.Router();
+configuracaoRouter.get("/email", asyncHandler(async (_req, res) => ok(res, "Configuração de e-mail.", await configEmailService.obterParaTela())));
+configuracaoRouter.put(
+  "/email",
+  validateBody(configEmailSchema),
+  asyncHandler(async (req, res) => ok(res, "Configuração de e-mail salva.", await configEmailService.salvar(req.body))),
+);
+configuracaoRouter.delete("/email", asyncHandler(async (_req, res) => ok(res, "Configuração de e-mail removida.", await configEmailService.remover())));
+configuracaoRouter.post(
+  "/email/teste",
+  asyncHandler(async (req, res) => {
+    const { email } = await prisma.usuario.findUnique({ where: { id: req.auth.id }, select: { email: true } });
+    try {
+      ok(res, `E-mail de teste enviado para ${email}.`, await enviarTeste(email));
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  }),
 );

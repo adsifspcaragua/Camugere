@@ -63,16 +63,27 @@ describe("authMiddleware", () => {
     prismaMock.bibliotecario.findFirst.mockResolvedValue(null);
     const { erro, req } = await rodar({ authorization: `Bearer ${assinar({ id: 0, id_bibliotecario: 0 })}` });
     expect(erro.status).toBe(401);
-    expect(erro.message).toMatch(/revogado/);
+    expect(erro.message).toMatch(/Sessão encerrada/);
     expect(req.auth).toBeUndefined();
   });
 
-  it("confere o par usuário/bibliotecário no banco", async () => {
-    await rodar({ authorization: `Bearer ${assinar({ id: 3, id_bibliotecario: 7 })}` });
+  it("confere o par usuário/bibliotecário e a versão do token no banco", async () => {
+    await rodar({ authorization: `Bearer ${assinar({ id: 3, id_bibliotecario: 7, v: 2 })}` });
     expect(prismaMock.bibliotecario.findFirst).toHaveBeenCalledWith({
-      where: { id: 7, id_usuario: 3 },
+      where: { id: 7, id_usuario: 3, usuario: { versaoToken: 2 } },
       select: { id: true },
     });
+  });
+
+  it("token antigo, sem versão, vale como versão 0", async () => {
+    await rodar({ authorization: `Bearer ${assinar({ id: 3, id_bibliotecario: 7 })}` });
+    expect(prismaMock.bibliotecario.findFirst.mock.calls[0][0].where.usuario).toEqual({ versaoToken: 0 });
+  });
+
+  it("rejeita token com versão que não é número inteiro", async () => {
+    const { erro } = await rodar({ authorization: `Bearer ${assinar({ id: 3, id_bibliotecario: 7, v: "x" })}` });
+    expect(erro.status).toBe(401);
+    expect(prismaMock.bibliotecario.findFirst).not.toHaveBeenCalled();
   });
 
   it("encaminha falha do banco ao handler de erro", async () => {

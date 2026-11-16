@@ -1,4 +1,5 @@
-// Popula o banco com dados de exemplo. Uso: npm run seed (após `npx prisma migrate reset`).
+// DADOS FICTÍCIOS PARA DESENVOLVIMENTO E DEMONSTRAÇÃO. Uso: npm run seed:demo (após `npx prisma migrate reset`).
+// Nunca rode no computador da biblioteca: ele cria uma conta com senha conhecida e leitores inventados.
 import bcrypt from "bcrypt";
 import { prisma } from "./lib/prisma.js";
 import { gerarInventarios } from "./services/inventario.js";
@@ -48,6 +49,12 @@ async function criarAutores(texto) {
 }
 
 async function main() {
+  // Proteção: recusa rodar num banco que já tem uma equipe real cadastrada.
+  const equipe = await prisma.bibliotecario.findMany({ select: { usuario: { select: { email: true } } } });
+  if (equipe.some((b) => b.usuario.email !== BIBLIOTECARIA.email)) {
+    throw new Error("Este banco já tem bibliotecários reais. Os dados de demonstração só podem ser criados num banco vazio.");
+  }
+
   const hash = await bcrypt.hash(BIBLIOTECARIA.senha, 10);
   const admin = await prisma.usuario.upsert({
     where: { email: BIBLIOTECARIA.email },
@@ -56,20 +63,6 @@ async function main() {
   });
   if (!(await prisma.bibliotecario.findFirst({ where: { id_usuario: admin.id } }))) {
     await prisma.bibliotecario.create({ data: { id_usuario: admin.id } });
-  }
-
-  // Mantém também os logins de bibliotecário legados (user13@example.com a user17@example.com / hash13 a hash17)
-  for (let i = 13; i <= 17; i++) {
-    const emailLegado = `user${i}@example.com`;
-    const hashLegado = await bcrypt.hash(`hash${i}`, 10);
-    const uLegado = await prisma.usuario.upsert({
-      where: { email: emailLegado },
-      update: {},
-      create: { nome: `Bibliotecário ${i}`, email: emailLegado, hash: hashLegado },
-    });
-    if (!(await prisma.bibliotecario.findFirst({ where: { id_usuario: uLegado.id } }))) {
-      await prisma.bibliotecario.create({ data: { id_usuario: uLegado.id } });
-    }
   }
 
   for (const cdd of CDDS) await prisma.cdd.upsert({ where: { id: cdd.id }, update: {}, create: cdd });

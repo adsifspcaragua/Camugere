@@ -1,43 +1,38 @@
-import { useState } from "react";
-import { ArrowRight, BookOpen, Sparkles, Users } from "lucide-react";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useEffect, useState } from "react";
+import { BookOpen, Sparkles, Users } from "lucide-react";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import Footer from "../components/layout/Footer.jsx";
-import { validateLogin } from "../lib/validators.js";
+import { EsqueciCard, LoginCard, PrimeiroAcessoCard, RedefinirCard } from "../features/AcessoCards.jsx";
+import { statusPrimeiroAcesso } from "../services/authService.js";
+
+const tokenDaUrl = () => new URLSearchParams(window.location.search).get("redefinir");
+const limparUrl = () => window.history.replaceState(null, "", window.location.pathname);
 
 export default function LoginPage() {
-  const { login, exitReason } = useAuth();
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  // "login" | "esqueci" | "redefinir" (link do e-mail) | "primeiro" (sistema sem nenhuma conta)
+  const [token] = useState(tokenDaUrl);
+  const [modo, setModo] = useState(token ? "redefinir" : "login");
+  const [aviso, setAviso] = useState("");
 
-  const checkField = (name) => () => {
-    const found = validateLogin({ email, senha })[name];
-    setFieldErrors((f) => ({ ...f, [name]: found }));
+  useEffect(() => {
+    if (token) return;
+    statusPrimeiroAcesso()
+      .then((r) => r?.necessario && setModo("primeiro"))
+      .catch(() => {});
+  }, [token]);
+
+  const irParaLogin = (mensagem = "") => {
+    limparUrl();
+    setAviso(mensagem);
+    setModo("login");
   };
 
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
-    const found = validateLogin({ email, senha });
-    setFieldErrors(found);
-    if (Object.keys(found).length) {
-      document.getElementById(found.email ? "login-email" : "login-senha")?.focus();
-      return;
-    }
-    setLoading(true);
-    try {
-      await login(email.trim(), senha);
-    } catch (err) {
-      if (err.status === 401) setError("E-mail ou senha incorretos. Confira os dados e tente de novo.");
-      else if (err.status === 0) setError(err.message);
-      else if (err.status === 400) setError("Não foi possível entrar com os dados informados. Confira o e-mail e a senha.");
-      else setError(err.message);
-      setLoading(false);
-    }
-  };
+  const cartao = {
+    login: <LoginCard aviso={aviso} onEsqueci={() => setModo("esqueci")} />,
+    esqueci: <EsqueciCard onVoltar={() => irParaLogin()} />,
+    redefinir: <RedefinirCard token={token} onVoltar={() => irParaLogin()} onConcluido={() => irParaLogin("Senha redefinida. Entre com a nova senha.")} />,
+    primeiro: <PrimeiroAcessoCard />,
+  }[modo];
 
   return (
     <div className="flex min-h-screen flex-col justify-between bg-paper text-ink transition-colors selection:bg-clay-soft">
@@ -124,104 +119,7 @@ export default function LoginPage() {
           {/* Lado Direito: Card de Login calibrado para conforto e acessibilidade */}
           <div className="w-full max-w-[480px] mx-auto lg:ml-auto">
             <div className="rounded-2xl border-2 border-line bg-panel p-8 sm:p-10 shadow-card">
-              <div className="mb-7">
-                <h2 className="font-display font-extrabold text-2xl sm:text-3xl text-ink">
-                  Entrar no Sistema
-                </h2>
-                <p className="mt-2 text-base text-ink-muted leading-relaxed">
-                  Digite seu e-mail e sua senha cadastrados para acessar o painel.
-                </p>
-              </div>
-
-              {exitReason === "expired" && !error && (
-                <div
-                  role="status"
-                  className="mb-6 rounded-xl border border-warn/30 bg-warn-soft p-4 text-sm font-semibold text-warn leading-relaxed"
-                >
-                  Sua sessão expirou por segurança. Por favor, entre novamente.
-                </div>
-              )}
-
-              <form onSubmit={submit} noValidate className="space-y-6">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="login-email"
-                    className="block text-base font-bold text-ink"
-                  >
-                    E-mail de acesso
-                  </label>
-                  <input
-                    id="login-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setFieldErrors((f) => ({ ...f, email: undefined }));
-                    }}
-                    onBlur={checkField("email")}
-                    aria-invalid={Boolean(fieldErrors.email)}
-                    aria-describedby={fieldErrors.email ? "login-email-error" : undefined}
-                    autoComplete="username"
-                    placeholder="exemplo: admin@camugere.org"
-                    required
-                    autoFocus
-                    className="h-14 w-full rounded-xl border-2 border-line bg-sunken px-4 text-base sm:text-lg text-ink placeholder:text-ink-muted/60 transition-all hover:border-field focus:border-forest focus:bg-panel focus:outline-none aria-[invalid=true]:border-danger"
-                  />
-                  {fieldErrors.email && (
-                    <p id="login-email-error" role="alert" className="text-sm font-semibold text-danger">
-                      {fieldErrors.email}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="login-senha"
-                    className="block text-base font-bold text-ink"
-                  >
-                    Senha
-                  </label>
-                  <input
-                    id="login-senha"
-                    type="password"
-                    value={senha}
-                    onChange={(e) => {
-                      setSenha(e.target.value);
-                      setFieldErrors((f) => ({ ...f, senha: undefined }));
-                    }}
-                    onBlur={checkField("senha")}
-                    aria-invalid={Boolean(fieldErrors.senha)}
-                    aria-describedby={fieldErrors.senha ? "login-senha-error" : undefined}
-                    autoComplete="current-password"
-                    placeholder="Digite sua senha"
-                    required
-                    className="h-14 w-full rounded-xl border-2 border-line bg-sunken px-4 text-base sm:text-lg text-ink placeholder:text-ink-muted/60 transition-all hover:border-field focus:border-forest focus:bg-panel focus:outline-none aria-[invalid=true]:border-danger"
-                  />
-                  {fieldErrors.senha && (
-                    <p id="login-senha-error" role="alert" className="text-sm font-semibold text-danger">
-                      {fieldErrors.senha}
-                    </p>
-                  )}
-                </div>
-
-                {error && (
-                  <div
-                    role="alert"
-                    className="rounded-xl border border-danger/30 bg-danger-soft p-4 text-sm font-semibold text-danger leading-relaxed"
-                  >
-                    {error}
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex h-14 w-full items-center justify-center gap-2.5 rounded-xl bg-forest px-6 text-lg font-extrabold text-on-forest shadow-sm transition-all hover:bg-forest-strong hover:shadow-md active:scale-[0.99] disabled:opacity-60 cursor-pointer"
-                >
-                  {loading ? "Entrando no sistema..." : "Entrar no sistema"}
-                  {!loading && <ArrowRight size={20} />}
-                </button>
-              </form>
+              {cartao}
             </div>
           </div>
         </div>
