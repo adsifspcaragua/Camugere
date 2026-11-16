@@ -106,9 +106,13 @@ function rodarMysqldump(exe, conexao, arquivoSql) {
     let erro = "";
     const p = spawn(exe, args, { stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
     p.stderr.on("data", (d) => (erro += d));
-    p.on("error", reject);
+    const limpar = () => fs.rmSync(path.dirname(opcoes), { recursive: true, force: true });
+    p.on("error", (e) => {
+      limpar();
+      reject(e);
+    });
     p.on("close", (codigo) => {
-      fs.rmSync(path.dirname(opcoes), { recursive: true, force: true });
+      limpar();
       if (codigo === 0) resolve();
       else reject(new Error(`mysqldump falhou (código ${codigo}): ${erro.trim() || "sem detalhes"}`));
     });
