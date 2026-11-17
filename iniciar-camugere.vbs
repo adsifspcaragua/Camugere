@@ -1,4 +1,4 @@
-' Inicia o sistema da Biblioteca Camugere SEM janela e abre o navegador.
+' Inicia o sistema da Biblioteca Comunitaria SEM janela e abre o navegador.
 ' Se o sistema ja estiver rodando, apenas abre o navegador. Para desligar: parar-camugere.bat.
 ' Se algo der errado, o motivo fica em camugere.log, ao lado deste arquivo.
 Option Explicit
@@ -28,7 +28,7 @@ If Not NoAr() Then
     If NoAr() Then Exit For
   Next
   If Not NoAr() Then
-    MsgBox "O sistema nao iniciou. Veja o arquivo camugere.log na pasta do sistema.", 48, "Biblioteca Camugere"
+    MsgBox "O sistema nao iniciou. Veja o arquivo camugere.log na pasta do sistema.", 48, "Biblioteca Comunitaria"
     WScript.Quit 1
   End If
 End If

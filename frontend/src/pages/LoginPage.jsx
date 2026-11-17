@@ -42,15 +42,15 @@ export default function LoginPage() {
           <div className="flex items-center gap-3.5">
             <img
               src="/favicon.svg"
-              alt="Logotipo da Biblioteca Camugerê"
+              alt="Logotipo da Biblioteca Comunitária"
               className="size-11 rounded-lg ring-1 ring-line shadow-xs"
             />
             <div className="leading-tight">
               <span className="font-display font-extrabold text-xl tracking-tight text-ink">
-                Camugerê
+                Biblioteca Comunitária
               </span>
               <p className="text-xs font-semibold text-ink-muted">
-                Biblioteca Comunitária • Espaço Cultural Casa da Democracia
+                Espaço Cultural Casa da Democracia
               </p>
             </div>
           </div>

@@ -24,7 +24,7 @@ async function perguntar(texto, { oculto = false } = {}) {
 }
 
 async function main() {
-  console.info("Redefinir a senha de um bibliotecário da Biblioteca Camugerê\n");
+  console.info("Redefinir a senha de um bibliotecário da Biblioteca Comunitária\n");
   const email = (await perguntar("E-mail da conta: ")).toLowerCase();
   const usuario = await prisma.usuario.findUnique({ where: { email }, include: { bibliotecarios: { take: 1 } } });
   if (!usuario?.bibliotecarios.length) throw new Error("nenhum bibliotecário cadastrado com este e-mail.");

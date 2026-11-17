@@ -194,7 +194,7 @@ describe("e-mail da biblioteca (Configurações)", () => {
   };
 
   it("configura o Gmail com senha de app e atualiza o status", async () => {
-    let salvo = { configurado: false, origem: null, nomeRemetente: "Biblioteca Camugerê", senhaDefinida: false };
+    let salvo = { configurado: false, origem: null, nomeRemetente: "Biblioteca Comunitária", senhaDefinida: false };
     rotas["GET /configuracao/email"] = () => json(200, { data: salvo });
     rotas["PUT /configuracao/email"] = (b) => {
       salvo = { configurado: true, origem: "tela", host: b.host, porta: b.porta, usuario: b.usuario, nomeRemetente: b.nomeRemetente, senhaDefinida: true };
@@ -212,7 +212,7 @@ describe("e-mail da biblioteca (Configurações)", () => {
 
     await screen.findByText(/E-mail configurado/);
     expect(chamadas.find((c) => c.method === "PUT").body).toEqual({
-      host: "smtp.gmail.com", porta: 587, seguro: false, usuario: "biblioteca@gmail.com", senha: "abcdefghijklmnop", nomeRemetente: "Biblioteca Camugerê",
+      host: "smtp.gmail.com", porta: 587, seguro: false, usuario: "biblioteca@gmail.com", senha: "abcdefghijklmnop", nomeRemetente: "Biblioteca Comunitária",
     });
     expect(await screen.findByText("biblioteca@gmail.com")).toBeInTheDocument();
   });

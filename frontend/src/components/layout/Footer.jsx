@@ -41,11 +41,21 @@ export const TEAM_MEMBERS = [
   { name: "Vitor de Oliveira" },
 ];
 
+const SYSTEM_NAME = "Biblioteca Comunitária";
+
+function joinNames(names) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
+}
+
 function MemberSocialLinks({ member }) {
   if (!member.github && !member.linkedin) return null;
 
+  const linkClass =
+    "text-ink-soft transition-colors hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forest";
+
   return (
-    <div className="flex items-center gap-1.5">
+    <span className="flex items-center gap-2.5">
       {member.github && (
         <a
           href={member.github}
@@ -53,7 +63,7 @@ function MemberSocialLinks({ member }) {
           rel="noopener noreferrer"
           aria-label={`GitHub de ${member.name} (abre em nova aba)`}
           title={`GitHub: ${member.name}`}
-          className="inline-flex size-7 items-center justify-center rounded-md border border-line bg-panel text-ink shadow-2xs transition-colors hover:border-ink hover:bg-sunken focus-visible:outline-2 focus-visible:outline-forest"
+          className={linkClass}
         >
           <GithubIcon className="size-4" />
         </a>
@@ -65,86 +75,81 @@ function MemberSocialLinks({ member }) {
           rel="noopener noreferrer"
           aria-label={`LinkedIn de ${member.name} (abre em nova aba)`}
           title={`LinkedIn: ${member.name}`}
-          className="inline-flex size-7 items-center justify-center rounded-md border border-line bg-panel text-[#0A66C2] shadow-2xs transition-colors hover:border-[#0A66C2] hover:bg-sky-50/70 dark:hover:bg-[#0A66C2]/20 focus-visible:outline-2 focus-visible:outline-[#0A66C2]"
+          className={`${linkClass} hover:!text-[#0A66C2]`}
         >
           <LinkedinIcon className="size-4" />
         </a>
       )}
-    </div>
+    </span>
+  );
+}
+
+function Heading({ children }) {
+  return (
+    <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-ink-soft">
+      {children}
+    </h2>
   );
 }
 
 export default function Footer({ compact = false, className = "" }) {
   const currentYear = new Date().getFullYear();
 
-  return (
-    <footer
-      className={`mt-auto border-t border-line bg-panel/90 py-5 transition-colors ${className}`}
-    >
-      <div
-        className={`mx-auto flex flex-col gap-4 px-4 sm:px-8 ${
-          compact ? "items-center text-center" : "max-w-[1360px]"
+  const team = (
+    <div>
+      <Heading>Desenvolvido por</Heading>
+      <ul
+        className={`grid gap-x-8 gap-y-2 text-sm ${
+          compact ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2"
         }`}
       >
-        <div
-          className={`flex flex-col gap-4 ${
-            compact
-              ? "items-center justify-center text-center"
-              : "justify-between text-center lg:flex-row lg:items-center lg:text-left"
-          }`}
-        >
-          {!compact && (
-            <div className="flex shrink-0 flex-col gap-0.5">
-              <p className="text-sm font-medium text-ink-muted">
-                <span className="font-bold text-ink">Camugerê</span> • Sistema de Gestão da Biblioteca Comunitária
-              </p>
-              <p className="text-xs text-ink-soft">
-                Projeto de Extensão 3
+        {TEAM_MEMBERS.map((member) => (
+          <li
+            key={member.name}
+            className="flex min-h-6 items-center gap-3"
+          >
+            <span className="text-ink">{member.name}</span>
+            <MemberSocialLinks member={member} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+
+  return (
+    <footer
+      className={`mt-auto border-t border-line bg-panel/90 transition-colors ${className}`}
+    >
+      <div
+        className={`mx-auto px-4 sm:px-8 ${compact ? "max-w-[820px]" : "max-w-[1360px]"}`}
+      >
+        {compact ? (
+          <div className="py-8">{team}</div>
+        ) : (
+          <div className="grid gap-10 py-10 md:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1.6fr]">
+            <div>
+              <p className="text-base font-bold text-ink">{SYSTEM_NAME}</p>
+              <p className="mt-2 max-w-xs text-sm leading-relaxed text-ink-muted">
+                Espaço Cultural Casa da Democracia
               </p>
             </div>
-          )}
-
-          <div
-            className={`flex flex-col gap-2 ${
-              compact ? "items-center" : "items-center lg:items-end"
-            }`}
-          >
-            <span className="text-xs font-medium text-ink-muted">
-              Desenvolvido por
-            </span>
-            <ul
-              className={`flex flex-wrap items-center gap-2 ${
-                compact ? "justify-center" : "justify-center lg:justify-end"
-              }`}
-            >
-              {TEAM_MEMBERS.map((member) => (
-                <li
-                  key={member.name}
-                  className="inline-flex items-center gap-2 rounded-lg border border-line bg-sunken/60 px-3 py-1.5 text-xs"
-                >
-                  <span className="font-semibold text-ink">{member.name}</span>
-                  <MemberSocialLinks member={member} />
-                </li>
-              ))}
-            </ul>
+            <div>
+              <Heading>Projeto</Heading>
+              <p className="max-w-xs text-sm leading-relaxed text-ink">
+                Projeto de Extensão do curso de Análise e Desenvolvimento de Sistemas
+              </p>
+              <p className="mt-1 text-sm text-ink-muted">
+                IFSP — Câmpus Caraguatatuba
+              </p>
+            </div>
+            <div className="md:col-span-2 lg:col-span-1">{team}</div>
           </div>
-        </div>
+        )}
 
-        <div
-          className={`flex flex-col items-center gap-2 border-t border-line/80 pt-3 text-xs text-ink-muted ${
-            compact
-              ? "w-full justify-center text-center"
-              : "justify-between text-center sm:flex-row sm:text-left"
-          }`}
-        >
+        <div className="border-t border-line py-5 text-xs text-ink-muted">
           <p>
-            © {currentYear} Camugerê — Projeto de Extensão 3. Todos os direitos reservados.
+            © {currentYear} {joinNames(TEAM_MEMBERS.map((m) => m.name))}. Todos os direitos reservados.
           </p>
-          {!compact && (
-            <p className="text-ink-soft">
-              Uso acadêmico e comunitário
-            </p>
-          )}
         </div>
       </div>
     </footer>

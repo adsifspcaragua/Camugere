@@ -18,7 +18,7 @@ describe("Footer", () => {
       expect(screen.getByText(member)).toBeInTheDocument();
     }
     expect(
-      screen.getByText(/Camugerê — Projeto de Extensão 3\. Todos os direitos reservados\./i)
+      screen.getByText(/Vitor de Oliveira\. Todos os direitos reservados\./i)
     ).toBeInTheDocument();
 
     const githubLink = screen.getByRole("link", { name: /github de tiago vieira/i });
@@ -38,9 +38,9 @@ describe("Footer", () => {
     for (const member of EXPECTED_MEMBERS) {
       expect(screen.getByText(member)).toBeInTheDocument();
     }
-    expect(screen.queryByText(/Sistema de Gestão da Biblioteca Comunitária/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Espaço Cultural Casa da Democracia/i)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Camugerê — Projeto de Extensão 3\. Todos os direitos reservados\./i)
+      screen.getByText(/Vitor de Oliveira\. Todos os direitos reservados\./i)
     ).toBeInTheDocument();
   });
 });

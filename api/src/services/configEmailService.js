@@ -3,7 +3,7 @@ import { prisma } from "../lib/prisma.js";
 import { cifrar, decifrar } from "../lib/cripto.js";
 import { badRequest } from "../lib/httpError.js";
 
-const NOME_PADRAO = "Biblioteca Camugerê";
+const NOME_PADRAO = "Biblioteca Comunitária";
 let cache; // undefined = ainda não carregado
 const ouvintes = new Set();
 

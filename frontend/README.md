@@ -1,4 +1,4 @@
-# Camugerê — Frontend
+# Biblioteca Comunitária — Frontend
 
 React 19 + Vite + Tailwind 4.
 

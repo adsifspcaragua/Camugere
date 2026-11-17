@@ -1,6 +1,6 @@
 /**
  * Parser e normalizador de CSV para importação de acervo.
- * Compatível tanto com o formato de exportação nativo do Camugere quanto com
+ * Compatível tanto com o formato de exportação nativo do sistema quanto com
  * planilhas legadas de sistemas de biblioteca (ex: Koha, Biblivre, planilhas Access/Excel).
  */
 

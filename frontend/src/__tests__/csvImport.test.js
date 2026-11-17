@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cleanAno, cleanAutor, cleanCdd, cleanIsbn, parseAcervoCsv } from "../lib/csvImport.js";
 
 describe("csvImport", () => {
-  it("faz parse de formato de exportação nativo do Camugere", () => {
+  it("faz parse de formato de exportação nativo do sistema", () => {
     const csv = `Título,Autoria,CDD,ISBN,Exemplares,Disponíveis
 "Torto Arado","Itamar Vieira Junior","869t","9786580309313",5,5
 "O escravo","Carolina Maria de Jesus","869e","9788535936032",2,2`;

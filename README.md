@@ -1,4 +1,4 @@
-# Biblioteca Camugerê
+# Biblioteca Comunitária — Espaço Cultural Casa da Democracia
 
 Sistema de gestão da biblioteca comunitária do Espaço Cultural Casa da Democracia: acervo, leitores, empréstimos, devoluções e relatórios.
 
@@ -65,7 +65,7 @@ O comando instala as dependências, cria as tabelas no banco vazio e gera o site
 
 ### Atalhos na Área de Trabalho
 
-Dê dois cliques em **`criar-atalhos.bat`**. Ele cria **Biblioteca Camugere** (livro laranja, abre o sistema), **Backup Camugere** (seta para baixo, faz o backup na hora) e **Parar Camugere** (quadrado, desliga o sistema). Se mudar a pasta de lugar, rode de novo.
+Dê dois cliques em **`criar-atalhos.bat`**. Ele cria **Biblioteca Comunitaria** (livro laranja, abre o sistema), **Backup Biblioteca** (seta para baixo, faz o backup na hora) e **Parar Biblioteca** (quadrado, desliga o sistema). Se mudar a pasta de lugar, rode de novo.
 
 ### Iniciar junto com o Windows (recomendado)
 
@@ -74,7 +74,7 @@ Aperte `Win + R`, digite `shell:startup` e crie nessa pasta um atalho para o `in
 ## Uso diário
 
 - **Abrir o sistema:** `iniciar-camugere.vbs` (ou o atalho da Área de Trabalho), ou acesse http://localhost:3000 se ele já estiver aberto.
-- **Fechar:** só é preciso para reiniciar ou desligar o PC com calma: use `parar-camugere.bat` (atalho **Parar Camugere**). Fechar o navegador não desliga o sistema. Se algo falhar ao abrir, veja `camugere.log`. O `iniciar-camugere.bat` continua existindo e mostra a janela preta, útil para diagnosticar.
+- **Fechar:** só é preciso para reiniciar ou desligar o PC com calma: use `parar-camugere.bat` (atalho **Parar Biblioteca**). Fechar o navegador não desliga o sistema. Se algo falhar ao abrir, veja `camugere.log`. O `iniciar-camugere.bat` continua existindo e mostra a janela preta, útil para diagnosticar.
 - **Backup:** automático, nos dias e no horário de Configurações › Backup. Confira lá se o último deu certo (veja [Backup](#backup)).
 - **Trocar a própria senha:** Configurações › Equipe da biblioteca › Alterar minha senha.
 

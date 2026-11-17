@@ -31,7 +31,7 @@ function ConfigurarEmail({ atual, onClose, onSaved }) {
       seguro: atual?.seguro ?? false,
       usuario: atual?.usuario ?? "",
       senha: "",
-      nomeRemetente: atual?.nomeRemetente ?? "Biblioteca Camugerê",
+      nomeRemetente: atual?.nomeRemetente ?? "Biblioteca Comunitária",
     },
     (v) => validateConfigEmail(v, { senhaDefinida: atual?.senhaDefinida && atual?.origem === "tela" }),
   );

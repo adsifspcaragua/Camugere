@@ -2,7 +2,7 @@
   "name": "camugere-api",
   "version": "1.0.0",
   "type": "module",
-  "description": "API da Biblioteca Camugerê",
+  "description": "API da Biblioteca Comunitária",
   "license": "ISC",
   "author": "",
   "main": "src/server.js",

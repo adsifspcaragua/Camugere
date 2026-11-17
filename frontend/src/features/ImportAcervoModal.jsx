@@ -129,7 +129,7 @@ export default function ImportAcervoModal({ open, onClose }) {
                 Importar Acervo via CSV
               </h2>
               <p className="text-xs text-ink-muted">
-                Compatível com exportação do Camugere e planilhas legadas da biblioteca
+                Compatível com exportação do sistema e planilhas legadas da biblioteca
               </p>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function ImportAcervoModal({ open, onClose }) {
                   Arraste e solte o arquivo CSV aqui ou clique para selecionar
                 </p>
                 <p className="text-xs text-ink-muted mt-1 text-center">
-                  Formatos aceitos: CSV Camugere (Título, Autoria, CDD, Assunto CDD, ISBN...) ou legado (title, writers...). CDDs novos são cadastrados na hora; sem a coluna de assunto, ficam para completar em Classificação (CDD).
+                  Formatos aceitos: CSV do sistema (Título, Autoria, CDD, Assunto CDD, ISBN...) ou legado (title, writers...). CDDs novos são cadastrados na hora; sem a coluna de assunto, ficam para completar em Classificação (CDD).
                 </p>
               </div>
             ) : (
