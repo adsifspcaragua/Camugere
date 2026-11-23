@@ -65,7 +65,7 @@ O comando instala as dependências, cria as tabelas no banco vazio e gera o site
 
 ### Atalhos na Área de Trabalho
 
-Dê dois cliques em **`criar-atalhos.bat`**. Ele cria **Biblioteca Camugere** (livro laranja, abre o sistema), **Backup Camugere** (seta para baixo, faz o backup na hora) e **Parar Camugere** (quadrado, desliga o sistema). Se mudar a pasta de lugar, rode de novo.
+Dê dois cliques em **`criar-atalhos.bat`**. Ele cria **Biblioteca Camugere** (livro laranja, abre o sistema), **Backup Camugere** (seta para baixo, faz o backup na hora), **Atualizar Camugere** (setas circulares, atualiza o sistema) e **Parar Camugere** (quadrado, desliga o sistema). Se mudar a pasta de lugar, rode de novo.
 
 ### Iniciar junto com o Windows (recomendado)
 
@@ -142,7 +142,9 @@ Para restaurar, com o sistema fechado:
 
 ## Atualizar o sistema
 
-Com o sistema fechado, na pasta raiz:
+Dê dois cliques em **`atualizar-camugere.bat`**, na pasta raiz. Ele fecha o sistema, faz um backup de segurança, baixa as novidades, aplica as atualizações e abre o sistema de novo.
+
+Se preferir fazer manualmente, com o sistema fechado, na pasta raiz:
 
 ```bash
 git pull
