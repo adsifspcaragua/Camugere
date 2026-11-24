@@ -28,7 +28,7 @@ const email = await import("../src/services/emailService.js");
 const { default: app } = await import("../src/app.js");
 
 const auth = { Authorization: `Bearer ${jwt.sign({ id: 1, id_bibliotecario: 1, v: 0 }, "test-secret")}` };
-const GMAIL = { host: "smtp.gmail.com", porta: 587, usuario: "biblioteca@gmail.com", senha: "abcd efgh ijkl mnop", nomeRemetente: "Biblioteca Camugerê" };
+const GMAIL = { host: "smtp.gmail.com", porta: 587, usuario: "biblioteca@gmail.com", senha: "abcd efgh ijkl mnop", nomeRemetente: "Biblioteca Comunitária" };
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -100,7 +100,7 @@ describe("configuração pela tela", () => {
       dataInicio: new Date(), diasLocacao: 14, leitor: { usuario: { nome: "Ana", email: "ana@x.com" } }, exemplar: { numeroInventario: "1", obra: { titulo: "Livro" } },
     });
     expect(nodemailerMock.createTransport).toHaveBeenLastCalledWith(expect.objectContaining({ host: "smtp.gmail.com", auth: { user: "biblioteca@gmail.com", pass: GMAIL.senha } }));
-    expect(conexao.sendMail.mock.calls[0][0].from).toBe('"Biblioteca Camugerê" <biblioteca@gmail.com>');
+    expect(conexao.sendMail.mock.calls[0][0].from).toBe('"Biblioteca Comunitária" <biblioteca@gmail.com>');
   });
 
   it("senha cifrada com outra chave (JWT_SECRET trocado) conta como não configurado", async () => {

@@ -9,8 +9,8 @@ function Brand() {
     <div className="flex items-center gap-3 px-5 pt-6 pb-6">
       <img src="/favicon.svg" alt="" className="size-11 rounded-md" />
       <div className="leading-tight">
-        <p className="font-display text-lg font-bold text-ink">Camugerê</p>
-        <p className="text-xs text-ink-muted">Biblioteca comunitária</p>
+        <p className="font-display text-lg font-bold text-ink">Biblioteca Comunitária</p>
+        <p className="text-xs text-ink-muted">Casa da Democracia</p>
       </div>
     </div>
   );

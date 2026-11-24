@@ -23,7 +23,7 @@ async function criarTransporter() {
   const conta = await nodemailer.createTestAccount();
   return {
     conexao: nodemailer.createTransport({ host: "smtp.ethereal.email", port: 587, auth: { user: conta.user, pass: conta.pass } }),
-    remetente: '"Biblioteca Camugerê" <no-reply@camugere.org>',
+    remetente: '"Biblioteca Comunitária" <no-reply@camugere.org>',
   };
 }
 
@@ -52,7 +52,7 @@ function montarConteudo({ titulo: cabecalho, intro, nomeLeitor, tituloObra, nume
   const html = `
   <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1f1d1a;border:1px solid #e4dfd4">
     <div style="background:#1f3a2e;color:#f6f2ea;padding:24px 28px">
-      <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8">Biblioteca Camugerê</div>
+      <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8">Biblioteca Comunitária</div>
       <div style="font-size:22px;margin-top:4px">${escapeHtml(cabecalho)}</div>
     </div>
     <div style="padding:28px;font-family:Arial,sans-serif;font-size:15px;line-height:1.55">
@@ -118,7 +118,7 @@ export async function enviarRedefinicaoSenha({ nome, email, link, validadeMin })
   const html = `
   <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;color:#1f1d1a;border:1px solid #e4dfd4">
     <div style="background:#1f3a2e;color:#f6f2ea;padding:24px 28px">
-      <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8">Biblioteca Camugerê</div>
+      <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.8">Biblioteca Comunitária</div>
       <div style="font-size:22px;margin-top:4px">Redefinição de senha</div>
     </div>
     <div style="padding:28px;font-family:Arial,sans-serif;font-size:15px;line-height:1.55">
@@ -134,7 +134,7 @@ Para criar uma nova senha de acesso ao sistema da biblioteca, abra o link abaixo
 ${link}
 
 Se você não pediu a troca, ignore este e-mail.`;
-  await despachar({ to: email, subject: "Biblioteca Camugerê — redefinição de senha", text, html });
+  await despachar({ to: email, subject: "Biblioteca Comunitária — redefinição de senha", text, html });
 }
 
 /**
@@ -150,7 +150,7 @@ export async function enviarTeste(para) {
     await conexao.sendMail({
       from: smtp.remetente,
       to: para,
-      subject: "Biblioteca Camugerê — e-mail de teste",
+      subject: "Biblioteca Comunitária — e-mail de teste",
       text: "Este é um e-mail de teste do sistema da biblioteca. Se você recebeu, o envio de comprovantes, lembretes e links de senha está funcionando.",
     });
   } catch (error) {

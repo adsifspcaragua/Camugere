@@ -1,6 +1,6 @@
 @echo off
-REM Atualiza a Biblioteca Camugere: para o sistema, faz backup, baixa as novidades, prepara e inicia de novo.
-title Atualizar - Biblioteca Camugere
+REM Atualiza a Biblioteca Comunitaria: para o sistema, faz backup, baixa as novidades, prepara e inicia de novo.
+title Atualizar - Biblioteca Comunitaria
 cd /d "%~dp0"
 
 echo [1/5] Parando o sistema, se estiver aberto...
